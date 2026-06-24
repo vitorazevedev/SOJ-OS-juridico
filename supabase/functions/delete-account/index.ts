@@ -55,46 +55,47 @@ Deno.serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
-  // Identify the caller and their org via RLS (auth.uid() resolves from the JWT) —
-  // this is the same trust boundary every other Edge Function in this project uses.
-  const { data: authUser, error: authErr } = await userClient.auth.getUser()
-  if (authErr || !authUser?.user) return jsonResponse({ error: 'Unauthorized' }, 401)
-
-  const { data: callerRow, error: callerErr } = await userClient
-    .from('users')
-    .select('id, org_id')
-    .eq('id', authUser.user.id)
-    .single()
-
-  if (callerErr || !callerRow?.org_id) {
+  // Identify the caller's org via the get_org_id() RPC, which resolves auth.uid() from
+  // the JWT in the Authorization header — the same trust boundary every other Edge
+  // Function in this project uses for RLS. (auth.getUser() with no argument depends on
+  // an internal client session, not on the forwarded header, and fails here.)
+  const { data: orgId, error: orgErr } = await userClient.rpc('get_org_id')
+  if (orgErr || !orgId) {
     return jsonResponse({ error: 'User or organization not found' }, 404)
   }
 
-  const orgId = callerRow.org_id
-
   try {
     // 1. Collect every org member's auth id before the org row (and its FK-cascaded
-    // `users` rows) disappear.
+    // `users` rows) disappear. Also collect Storage paths now, while the contract rows
+    // (and thus the org prefix) still exist — the actual removal happens after the DB
+    // delete succeeds (step 3), not before.
     const { data: orgUsers } = await serviceClient
       .from('users')
       .select('id')
       .eq('org_id', orgId)
     const userIds = (orgUsers ?? []).map((u: { id: string }) => u.id)
 
-    // 2. Delete all Storage objects under this org's prefix (contracts, generated docs, logo).
     const filePaths = await listAllFiles(serviceClient, 'contracts', orgId)
-    if (filePaths.length > 0) {
-      await serviceClient.storage.from('contracts').remove(filePaths)
-    }
 
-    // 3. Delete the organization — cascades to contracts, contract_contents,
+    // 2. Delete the organization — cascades to contracts, contract_contents,
     // contract_analyses, clause_risks, financial_impacts, contract_obligations,
-    // generated_contracts and users (all confirmed ON DELETE CASCADE).
+    // generated_contracts and users (all confirmed ON DELETE CASCADE). Deliberately
+    // done BEFORE Storage/auth cleanup: this is the only step wrapped in a Postgres
+    // transaction, so if it fails, nothing destructive has happened yet. Storage removal
+    // and auth.users deletion are separate API calls with no shared transaction — running
+    // them first would risk deleting files/logins while the DB rows (and the PII in them)
+    // survive a later failure, which is the worse failure mode for a "right to erasure"
+    // feature.
     const { error: deleteOrgErr } = await serviceClient
       .from('organizations')
       .delete()
       .eq('id', orgId)
     if (deleteOrgErr) throw deleteOrgErr
+
+    // 3. Delete all Storage objects under this org's prefix (contracts, generated docs, logo).
+    if (filePaths.length > 0) {
+      await serviceClient.storage.from('contracts').remove(filePaths)
+    }
 
     // 4. Delete each org member's auth.users entry (admin-only operation).
     for (const id of userIds) {
@@ -104,6 +105,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ success: true, deleted_users: userIds.length, deleted_files: filePaths.length })
   } catch (err) {
     console.error('delete-account error:', err)
-    return jsonResponse({ error: String(err) }, 500)
+    const message = err instanceof Error ? err.message : JSON.stringify(err)
+    return jsonResponse({ error: message }, 500)
   }
 })
