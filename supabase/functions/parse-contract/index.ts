@@ -53,12 +53,53 @@ Deno.serve(async (req) => {
   // Auth check via RLS — only succeeds if caller owns this contract
   const { data: contract, error: contractErr } = await userClient
     .from('contracts')
-    .select('id, file_path, file_type, file_name')
+    .select('id, file_path, file_type, file_name, org_id')
     .eq('id', contract_id)
     .single()
 
   if (contractErr || !contract?.file_path) {
     return jsonResponse({ error: 'Contract not found' }, 404)
+  }
+
+  // Monthly plan quota: parsing is the step that actually incurs Claude API cost, so
+  // it's the right place to enforce the per-plan contract limit (Starter: 5/month,
+  // Pro/Enterprise: unlimited) rather than at upload time.
+  const PLAN_MONTHLY_LIMIT: Record<string, number | null> = {
+    starter: 5,
+    pro: null,
+    enterprise: null,
+  }
+
+  const { data: org } = await serviceClient
+    .from('organizations')
+    .select('plan_id')
+    .eq('id', contract.org_id)
+    .single()
+
+  const planLimit = PLAN_MONTHLY_LIMIT[org?.plan_id ?? 'starter'] ?? null
+  if (planLimit !== null) {
+    const startOfMonth = new Date()
+    startOfMonth.setUTCDate(1)
+    startOfMonth.setUTCHours(0, 0, 0, 0)
+
+    const { count: contractsThisMonth } = await serviceClient
+      .from('contracts')
+      .select('id', { count: 'exact', head: true })
+      .eq('org_id', contract.org_id)
+      .gte('created_at', startOfMonth.toISOString())
+
+    if ((contractsThisMonth ?? 0) > planLimit) {
+      await serviceClient
+        .from('contracts')
+        .update({ status: 'aguardando', updated_at: new Date().toISOString() })
+        .eq('id', contract_id)
+      return jsonResponse(
+        {
+          error: `Limite de ${planLimit} contratos/mês do plano atingido. Faça upgrade para o plano Pro para análises ilimitadas.`,
+        },
+        402
+      )
+    }
   }
 
   // Download the file

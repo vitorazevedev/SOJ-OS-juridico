@@ -196,6 +196,6 @@
 ## Perguntas em Aberto
 
 - [ ] Integração com e-CAC e sistemas de tribunais — escopo e viabilidade técnica para Fase 3
-- [ ] Parceiros de revisão jurídica para validar templates (advogados consultores)
-- [ ] Política de retenção de dados dos contratos analisados (privacidade / LGPD)
-- [ ] Limite de tokens por análise para controle de custo Claude API
+- [ ] Parceiros de revisão jurídica para validar templates (advogados consultores) — revisão geral de Termos/Privacidade já solicitada ao Fellipe (`docs/decisions/2026-06-24-pedido-revisao-juridica-lgpd.md`); validação específica dos templates de contrato (STORY-006) ainda não solicitada
+- [x] Política de retenção de dados dos contratos analisados (privacidade / LGPD) — implementado mecanismo de sinalização (`enforce-data-retention`, 24 meses de inatividade), mas o prazo exato e se deve ser automático ainda dependem de validação jurídica (STORY-007)
+- [x] Limite de tokens por análise para controle de custo Claude API — endereçado de duas formas: (1) `analyze-contract` já truncava input em 80k caracteres; (2) **2026-06-24**: implementado limite real de contratos/mês por plano (Starter: 5) em `parse-contract`, que bloqueia antes de qualquer chamada à Claude API — esse controle de custo era só texto na UI até agora (`SECURITY_DEBT.md` SD-004)

@@ -27,7 +27,7 @@ async function fetchSelic(): Promise<{ value: number; period: string } | null> {
     const data = await res.json() as { data: string; valor: string }[]
     if (!data?.[0]) return null
     const value = parseFloat(data[0].valor)
-    const [day, month, year] = data[0].data.split('/')
+    const [, month, year] = data[0].data.split('/')
     return { value, period: `${year}-${month}` }
   } catch {
     return null
@@ -45,7 +45,7 @@ async function fetchIpca(): Promise<{ value: number; period: string } | null> {
     const data = await res.json() as { data: string; valor: string }[]
     if (!data?.[0]) return null
     const value = parseFloat(data[0].valor)
-    const [day, month, year] = data[0].data.split('/')
+    const [, month, year] = data[0].data.split('/')
     return { value, period: `${year}-${month}` }
   } catch {
     return null
@@ -63,7 +63,7 @@ async function fetchInpc(): Promise<{ value: number; period: string } | null> {
     const data = await res.json() as { data: string; valor: string }[]
     if (!data?.[0]) return null
     const value = parseFloat(data[0].valor)
-    const [day, month, year] = data[0].data.split('/')
+    const [, month, year] = data[0].data.split('/')
     return { value, period: `${year}-${month}` }
   } catch {
     return null

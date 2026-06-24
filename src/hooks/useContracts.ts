@@ -162,11 +162,22 @@ export async function uploadContract(
   // Trigger parsing async — Realtime will update the UI when done
   supabase.functions
     .invoke("parse-contract", { body: { contract_id: contract.id } })
-    .then(({ error }) => {
-      if (error) {
-        console.error("parse-contract error:", error);
-        toast.error(`Erro ao processar "${file.name}". Tente novamente.`);
+    .then(async ({ error }) => {
+      if (!error) return;
+      console.error("parse-contract error:", error);
+      // FunctionsHttpError.message is a generic "non-2xx status code" string — the
+      // actual error (e.g. plan quota exceeded) is in the response body.
+      let message = `Erro ao processar "${file.name}". Tente novamente.`;
+      const context = (error as { context?: Response }).context;
+      if (context && typeof context.json === "function") {
+        try {
+          const body = await context.json();
+          if (body?.error) message = body.error;
+        } catch {
+          // response body wasn't JSON — keep the generic message
+        }
       }
+      toast.error(message);
     });
 
   return contract;

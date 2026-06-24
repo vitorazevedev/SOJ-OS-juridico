@@ -6,11 +6,12 @@
 
 ## Dívidas Conhecidas
 
-| ID | Descrição | Severidade | Responsável | Prazo |
-|---|---|---|---|---|
-| SD-001 | RLS das tabelas no projeto `igolxkyahbavripvfeak` não verificada — migrations foram aplicadas mas políticas não foram auditadas | Alta | @qa | Próxima sprint |
-| SD-002 | Sem validação Zod em formulários existentes (contratos, obrigações) | Média | @dev | Próxima sprint |
-| SD-003 | `supabase/config.toml` ainda referencia project-ref antigo nos comentários | Baixa | @devops | Já tratado em STORY-001 |
+| ID | Descrição | Severidade | Responsável | Prazo | Status |
+|---|---|---|---|---|---|
+| ~~SD-001~~ | RLS das tabelas não verificada | Alta | @qa | — | **Resolvido 2026-06-23/24** — auditoria completa via Management API confirmou RLS correta em todas as tabelas (políticas isolam por `org_id`/`get_org_id()`, sem vazamento entre orgs). Políticas versionadas em `supabase/migrations/20260623000000_story007_version_existing_rls_policies.sql`. Ver STORY-007 |
+| SD-002 | Sem validação Zod em formulários existentes (contratos, obrigações) | Média | @dev | — | **Parcial** — `Generator.tsx` tem Zod (STORY-006, 2026-06-21). `Contracts.tsx`/`Obligations.tsx`/`Settings.tsx` ainda sem schema Zod formal |
+| SD-003 | `supabase/config.toml` ainda referencia project-ref antigo nos comentários | Baixa | @devops | — | Já tratado em STORY-001 |
+| SD-004 | Limite de contratos/mês por plano (Starter: 5) era só texto na UI, sem aplicação real — qualquer cliente podia consumir IA ilimitadamente | Alta | @dev | — | **Resolvido 2026-06-24** — `parse-contract` agora verifica a cota mensal antes de chamar a Claude API e retorna HTTP 402 se excedida. Testado com conta descartável (bloqueou no 6º contrato do plano Starter; não bloqueou no plano Pro) |
 
 ---
 
@@ -18,8 +19,7 @@
 
 | ID | Mitigação | Story |
 |---|---|---|
-| SD-001 | Auditoria completa de RLS com `supabase db advisors` | STORY-002 (backlog) |
-| SD-002 | Adicionar Zod schemas em todos os formulários | A criar |
+| SD-002 | Adicionar Zod schemas nos formulários restantes (`Contracts.tsx`, `Obligations.tsx`, `Settings.tsx`) | A criar |
 
 ---
 
