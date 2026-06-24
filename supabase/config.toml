@@ -1,0 +1,32 @@
+# Supabase local dev config
+# Projeto ativo: igolxkyahbavripvfeak (sa-east-1)
+# Run: supabase link --project-ref igolxkyahbavripvfeak
+# Then: supabase db push
+
+[api]
+port = 54321
+
+[db]
+port = 54322
+
+[studio]
+port = 54323
+
+[auth]
+site_url = "http://localhost:8080"
+additional_redirect_urls = ["http://localhost:8080/", "http://localhost:8081/"]
+jwt_expiry = 3600
+enable_signup = true
+
+# Cron-triggered functions: invoked by pg_cron via net.http_post with no Authorization
+# header, so they must not require a user JWT. Declared here so a future
+# `supabase functions deploy <name>` (without --no-verify-jwt) doesn't silently regress
+# this and break the scheduled job.
+[functions.fetch-economic-indexes]
+verify_jwt = false
+
+[functions.send-obligation-alerts]
+verify_jwt = false
+
+[functions.enforce-data-retention]
+verify_jwt = false

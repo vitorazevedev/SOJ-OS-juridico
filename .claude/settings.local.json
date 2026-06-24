@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm *)",
+      "Bash(supabase *)",
+      "Bash(node *)",
+      "PowerShell(npm *)",
+      "PowerShell(supabase *)"
+    ]
+  }
+}

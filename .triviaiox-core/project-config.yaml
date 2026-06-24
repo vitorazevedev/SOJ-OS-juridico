@@ -1,0 +1,75 @@
+# ============================================================
+# TRIVIAIOX — Project Config (L2 — committed to git)
+# Project: SOJ — Sistema Operacional Jurídico
+# ============================================================
+
+project:
+  name: "SOJ — Sistema Operacional Jurídico"
+  slug: soj-os-juridico
+  type: EXISTING_PROJECT
+  version: "0.1.0"
+  supabase_project_ref: igolxkyahbavripvfeak
+  deploy_target: netlify
+  language: pt-BR
+
+tech_stack:
+  frontend: "React 18 + Vite 5 + TypeScript (strict)"
+  styling: "Tailwind CSS v3 + shadcn/ui"
+  state: "TanStack Query v5"
+  routing: "React Router v6 (lazy-loaded)"
+  backend: "Supabase (Auth, Postgres, Storage, Realtime)"
+  deploy: "Netlify (frontend) + Supabase (backend)"
+
+documentation:
+  qa_dir: docs/qa
+  prd_file: docs/prd.md
+  architecture_file: docs/architecture.md
+  stories_dir: docs/stories
+  story_backlog_dir: docs/stories/backlog
+
+github:
+  enabled: false
+  pr_creation: false
+  issue_management: false
+  conventional_commits: true
+
+coderabbit:
+  enabled: false
+  self_healing: false
+
+logging:
+  decision_logging: true
+  format: ADR
+  output: docs/decisions
+
+story_backlog:
+  location: docs/stories/backlog
+  prioritization: value_risk
+
+squads:
+  enabled: false
+
+auto_claude:
+  worktree_support: false
+
+agents:
+  active:
+    - dev
+    - qa
+    - architect
+    - pm
+    - po
+    - sm
+    - analyst
+    - ux-design-expert
+    - devops
+    - triviaiox-master
+  disabled:
+    - data-engineer
+
+boundary_mapping:
+  framework_core: .triviaiox-core/
+  claude_integration: .claude/
+  project_code: src/
+  documentation: docs/
+  supabase: supabase/

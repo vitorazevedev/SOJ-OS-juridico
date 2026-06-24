@@ -1,0 +1,1 @@
+ALTER TABLE public.generated_contracts ADD COLUMN IF NOT EXISTS name text;
