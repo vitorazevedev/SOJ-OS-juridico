@@ -1,16 +1,19 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useContractAnalysis, type ClauseRisk } from "@/hooks/useContractAnalysis";
+import { useContractAnalysis } from "@/hooks/useContractAnalysis";
 import { useEconomicIndexes } from "@/hooks/useEconomicIndexes";
-import { RiskBadge, SeverityDot, SojCard } from "@/components/layout/Primitives";
+import { RiskBadge, SojCard } from "@/components/layout/Primitives";
 import { GaugeChart } from "@/components/layout/Charts";
 import {
-  ArrowLeft, ChevronDown, ChevronUp, FileText,
-  AlertTriangle, CheckCircle2, Clock, Loader2, Info, Download,
+  ArrowLeft, FileText,
+  CheckCircle2, Clock, Loader2, Info, Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { generateAnalysisPdf, downloadBlob } from "@/lib/contractDocs";
 import { ParsedDataSummary } from "@/features/contracts/components/ParsedDataSummary";
+import { HighlightedText, SEV_HIGHLIGHT } from "@/features/analysis/components/HighlightedText";
+import { RiskClauseCard } from "@/features/analysis/components/RiskClauseCard";
+import { FinancialSimulator } from "@/features/analysis/components/FinancialSimulator";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -49,13 +52,6 @@ const severityColor: Record<string, string> = {
   baixo: "bg-risk-low",
 };
 
-const severityDimColor: Record<string, string> = {
-  critico: "bg-risk-critical-dim text-risk-critical",
-  alto: "bg-risk-high-dim text-risk-high",
-  medio: "bg-risk-medium-dim text-risk-medium",
-  baixo: "bg-risk-low-dim text-risk-low",
-};
-
 // Redução estimada de exposição por severidade ao aplicar sugestões
 const SEV_REDUCTION: Record<string, number> = { critico: 0.80, alto: 0.60, medio: 0.40, baixo: 0.20 };
 
@@ -66,118 +62,6 @@ const PARAMS_LABELS = [
   "Base de cálculo",
   "Prazo de referência",
 ];
-
-// ─── HighlightedText ─────────────────────────────────────────────────────────
-
-const SEV_HIGHLIGHT: Record<string, string> = {
-  critico: "bg-risk-critical/25 border-b-2 border-risk-critical",
-  alto:    "bg-risk-high/25 border-b-2 border-risk-high",
-  medio:   "bg-risk-medium/25 border-b-2 border-risk-medium",
-  baixo:   "bg-risk-low/25 border-b-2 border-risk-low",
-};
-
-// Builds a normalized string (all whitespace → single space) and a map
-// from each position in the normalized string back to the original string.
-function buildNormMap(s: string): { norm: string; normToOrig: number[] } {
-  const normToOrig: number[] = [];
-  let norm = "";
-  let prevSpace = false;
-  for (let i = 0; i < s.length; i++) {
-    if (/\s/.test(s[i])) {
-      if (!prevSpace) { normToOrig.push(i); norm += " "; }
-      prevSpace = true;
-    } else {
-      normToOrig.push(i);
-      norm += s[i];
-      prevSpace = false;
-    }
-  }
-  return { norm, normToOrig };
-}
-
-// Finds needle in text, trying exact → normalized → prefix fallback.
-// Returns original-string {start, end} or null.
-function findInText(
-  text: string,
-  needle: string,
-  normText: { norm: string; normToOrig: number[] },
-): { start: number; end: number } | null {
-  // 1. Exact match
-  const exact = text.indexOf(needle);
-  if (exact >= 0) return { start: exact, end: exact + needle.length };
-
-  // 2. Whitespace-normalized match
-  const normNeedle = needle.replace(/\s+/g, " ").trim();
-  if (normNeedle.length < 10) return null;
-  const ni = normText.norm.indexOf(normNeedle);
-  if (ni >= 0) {
-    const start = normText.normToOrig[ni];
-    const endNi = ni + normNeedle.length - 1;
-    const end = normText.normToOrig[Math.min(endNi, normText.normToOrig.length - 1)] + 1;
-    return { start, end };
-  }
-
-  // 3. Prefix fallback — match the first 120 normalized chars of the needle,
-  //    then extend by the full needle length from that position.
-  //    Handles cases where AI-generated original_text has minor tail differences.
-  const prefixLen = Math.min(120, Math.floor(normNeedle.length * 0.6));
-  const prefix = normNeedle.slice(0, prefixLen);
-  if (prefix.length < 30) return null;
-  const pi = normText.norm.indexOf(prefix);
-  if (pi < 0) return null;
-  const start = normText.normToOrig[pi];
-  // Extend by approximately the original needle length from the found position
-  const end = Math.min(start + needle.length + 20, text.length);
-  return { start, end };
-}
-
-function HighlightedText({ text, clauses }: { text: string; clauses: ClauseRisk[] }) {
-  const segments = useMemo(() => {
-    type Seg = { text: string; severity: string | null; title: string | null };
-    const markers: { start: number; end: number; severity: string; title: string }[] = [];
-    const normText = buildNormMap(text);
-
-    for (const cl of clauses) {
-      if (!cl.original_text || cl.original_text.length < 15) continue;
-      const match = findInText(text, cl.original_text, normText);
-      if (match) {
-        markers.push({ ...match, severity: cl.severity, title: cl.title });
-      }
-    }
-
-    markers.sort((a, b) => a.start - b.start);
-
-    const segs: Seg[] = [];
-    let pos = 0;
-    for (const m of markers) {
-      if (m.end <= pos) continue; // fully inside previous highlight — skip
-      const start = Math.max(m.start, pos); // clip start if partially overlapping
-      if (start > pos) segs.push({ text: text.slice(pos, start), severity: null, title: null });
-      segs.push({ text: text.slice(start, m.end), severity: m.severity, title: m.title });
-      pos = m.end;
-    }
-    if (pos < text.length) segs.push({ text: text.slice(pos), severity: null, title: null });
-    return segs;
-  }, [text, clauses]);
-
-  return (
-    <article className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap font-mono max-h-[60vh] overflow-y-auto scroll-hide">
-      {segments.map((seg, i) =>
-        seg.severity ? (
-          <span
-            key={i}
-            className={cn("rounded-sm", SEV_HIGHLIGHT[seg.severity] ?? "bg-yellow-500/20")}
-            title={seg.title ?? undefined}
-          >
-            {seg.text}
-          </span>
-        ) : (
-          <span key={i}>{seg.text}</span>
-        )
-      )}
-    </article>
-  );
-}
 
 // ─── sub-views ──────────────────────────────────────────────────────────────
 
@@ -346,79 +230,6 @@ function InAnaliseView({
   );
 }
 
-function FinancialSimulator({
-  contract,
-  totalExposure,
-  onSave,
-}: {
-  contract: NonNullable<ReturnType<typeof useContractAnalysis>["contract"]>;
-  totalExposure: number;
-  onSave: (value: number) => Promise<void>;
-}) {
-  const [raw, setRaw] = useState(
-    contract.contract_value_informed != null
-      ? String(contract.contract_value_informed)
-      : ""
-  );
-  const [saving, setSaving] = useState(false);
-
-  const parsedValue = parseFloat(raw.replace(/\./g, "").replace(",", "."));
-  const isValid = !isNaN(parsedValue) && parsedValue > 0;
-  const exposurePct = isValid && totalExposure > 0
-    ? ((totalExposure / 100) / parsedValue * 100).toFixed(1)
-    : null;
-
-  const handleSave = async () => {
-    if (!isValid) return;
-    setSaving(true);
-    await onSave(parsedValue);
-    setSaving(false);
-  };
-
-  return (
-    <div className="rounded-xl border border-border bg-muted/20 p-4 flex flex-col gap-3">
-      <div>
-        <p className="text-sm font-medium">Simulador de Valor do Contrato</p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Informe o valor real para calcular a exposição proporcional
-        </p>
-      </div>
-      <div className="flex gap-2">
-        <div className="flex-1 relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">R$</span>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={raw}
-            onChange={(e) => setRaw(e.target.value)}
-            placeholder="500.000,00"
-            className="w-full h-9 pl-8 pr-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:border-primary/60 transition-colors"
-          />
-        </div>
-        <button
-          onClick={handleSave}
-          disabled={!isValid || saving}
-          className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium disabled:opacity-50 hover:opacity-90 transition-opacity"
-        >
-          {saving ? "Salvando..." : "Aplicar"}
-        </button>
-      </div>
-      {isValid && exposurePct && (
-        <div className="rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-          Exposição representa{" "}
-          <span className="font-semibold text-foreground">{exposurePct}%</span>
-          {" "}do valor informado
-          {parseFloat(exposurePct) > 30 && (
-            <span className="text-risk-critical font-medium"> — exposição elevada</span>
-          )}
-        </div>
-      )}
-      <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
-        * Estimativa baseada nas cláusulas identificadas pela IA. Consulte um advogado para avaliação definitiva.
-      </p>
-    </div>
-  );
-}
 
 function AnalisadoView({
   contract,
@@ -556,56 +367,14 @@ function AnalisadoView({
               <p className="text-sm text-muted-foreground text-center py-10">Nenhuma cláusula de risco identificada.</p>
             ) : (
               <div className="divide-y divide-border">
-                {clauses.map((cl) => {
-                  const open = expanded === cl.id;
-                  const dimCls = severityDimColor[cl.severity] ?? "bg-muted text-foreground";
-                  return (
-                    <div key={cl.id}>
-                      <button
-                        onClick={() => setExpanded(open ? null : cl.id)}
-                        className="w-full flex items-center gap-3 px-4 md:px-5 py-3.5 md:py-4 hover:bg-muted/30 active:bg-muted/30 transition-colors text-left"
-                        style={{ minHeight: 44 }}
-                      >
-                        <SeverityDot severity={cl.severity} />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[13px] md:text-sm">{cl.title}</p>
-                          {cl.category && (
-                            <p className="text-[10px] text-muted-foreground mt-0.5">{cl.category}</p>
-                          )}
-                        </div>
-                        {cl.exposure_likely != null && cl.exposure_likely > 0 && (
-                          <span
-                            className={cn("text-[10px] md:text-xs px-2 py-1 rounded-md font-medium tabular-nums shrink-0", dimCls)}
-                            title="Faixa estimada pela IA com base na cláusula identificada — não é um cálculo financeiro determinístico."
-                          >
-                            {fmtExposureRange(cl.exposure_min, cl.exposure_max, cl.exposure_likely)}
-                          </span>
-                        )}
-                        {open ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
-                      </button>
-                      {open && (
-                        <div className="px-4 md:px-5 pb-5 grid gap-3 animate-fade-in">
-                          {cl.original_text && (
-                            <div className="rounded-lg border border-risk-critical/20 bg-risk-critical-dim p-3 md:p-4">
-                              <p className="text-[11px] md:text-xs font-medium text-risk-critical flex items-center gap-1.5 mb-2">
-                                <AlertTriangle className="h-3.5 w-3.5" /> Original (Risco)
-                              </p>
-                              <p className="text-[12px] md:text-sm leading-relaxed text-foreground/90">{cl.original_text}</p>
-                            </div>
-                          )}
-                          {cl.suggestion && (
-                            <div className="rounded-lg border border-primary/20 bg-primary-dim p-3 md:p-4">
-                              <p className="text-[11px] md:text-xs font-medium text-primary flex items-center gap-1.5 mb-2">
-                                <CheckCircle2 className="h-3.5 w-3.5" /> Sugestão
-                              </p>
-                              <p className="text-[12px] md:text-sm leading-relaxed text-foreground/90">{cl.suggestion}</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                {clauses.map((cl) => (
+                  <RiskClauseCard
+                    key={cl.id}
+                    clause={cl}
+                    open={expanded === cl.id}
+                    onToggle={() => setExpanded(expanded === cl.id ? null : cl.id)}
+                  />
+                ))}
               </div>
             )}
           </SojCard>
