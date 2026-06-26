@@ -2,6 +2,13 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
+// Mirrors PLAN_MONTHLY_LIMIT in supabase/functions/parse-contract/index.ts
+const PLAN_MONTHLY_LIMIT: Record<string, number | null> = {
+  starter: 5,
+  pro: null,
+  enterprise: null,
+};
+
 export type ParsedData = {
   parties: string[];
   signing_date: string | null;
@@ -116,6 +123,37 @@ export async function uploadContract(
   }
 
   const orgId = userRow.org_id;
+
+  // Pre-check the monthly plan quota before touching Storage/DB at all, so a
+  // blocked upload never leaves a "ghost" contract row stuck in "Aguardando".
+  // This mirrors the authoritative check in parse-contract (defense in depth —
+  // the backend still enforces it independently of this client-side check).
+  const { data: org } = await supabase
+    .from("organizations")
+    .select("plan_id")
+    .eq("id", orgId)
+    .single();
+
+  const planLimit = PLAN_MONTHLY_LIMIT[org?.plan_id ?? "starter"] ?? null;
+  if (planLimit !== null) {
+    const startOfMonth = new Date();
+    startOfMonth.setUTCDate(1);
+    startOfMonth.setUTCHours(0, 0, 0, 0);
+
+    const { count: contractsThisMonth } = await supabase
+      .from("contracts")
+      .select("id", { count: "exact", head: true })
+      .eq("org_id", orgId)
+      .gte("created_at", startOfMonth.toISOString());
+
+    if ((contractsThisMonth ?? 0) >= planLimit) {
+      toast.error(
+        `Limite de ${planLimit} contratos/mês do plano atingido. Faça upgrade para o plano Pro para análises ilimitadas.`
+      );
+      return null;
+    }
+  }
+
   const ext = file.name.split(".").pop() ?? "bin";
   const safeBase = file.name
     .replace(/\.[^.]+$/, "")
