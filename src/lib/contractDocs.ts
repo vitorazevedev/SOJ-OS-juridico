@@ -332,7 +332,7 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
     const titleLines = (pdf.splitTextToSize(cl.title, titleMaxWidth) as string[]).slice(0, 2);
     const headerH = Math.max(10, titleLines.length * 5 + 5);
 
-    const needH = headerH + 3 + (cl.original_text ? Math.ceil(cl.original_text.length / 80) * 5 + 8 : 0)
+    const needH = headerH + 7 + (cl.original_text ? Math.ceil(cl.original_text.length / 80) * 5 + 8 : 0)
                      + (cl.suggestion ? Math.ceil(cl.suggestion.length / 80) * 5 + 8 : 0);
     checkPage(Math.min(needH, 60));
 
@@ -353,7 +353,7 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
       pdf.setTextColor(220, 38, 38);
       pdf.text(fmtBRLPdf(cl.exposure_likely), ml + cw - 5, y + 6.5, { align: "right" });
     }
-    y += headerH + 3;
+    y += headerH + 7;
 
     if (cl.original_text) {
       checkPage(10);
