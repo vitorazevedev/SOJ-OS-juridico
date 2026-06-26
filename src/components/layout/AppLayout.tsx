@@ -298,7 +298,7 @@ export default function AppLayout() {
               <div className="flex items-center gap-2 text-sm" style={{ color: "hsl(var(--risk-critical))" }}>
                 <CalendarClock className="h-4 w-4 shrink-0" />
                 <span className="font-medium">
-                  {count} obrigação{count > 1 ? "ões" : ""} vencendo em até 7 dias
+                  {count} {count > 1 ? "obrigações" : "obrigação"} vencendo em até 7 dias
                 </span>
                 <button
                   onClick={() => navigate("/obligations")}

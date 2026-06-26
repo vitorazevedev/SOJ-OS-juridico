@@ -143,7 +143,7 @@ export default function Dashboard() {
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-risk-critical-dim text-risk-critical text-xs font-medium hover:opacity-80 transition-opacity"
           >
             <AlertTriangle className="h-3.5 w-3.5" />
-            {summary.urgent_obligations} obrigação{summary.urgent_obligations > 1 ? "ões" : ""} urgente{summary.urgent_obligations > 1 ? "s" : ""}
+            {summary.urgent_obligations} {summary.urgent_obligations > 1 ? "obrigações urgentes" : "obrigação urgente"}
           </button>
         )}
       </div>
