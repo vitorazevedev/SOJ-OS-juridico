@@ -402,6 +402,135 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
   return new Blob([pdf.output("arraybuffer")], { type: PDF_MIME });
 }
 
+export type DataSummaryPdfInput = {
+  exported_at: string;
+  organization: { name?: string; cnpj?: string | null; sector?: string | null; plan_id?: string; created_at?: string } | null;
+  users: { name?: string | null; email?: string; role?: string }[];
+  contracts: { name?: string; type?: string | null; status?: string; created_at?: string }[];
+  contract_obligations: { description?: string | null; due_date?: string | null; status?: string }[];
+  generated_contracts: { name?: string; created_at?: string }[];
+};
+
+const STATUS_LABEL_PDF: Record<string, string> = {
+  aguardando: "Aguardando",
+  em_analise: "Pronto p/ análise",
+  analisado: "Analisado",
+};
+
+// Resumo legível dos mesmos dados do export JSON (LGPD Art. 18) — pensado para
+// alguém abrir e entender sem precisar interpretar um arquivo de dados bruto.
+export function generateDataSummaryPdf(data: DataSummaryPdfInput): Blob {
+  const pdf = new jsPDF({ unit: "mm", format: "a4" });
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const ml = 20;
+  const mr = 20;
+  const cw = pageW - ml - mr;
+  let y = ml;
+
+  const checkPage = (need = 10) => {
+    if (y + need > pageH - mr) { pdf.addPage(); y = ml; }
+  };
+
+  const sectionTitle = (text: string) => {
+    checkPage(12);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(11);
+    pdf.setTextColor(15, 15, 15);
+    pdf.text(text, ml, y);
+    y += 6;
+  };
+
+  const row = (cols: string[], widths: number[], opts?: { bold?: boolean; color?: [number, number, number] }) => {
+    checkPage(6);
+    pdf.setFont("helvetica", opts?.bold ? "bold" : "normal");
+    pdf.setFontSize(9);
+    pdf.setTextColor(...(opts?.color ?? [50, 50, 50]));
+    let x = ml;
+    cols.forEach((c, i) => {
+      const lines = pdf.splitTextToSize(c, widths[i] - 2) as string[];
+      pdf.text(lines[0] ?? "", x, y);
+      x += widths[i];
+    });
+    y += 5;
+  };
+
+  // ── Header ───────────────────────────────────────────────────────────────
+  pdf.setFillColor(0, 20, 14);
+  pdf.rect(0, 0, pageW, 18, "F");
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(13);
+  pdf.setTextColor(0, 229, 160);
+  pdf.text("SOJ — Resumo dos Meus Dados (LGPD)", ml, 12);
+  y = 26;
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(9);
+  pdf.setTextColor(100, 100, 100);
+  pdf.text(`Gerado em ${fmtDatePdf(data.exported_at)} · cópia legível do export oficial em JSON`, ml, y);
+  y += 10;
+
+  // ── Organização ──────────────────────────────────────────────────────────
+  sectionTitle("Organização");
+  if (data.organization) {
+    row(["Nome", data.organization.name ?? "—"], [35, cw - 35]);
+    row(["CNPJ", data.organization.cnpj ?? "—"], [35, cw - 35]);
+    row(["Setor", data.organization.sector ?? "—"], [35, cw - 35]);
+    row(["Plano", data.organization.plan_id ?? "—"], [35, cw - 35]);
+    row(["Criada em", fmtDatePdf(data.organization.created_at)], [35, cw - 35]);
+  }
+  y += 4;
+
+  // ── Usuários ─────────────────────────────────────────────────────────────
+  sectionTitle(`Usuários (${data.users.length})`);
+  const userColW = [cw * 0.35, cw * 0.45, cw * 0.2];
+  row(["Nome", "E-mail", "Papel"], userColW, { bold: true, color: [80, 80, 80] });
+  data.users.forEach((u) => row([u.name ?? "—", u.email ?? "—", u.role ?? "—"], userColW));
+  y += 4;
+
+  // ── Contratos ────────────────────────────────────────────────────────────
+  sectionTitle(`Contratos (${data.contracts.length})`);
+  const ctColW = [cw * 0.4, cw * 0.25, cw * 0.2, cw * 0.15];
+  row(["Nome", "Tipo", "Status", "Enviado em"], ctColW, { bold: true, color: [80, 80, 80] });
+  data.contracts.forEach((c) =>
+    row(
+      [c.name ?? "—", c.type ?? "—", STATUS_LABEL_PDF[c.status ?? ""] ?? c.status ?? "—", fmtDatePdf(c.created_at)],
+      ctColW
+    )
+  );
+  y += 4;
+
+  // ── Obrigações ───────────────────────────────────────────────────────────
+  sectionTitle(`Obrigações (${data.contract_obligations.length})`);
+  const obColW = [cw * 0.55, cw * 0.25, cw * 0.2];
+  row(["Descrição", "Vencimento", "Status"], obColW, { bold: true, color: [80, 80, 80] });
+  data.contract_obligations.forEach((o) =>
+    row([o.description ?? "—", fmtDatePdf(o.due_date), o.status ?? "—"], obColW)
+  );
+  y += 4;
+
+  // ── Contratos gerados ────────────────────────────────────────────────────
+  sectionTitle(`Contratos gerados (${data.generated_contracts.length})`);
+  const genColW = [cw * 0.7, cw * 0.3];
+  row(["Nome", "Gerado em"], genColW, { bold: true, color: [80, 80, 80] });
+  data.generated_contracts.forEach((g) => row([g.name ?? "—", fmtDatePdf(g.created_at)], genColW));
+
+  // ── Footer ───────────────────────────────────────────────────────────────
+  const totalPages = (pdf as unknown as { internal: { getNumberOfPages(): number } }).internal.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    pdf.setPage(p);
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+    pdf.setTextColor(160, 160, 160);
+    pdf.text(
+      `SOJ — Sistema Operacional Jurídico  ·  Resumo de dados pessoais (LGPD Art. 18)  ·  Pág. ${p}/${totalPages}`,
+      ml, pageH - 8
+    );
+  }
+
+  return new Blob([pdf.output("arraybuffer")], { type: PDF_MIME });
+}
+
 export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");

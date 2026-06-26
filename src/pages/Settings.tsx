@@ -27,8 +27,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useBillingHistory, type BillingRecord } from "@/hooks/useBillingHistory";
-import { fetchLogoData, downloadBlob } from "@/lib/contractDocs";
-import { exportOrgDataJson } from "@/lib/dataExport";
+import { fetchLogoData, downloadBlob, generateDataSummaryPdf } from "@/lib/contractDocs";
+import { exportOrgDataJson, fetchOrgExportData } from "@/lib/dataExport";
 import { supabase } from "@/lib/supabase";
 import { generateReceiptPdf } from "@/lib/receiptPdf";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -109,6 +109,7 @@ export default function Settings() {
   const [removeTarget, setRemoveTarget] = useState<OrgUser | null>(null);
   const [inviteForm, setInviteForm] = useState({ email: "", role: "member" });
   const [exporting, setExporting] = useState(false);
+  const [exportingSummary, setExportingSummary] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -258,6 +259,21 @@ export default function Settings() {
       toast({ title: "Erro ao exportar dados", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
     } finally {
       setExporting(false);
+    }
+  };
+
+  const handleExportSummaryPdf = async () => {
+    setExportingSummary(true);
+    try {
+      const data = await fetchOrgExportData();
+      const blob = generateDataSummaryPdf(data);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      downloadBlob(blob, `soj-resumo-dados-${dateStr}.pdf`);
+      toast({ title: "Resumo exportado", description: "O download deve começar automaticamente." });
+    } catch (e) {
+      toast({ title: "Erro ao exportar resumo", description: e instanceof Error ? e.message : undefined, variant: "destructive" });
+    } finally {
+      setExportingSummary(false);
     }
   };
 
@@ -618,10 +634,11 @@ export default function Settings() {
           <SojCard className="flex flex-col gap-3">
             <h3 className="font-medium text-sm md:text-base">Exportar meus dados</h3>
             <p className="text-xs text-muted-foreground">
-              Baixe um arquivo JSON com todos os contratos, análises e obrigações da sua organização
-              (direito de portabilidade — LGPD Art. 18).
+              O JSON é a exportação oficial para fins de portabilidade (LGPD Art. 18) — formato
+              estruturado, pensado para outro sistema importar. O PDF é um resumo legível dos mesmos
+              dados, caso você só queira ver o que temos sobre você.
             </p>
-            <div>
+            <div className="flex flex-wrap gap-2">
               <button
                 onClick={handleExportData}
                 disabled={exporting}
@@ -629,6 +646,14 @@ export default function Settings() {
               >
                 <Download className="h-3.5 w-3.5" />
                 {exporting ? "Exportando..." : "Exportar dados (JSON)"}
+              </button>
+              <button
+                onClick={handleExportSummaryPdf}
+                disabled={exportingSummary}
+                className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg border border-border text-sm font-medium hover:bg-muted/40 disabled:opacity-50"
+              >
+                <FileDown className="h-3.5 w-3.5" />
+                {exportingSummary ? "Gerando..." : "Exportar resumo legível (PDF)"}
               </button>
             </div>
           </SojCard>
