@@ -41,7 +41,7 @@ function urgencyMeta(days: number | null, status: string) {
   if (days < 0 || status === "atrasada")
     return { dot: "bg-risk-critical", chip: "bg-risk-critical-dim text-risk-critical", label: "Vencida", date: "text-risk-critical" };
   if (days <= 1)
-    return { dot: "bg-risk-critical", chip: "bg-risk-critical-dim text-risk-critical", label: "Hoje/amanhã", date: "text-risk-critical" };
+    return { dot: "bg-risk-critical", chip: "bg-risk-critical-dim text-risk-critical", label: days === 0 ? "Hoje" : "Amanhã", date: "text-risk-critical" };
   if (days <= 7)
     return { dot: "bg-risk-medium", chip: "bg-risk-medium-dim text-risk-medium", label: "≤ 7 dias", date: "text-risk-medium" };
   if (days <= 15)
