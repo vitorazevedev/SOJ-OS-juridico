@@ -106,7 +106,7 @@ export function NewObligationModal({ open, onClose }: Props) {
       responsible: form.responsible || null,
       due_date: form.due_date || null,
       value_cents: form.value_brl
-        ? Math.round(parseFloat(form.value_brl.replace(",", ".")) * 100)
+        ? Math.round(parseFloat(form.value_brl.replace(/\./g, "").replace(",", ".")) * 100)
         : null,
       penalty_text: form.penalty_text.trim() || null,
       obligation_type: form.obligation_type,
