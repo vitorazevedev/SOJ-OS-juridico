@@ -155,7 +155,9 @@ Deno.serve(async (req) => {
     } else if (isDOCX) {
       // @ts-expect-error — mammoth works via npm compat layer in Deno
       const mammoth = (await import('npm:mammoth')).default
-      const result = await mammoth.extractRawText({ arrayBuffer })
+      // mammoth's API only recognizes `buffer` or `path` — `arrayBuffer` is silently
+      // rejected ("Could not find file in options"), which made every .docx parse fail.
+      const result = await mammoth.extractRawText({ buffer: bytes })
       rawText = result.value ?? ''
     } else if (isImage) {
       ocrApplied = true

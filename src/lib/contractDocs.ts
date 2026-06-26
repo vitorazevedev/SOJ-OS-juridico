@@ -323,26 +323,37 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
 
   clauses.forEach((cl, idx) => {
     const sevRgb = SEV_RGB[cl.severity] ?? [100, 100, 100];
-    const needH = 12 + (cl.original_text ? Math.ceil(cl.original_text.length / 80) * 5 + 8 : 0)
+    const hasExposure = cl.exposure_likely != null;
+    // Reserve space on the right for the exposure badge so long titles wrap
+    // instead of running underneath/over it.
+    const titleMaxWidth = cw - 35 - (hasExposure ? 32 : 5);
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(9);
+    const titleLines = (pdf.splitTextToSize(cl.title, titleMaxWidth) as string[]).slice(0, 2);
+    const headerH = Math.max(10, titleLines.length * 5 + 5);
+
+    const needH = headerH + 3 + (cl.original_text ? Math.ceil(cl.original_text.length / 80) * 5 + 8 : 0)
                      + (cl.suggestion ? Math.ceil(cl.suggestion.length / 80) * 5 + 8 : 0);
     checkPage(Math.min(needH, 60));
 
     // Clause header
     pdf.setFillColor(245, 245, 245);
-    pdf.roundedRect(ml, y, cw, 10, 2, 2, "F");
+    pdf.roundedRect(ml, y, cw, headerH, 2, 2, "F");
     pdf.setFillColor(...sevRgb);
-    pdf.roundedRect(ml, y, 2, 10, 1, 1, "F");
+    pdf.roundedRect(ml, y, 2, headerH, 1, 1, "F");
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(9);
     pdf.setTextColor(...sevRgb);
     pdf.text(`${idx + 1}. [${SEV_LABEL[cl.severity] ?? cl.severity}]`, ml + 5, y + 6.5);
+    pdf.setFont("helvetica", "normal");
     pdf.setTextColor(20, 20, 20);
-    pdf.text(cl.title, ml + 35, y + 6.5);
-    if (cl.exposure_likely != null) {
+    titleLines.forEach((line, i) => { pdf.text(line, ml + 35, y + 6.5 + i * 5); });
+    if (hasExposure) {
+      pdf.setFont("helvetica", "bold");
       pdf.setTextColor(220, 38, 38);
-      pdf.text(fmtBRLPdf(cl.exposure_likely), ml + cw - 30, y + 6.5);
+      pdf.text(fmtBRLPdf(cl.exposure_likely), ml + cw - 5, y + 6.5, { align: "right" });
     }
-    y += 13;
+    y += headerH + 3;
 
     if (cl.original_text) {
       checkPage(10);
