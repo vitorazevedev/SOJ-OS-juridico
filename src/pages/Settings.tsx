@@ -653,7 +653,7 @@ export default function Settings() {
                 className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg border border-border text-sm font-medium hover:bg-muted/40 disabled:opacity-50"
               >
                 <FileDown className="h-3.5 w-3.5" />
-                {exportingSummary ? "Gerando..." : "Exportar resumo legível (PDF)"}
+                {exportingSummary ? "Gerando..." : "Exportar dados (PDF)"}
               </button>
             </div>
           </SojCard>
