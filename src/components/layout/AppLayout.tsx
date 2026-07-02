@@ -4,6 +4,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import BottomNav from "./BottomNav";
 import OnboardingModal from "./OnboardingModal";
+import { FeedbackButton } from "./FeedbackButton";
 import { SearchPanel } from "./SearchPanel";
 import { Bell, CalendarClock, Scale, Search, X } from "lucide-react";
 import { UrgentObligationsContext, useUrgentObligationsProvider } from "@/hooks/useUrgentObligations";
@@ -323,6 +324,7 @@ export default function AppLayout() {
 
         <BottomNav />
         <OnboardingModal />
+        <FeedbackButton />
       </div>
     </SidebarProvider>
     </UrgentObligationsContext.Provider>

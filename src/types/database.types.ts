@@ -101,6 +101,15 @@ export type Database = {
         Update: { cnpj?: string | null; created_at?: string | null; id?: string; logo_url?: string | null; name?: string; plan_id?: string; plan_status?: string; sector?: string | null; stripe_customer_id?: string | null; trial_ends_at?: string | null }
         Relationships: []
       }
+      user_feedback: {
+        Row: { id: string; org_id: string | null; user_id: string | null; category: string; message: string; page_url: string | null; created_at: string | null }
+        Insert: { id?: string; org_id?: string | null; user_id?: string | null; category: string; message: string; page_url?: string | null; created_at?: string | null }
+        Update: { id?: string; org_id?: string | null; user_id?: string | null; category?: string; message?: string; page_url?: string | null; created_at?: string | null }
+        Relationships: [
+          { foreignKeyName: "user_feedback_org_id_fkey"; columns: ["org_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] },
+          { foreignKeyName: "user_feedback_user_id_fkey"; columns: ["user_id"]; isOneToOne: false; referencedRelation: "users"; referencedColumns: ["id"] }
+        ]
+      }
       users: {
         Row: { created_at: string | null; email: string; id: string; name: string | null; onboarding_completed: boolean; org_id: string; role: string }
         Insert: { created_at?: string | null; email: string; id: string; name?: string | null; onboarding_completed?: boolean; org_id: string; role?: string }
