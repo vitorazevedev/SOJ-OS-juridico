@@ -119,7 +119,7 @@ export default function OnboardingModal() {
       <button
         onClick={reopen}
         className="fixed bottom-[calc(80px+env(safe-area-inset-bottom)+8px)] right-4 md:bottom-6 md:right-6 z-40 flex items-center gap-2 h-10 pl-3 pr-4 rounded-full bg-background border border-border shadow-lg hover:bg-muted/40 transition-colors"
-        aria-label="Retomar configuração do SOJ"
+        aria-label="Retomar configuração do Ponderum"
       >
         <div className="relative">
           <ListChecks className="h-4 w-4 text-primary" />
@@ -142,13 +142,13 @@ export default function OnboardingModal() {
               </p>
             </div>
             <Button size="lg" onClick={handleFinish} className="w-full sm:w-auto">
-              Começar a usar o SOJ
+              Começar a usar o Ponderum
             </Button>
           </div>
         ) : (
           <>
             <div className="p-6 border-b border-border">
-              <h2 className="text-xl font-semibold">Bem-vindo ao SOJ! 👋</h2>
+              <h2 className="text-xl font-semibold">Bem-vindo ao Ponderum!</h2>
               <p className="text-sm text-muted-foreground mt-1">
                 Siga os passos abaixo para configurar seu ambiente jurídico
               </p>

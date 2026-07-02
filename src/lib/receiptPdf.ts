@@ -87,7 +87,7 @@ export function generateReceiptPdf(data: ReceiptData, logo?: LogoData | null): B
   pdf.setFont("helvetica", "italic");
   pdf.setFontSize(9);
   pdf.setTextColor(120);
-  pdf.text("SOJ — Sistema Operacional Jurídico", pageWidth / 2, pageHeight - margin, { align: "center" });
+  pdf.text("Ponderum — Inteligência Contratual", pageWidth / 2, pageHeight - margin, { align: "center" });
 
   return new Blob([pdf.output("arraybuffer")], { type: PDF_MIME });
 }

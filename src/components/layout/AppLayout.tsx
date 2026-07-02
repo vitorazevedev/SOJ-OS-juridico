@@ -23,7 +23,7 @@ function useMobileTitle(): string {
   if (pathname in PAGE_TITLES) return PAGE_TITLES[pathname];
   if (pathname.startsWith("/analysis")) return "Análise";
   if (pathname.startsWith("/contracts")) return "Contratos";
-  return "SOJ";
+  return "Ponderum";
 }
 
 function daysLabel(dateStr: string) {

@@ -264,7 +264,7 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(13);
   pdf.setTextColor(0, 229, 160);
-  pdf.text("SOJ — Relatório de Análise Jurídica", ml, 12);
+  pdf.text("Ponderum — Análise Contratual", ml, 12);
   y = 26;
 
   // ── Contract meta ────────────────────────────────────────────────────────
@@ -394,7 +394,7 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
     pdf.setFontSize(8);
     pdf.setTextColor(160, 160, 160);
     pdf.text(
-      `SOJ — Sistema Operacional Jurídico  ·  Gerado em ${fmtDatePdf(new Date().toISOString())}  ·  Pág. ${p}/${totalPages}`,
+      `Ponderum — Inteligência Contratual  ·  Gerado em ${fmtDatePdf(new Date().toISOString())}  ·  Pág. ${p}/${totalPages}`,
       ml, pageH - 8
     );
   }
@@ -461,7 +461,7 @@ export function generateDataSummaryPdf(data: DataSummaryPdfInput): Blob {
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(13);
   pdf.setTextColor(0, 229, 160);
-  pdf.text("SOJ — Resumo dos Meus Dados (LGPD)", ml, 12);
+  pdf.text("Ponderum — Resumo dos Meus Dados (LGPD)", ml, 12);
   y = 26;
 
   pdf.setFont("helvetica", "normal");
@@ -523,7 +523,7 @@ export function generateDataSummaryPdf(data: DataSummaryPdfInput): Blob {
     pdf.setFontSize(8);
     pdf.setTextColor(160, 160, 160);
     pdf.text(
-      `SOJ — Sistema Operacional Jurídico  ·  Resumo de dados pessoais (LGPD Art. 18)  ·  Pág. ${p}/${totalPages}`,
+      `Ponderum — Inteligência Contratual  ·  Resumo de dados pessoais (LGPD Art. 18)  ·  Pág. ${p}/${totalPages}`,
       ml, pageH - 8
     );
   }

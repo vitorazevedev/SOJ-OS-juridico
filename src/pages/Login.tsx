@@ -147,8 +147,9 @@ export default function Login() {
           <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center mb-3">
             <ScaleIcon className="h-6 w-6 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight">SOJ — Sócio Jurídico</h1>
-          <p className="text-sm text-muted-foreground mt-1">{subtitle[mode]}</p>
+          <h1 className="font-cormorant text-3xl font-light tracking-wider">Ponderum</h1>
+          <p className="text-xs text-muted-foreground tracking-wide mt-0.5">Inteligência contratual</p>
+          <p className="text-sm text-muted-foreground mt-2">{subtitle[mode]}</p>
         </div>
 
         <Card className="p-6">

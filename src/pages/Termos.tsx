@@ -16,10 +16,10 @@ export default function Termos() {
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Termos de Uso</h1>
           <p className="text-xs text-muted-foreground">Última atualização: 23 de junho de 2026</p>
 
-          <h2 className="text-base font-medium text-foreground mt-2">1. O que é o SOJ</h2>
+          <h2 className="text-base font-medium text-foreground mt-2">1. O que é o Ponderum</h2>
           <p>
-            O SOJ (Sistema Operacional Jurídico) é uma plataforma de análise de contratos assistida por
-            inteligência artificial. O SOJ não presta serviços de advocacia e não substitui a avaliação
+            O Ponderum é uma plataforma de análise de contratos assistida por
+            inteligência artificial. O Ponderum não presta serviços de advocacia e não substitui a avaliação
             de um advogado habilitado — as análises, scores de risco e estimativas de exposição financeira
             geradas pela IA são apoio à decisão, não aconselhamento jurídico.
           </p>
@@ -34,14 +34,14 @@ export default function Termos() {
           <h2 className="text-base font-medium text-foreground mt-2">3. Conteúdo enviado</h2>
           <p>
             Os contratos que você envia podem conter dados pessoais de terceiros (partes contratantes,
-            CPF/CNPJ, valores). Você declara ter base legal para compartilhar esse conteúdo com o SOJ para
+            CPF/CNPJ, valores). Você declara ter base legal para compartilhar esse conteúdo com o Ponderum para
             fins de análise. Consulte nossa <Link to="/privacidade" className="text-primary hover:underline">Política de Privacidade</Link> para
             saber como tratamos esses dados.
           </p>
 
           <h2 className="text-base font-medium text-foreground mt-2">4. Limitação de responsabilidade</h2>
           <p>
-            O SOJ é fornecido "como está". Não garantimos que as análises geradas por IA estejam livres de
+            O Ponderum é fornecido "como está". Não garantimos que as análises geradas por IA estejam livres de
             erros. Decisões contratuais e jurídicas finais devem ser revisadas por um profissional habilitado.
           </p>
 

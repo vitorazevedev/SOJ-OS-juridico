@@ -18,7 +18,7 @@ export default function Privacidade() {
 
           <h2 className="text-base font-medium text-foreground mt-2">1. Quem somos</h2>
           <p>
-            O SOJ trata dados pessoais como controlador (dos dados da sua conta) e como operador (dos dados
+            O Ponderum trata dados pessoais como controlador (dos dados da sua conta) e como operador (dos dados
             de terceiros mencionados nos contratos que você envia para análise), nos termos da Lei
             13.709/2018 (LGPD).
           </p>
@@ -28,7 +28,7 @@ export default function Privacidade() {
             <strong>Da sua conta:</strong> nome, email, nome da organização.<br />
             <strong>Dos contratos que você envia:</strong> o texto integral do documento, que pode conter
             nomes, CPF/CNPJ, endereços, valores e outras informações das partes contratantes — pessoas que
-            não têm relação direta de consentimento com o SOJ.
+            não têm relação direta de consentimento com o Ponderum.
           </p>
 
           <h2 className="text-base font-medium text-foreground mt-2">3. Para que usamos</h2>

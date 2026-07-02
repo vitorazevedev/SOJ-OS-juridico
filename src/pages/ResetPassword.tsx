@@ -59,7 +59,7 @@ export default function ResetPassword() {
             <ScaleIcon className="h-6 w-6 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">Redefinir senha</h1>
-          <p className="text-sm text-muted-foreground mt-1">SOJ — Sócio Jurídico</p>
+          <p className="text-xs text-muted-foreground tracking-wide mt-1">Ponderum · Inteligência contratual</p>
         </div>
 
         <Card className="p-6">
