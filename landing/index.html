@@ -405,12 +405,11 @@ footer {
 }
 .phone-wrap:focus-within { border-color: var(--esmeralda); }
 .phone-ddi {
-  flex-shrink: 0;
+  flex-shrink: 0; width: 62px; text-align: center;
   border: none; border-right: 1.5px solid var(--line);
-  background: transparent; padding: 10px 10px;
+  background: transparent; padding: 10px 8px;
   font-family: var(--body); font-size: 14px; color: var(--navy);
-  cursor: pointer; outline: none; appearance: none;
-  -webkit-appearance: none;
+  outline: none;
 }
 .phone-number {
   flex: 1; border: none !important; background: transparent !important;
@@ -719,12 +718,9 @@ footer {
           <div class="field">
             <label for="wl-phone">WhatsApp / Celular</label>
             <div class="phone-wrap">
-              <select class="phone-ddi" id="wl-ddi" aria-label="DDI">
-                <option value="+55">🇧🇷 +55</option>
-                <option value="+1">🇺🇸 +1</option>
-                <option value="+351">🇵🇹 +351</option>
-                <option value="+54">🇦🇷 +54</option>
-              </select>
+              <input id="wl-ddi" class="phone-ddi" type="text"
+                     value="+55" maxlength="5"
+                     aria-label="DDI" title="Código do país (ex: +55 para Brasil)">
               <input id="wl-phone" class="phone-number" type="tel"
                      placeholder="(11) 99999-9999" autocomplete="tel" maxlength="15">
             </div>
