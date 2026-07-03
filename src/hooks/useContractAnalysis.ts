@@ -26,6 +26,7 @@ export type FullContract = {
   updated_at: string | null;
   contract_value_informed: number | null;
   parsed_data: ParsedData | null;
+  org_id: string | null;
 };
 
 export type ContractContent = {
@@ -71,7 +72,7 @@ export function useContractAnalysis(contractId: string | undefined) {
     const [contractRes, contentRes, analysisRes] = await Promise.all([
       supabase
         .from("contracts")
-        .select("id,name,party,type,status,file_name,file_size,file_type,page_count,created_at,updated_at,contract_value_informed,parsed_data")
+        .select("id,name,party,type,status,file_name,file_size,file_type,page_count,created_at,updated_at,contract_value_informed,parsed_data,org_id")
         .eq("id", contractId)
         .maybeSingle(),
       supabase

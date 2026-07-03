@@ -14,6 +14,7 @@ import { ParsedDataSummary } from "@/features/contracts/components/ParsedDataSum
 import { HighlightedText, SEV_HIGHLIGHT } from "@/features/analysis/components/HighlightedText";
 import { RiskClauseCard } from "@/features/analysis/components/RiskClauseCard";
 import { FinancialSimulator } from "@/features/analysis/components/FinancialSimulator";
+import { AnalysisFeedbackPrompt } from "@/features/analysis/components/AnalysisFeedbackPrompt";
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -675,6 +676,10 @@ function AnalysisView({ id }: { id: string }) {
           onAnalyze={handleAnalyze}
           analyzing={analyzing}
         />
+      )}
+
+      {contract.status === "analisado" && analysis && contract.org_id && (
+        <AnalysisFeedbackPrompt analysisId={analysis.id} orgId={contract.org_id} />
       )}
 
       {contract.status === "analisado" && analysis && (
