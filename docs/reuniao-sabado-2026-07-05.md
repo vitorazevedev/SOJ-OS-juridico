@@ -15,10 +15,12 @@ Plataforma SaaS de inteligência contratual. O usuário envia um contrato (PDF, 
 ## 2. O que está funcionando no MVP
 
 ### Autenticação e segurança de acesso
-- Cadastro por email/senha e por Google (OAuth)
+- Cadastro por email/senha e por **Google (OAuth)** — configurado e testado em 03/07/2026
 - Recuperação de senha por link
 - Confirmação de aceite de Termos de Uso e Política de Privacidade obrigatória no cadastro
 - Sessões com expiração automática (JWT via Supabase GoTrue)
+
+> **Nota sobre Google OAuth:** funciona para qualquer conta Google. Após a definição do domínio (`ponderum.com.br`), serão necessários 4 ajustes simples: (1) atualizar Site URL no Supabase Auth, (2) adicionar o domínio nas Redirect URLs do Supabase, (3) adicionar o domínio nas origens autorizadas do Google Cloud Console e (4) configurar RESEND com o domínio próprio.
 
 ### Análise de contratos
 | O que faz | Como faz |
@@ -86,6 +88,7 @@ Plataforma SaaS de inteligência contratual. O usuário envia um contrato (PDF, 
 |---|---|---|
 | Row Level Security (RLS) | ✅ Auditado | Todas as 20 tabelas — isolamento total entre organizações confirmado |
 | Autenticação JWT | ✅ | Supabase GoTrue — padrão da indústria |
+| Login com Google (OAuth) | ✅ Configurado | Google Cloud Console + Supabase — testado em 03/07/2026 |
 | Validação de entrada (Zod) | ✅ Parcial | Generator + quota; Contracts e Obligations ainda sem schema formal |
 | Rate limiting no login | ✅ | 5 tentativas por 5 min por IP (configurado no Supabase) |
 | Headers HTTP | ✅ | CSP, HSTS, X-Frame-Options, Permissions-Policy (Netlify) |
@@ -168,7 +171,7 @@ Estas são tarefas de desenvolvimento, não precisam de decisão dos sócios —
 
 Fluxo completo testado e funcionando:
 
-1. Criar conta (email ou Google) com aceite de Termos ✅
+1. Criar conta por email/senha **ou Google** com aceite de Termos ✅
 2. Fazer upload de um contrato (PDF, Word, imagem) ✅
 3. Aguardar extração automática de texto ✅
 4. Solicitar análise de risco com IA ✅
@@ -181,7 +184,22 @@ Fluxo completo testado e funcionando:
 
 ---
 
-## 8. O que vem depois do MVP
+## 8. O que muda quando tiver o domínio (`ponderum.com.br`)
+
+Assim que o domínio estiver registrado e apontado para o Netlify, são **4 ajustes técnicos** — estimativa total de 2h:
+
+| # | Onde | O que fazer | Esforço |
+|---|---|---|---|
+| 1 | Supabase → Auth → URL Configuration | Trocar Site URL para `https://ponderum.com.br` e adicionar nas Redirect URLs | 5 min |
+| 2 | Google Cloud Console → Cliente Ponderum | Adicionar `https://ponderum.com.br` nas origens JavaScript autorizadas | 5 min |
+| 3 | Resend | Verificar o domínio e atualizar o remetente de `onboarding@resend.dev` para `alertas@ponderum.com.br` | 30 min |
+| 4 | Código (Edge Function) | Atualizar o `from:` nos emails de alerta de obrigações | 30 min + redeploy |
+
+Após esses 4 passos: login com Google, emails de alerta e landing page funcionam todos com identidade Ponderum.
+
+---
+
+## 9. O que vem depois do MVP
 
 Funcionalidades já mapeadas para fases futuras:
 
@@ -194,5 +212,5 @@ Funcionalidades já mapeadas para fases futuras:
 
 ---
 
-*Documento gerado em 03/07/2026 · Vitor Azevedo (Dev)*
-*Próxima revisão: após reunião de sábado*
+*Documento gerado em 03/07/2026 · Atualizado em 03/07/2026 (Google OAuth configurado e testado)*
+*Vitor Azevedo (Dev) · Próxima revisão: após reunião de sábado*
