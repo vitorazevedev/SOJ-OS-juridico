@@ -101,6 +101,12 @@ export type Database = {
         Update: { cnpj?: string | null; created_at?: string | null; id?: string; logo_url?: string | null; name?: string; plan_id?: string; plan_status?: string; sector?: string | null; stripe_customer_id?: string | null; trial_ends_at?: string | null }
         Relationships: []
       }
+      waitlist: {
+        Row: { id: string; name: string; email: string; company: string | null; role: string | null; message: string | null; source: string | null; created_at: string | null }
+        Insert: { id?: string; name: string; email: string; company?: string | null; role?: string | null; message?: string | null; source?: string | null; created_at?: string | null }
+        Update: { id?: string; name?: string; email?: string; company?: string | null; role?: string | null; message?: string | null; source?: string | null; created_at?: string | null }
+        Relationships: []
+      }
       user_feedback: {
         Row: { id: string; org_id: string | null; user_id: string | null; category: string; message: string; page_url: string | null; created_at: string | null }
         Insert: { id?: string; org_id?: string | null; user_id?: string | null; category: string; message: string; page_url?: string | null; created_at?: string | null }

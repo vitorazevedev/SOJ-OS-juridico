@@ -365,6 +365,58 @@ footer {
   padding: 2px 8px; border-radius: 10px; margin-left: 6px;
 }
 
+/* ── MODAL WAITLIST ── */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 100;
+  background: rgba(10,22,40,0.75); backdrop-filter: blur(4px);
+  align-items: center; justify-content: center; padding: 16px;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: #fff; border-radius: 16px; padding: 36px 32px;
+  width: 100%; max-width: 480px; position: relative;
+  animation: modalin .25s ease-out;
+}
+@keyframes modalin { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+.modal-close {
+  position: absolute; top: 16px; right: 16px;
+  background: none; border: none; cursor: pointer;
+  font-size: 20px; color: #8A9BB0; line-height: 1;
+}
+.modal-close:hover { color: var(--navy); }
+.modal-box h3 { font-family: var(--display); font-size: 24px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+.modal-box p.modal-sub { font-size: 14px; color: #5A6A7E; margin-bottom: 24px; }
+.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; }
+.field label { font-size: 13px; font-weight: 600; color: var(--navy); }
+.field input, .field select, .field textarea {
+  border: 1.5px solid var(--line); border-radius: 8px;
+  padding: 10px 12px; font-family: var(--body); font-size: 14px; color: var(--navy);
+  background: var(--cinza); transition: border-color .15s;
+}
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: none; border-color: var(--esmeralda);
+}
+.field textarea { resize: none; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.modal-submit {
+  width: 100%; background: var(--esmeralda); color: #fff;
+  border: none; border-radius: 8px; padding: 13px;
+  font-family: var(--body); font-weight: 600; font-size: 15px;
+  cursor: pointer; transition: opacity .15s; margin-top: 4px;
+}
+.modal-submit:hover { opacity: 0.9; }
+.modal-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.modal-success { text-align: center; padding: 20px 0; }
+.modal-success .check {
+  width: 52px; height: 52px; border-radius: 50%;
+  background: #E9F5F3; margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+}
+.modal-success h4 { font-family: var(--display); font-size: 22px; font-weight: 600; color: var(--navy); margin-bottom: 8px; }
+.modal-success p { font-size: 14px; color: #5A6A7E; }
+.modal-error { font-size: 13px; color: #c0392b; margin-top: 8px; text-align: center; }
+
 /* ── ANIMAÇÕES ── */
 .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
 .reveal.in { opacity: 1; transform: translateY(0); }
@@ -622,8 +674,129 @@ footer {
   </div>
 </footer>
 
+<!-- MODAL WAITLIST -->
+<div class="modal-overlay" id="waitlist-modal" onclick="if(event.target===this) closeModal()">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal()" aria-label="Fechar">&times;</button>
+
+    <!-- Formulário -->
+    <div id="modal-form-view">
+      <h3>Solicitar acesso antecipado</h3>
+      <p class="modal-sub">Gratuito durante a fase de testes. Sem cartão de crédito.</p>
+      <form id="waitlist-form" onsubmit="submitWaitlist(event)">
+        <div class="field-row">
+          <div class="field">
+            <label for="wl-name">Nome *</label>
+            <input id="wl-name" type="text" placeholder="Seu nome" required>
+          </div>
+          <div class="field">
+            <label for="wl-email">Email *</label>
+            <input id="wl-email" type="email" placeholder="voce@empresa.com" required>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="wl-company">Empresa</label>
+            <input id="wl-company" type="text" placeholder="Nome da empresa">
+          </div>
+          <div class="field">
+            <label for="wl-role">Perfil</label>
+            <select id="wl-role">
+              <option value="">Selecione...</option>
+              <option>Advogado autônomo</option>
+              <option>Departamento jurídico</option>
+              <option>Escritório de advocacia</option>
+              <option>Empresário / Gestor</option>
+              <option>Outro</option>
+            </select>
+          </div>
+        </div>
+        <div class="field">
+          <label for="wl-message">Como podemos te ajudar? <span style="font-weight:400;color:#8A9BB0">(opcional)</span></label>
+          <textarea id="wl-message" rows="3" placeholder="Ex: Preciso analisar contratos de prestação de serviços frequentemente..."></textarea>
+        </div>
+        <p id="modal-error" class="modal-error" style="display:none"></p>
+        <button type="submit" class="modal-submit" id="modal-submit-btn">Solicitar minha vaga</button>
+      </form>
+    </div>
+
+    <!-- Sucesso -->
+    <div id="modal-success-view" style="display:none" class="modal-success">
+      <div class="check">✓</div>
+      <h4>Solicitação recebida!</h4>
+      <p>Entraremos em contato assim que sua vaga estiver disponível.<br>Obrigado pelo interesse no Ponderum.</p>
+    </div>
+  </div>
+</div>
+
 <script>
-  // Demo card: mostrar finding ao clicar no trecho destacado
+  // ── Configuração Supabase (anon key — somente insert público) ──
+  const SUPABASE_URL = 'https://igolxkyahbavripvfeak.supabase.co';
+  const SUPABASE_ANON = 'sb_publishable_oujMak_Co0OnlJ30JeLZaw_Qnl85crO';
+
+  function openModal() {
+    document.getElementById('waitlist-modal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => document.getElementById('wl-name').focus(), 50);
+  }
+  function closeModal() {
+    document.getElementById('waitlist-modal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+  // Conectar todos os botões de CTA ao modal
+  document.querySelectorAll('.btn-cta, .btn-primary').forEach(btn => {
+    if (!btn.closest('form')) btn.addEventListener('click', openModal);
+  });
+
+  async function submitWaitlist(e) {
+    e.preventDefault();
+    const btn = document.getElementById('modal-submit-btn');
+    const errEl = document.getElementById('modal-error');
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+    errEl.style.display = 'none';
+
+    const payload = {
+      name:    document.getElementById('wl-name').value.trim(),
+      email:   document.getElementById('wl-email').value.trim(),
+      company: document.getElementById('wl-company').value.trim() || null,
+      role:    document.getElementById('wl-role').value || null,
+      message: document.getElementById('wl-message').value.trim() || null,
+      source:  'landing_page',
+    };
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/waitlist`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON,
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'Prefer': 'return=minimal',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.status === 409) {
+        errEl.textContent = 'Este email já está na lista. Entraremos em contato em breve!';
+        errEl.style.display = 'block';
+        btn.disabled = false; btn.textContent = 'Solicitar minha vaga';
+        return;
+      }
+      if (!res.ok) throw new Error('Erro ao enviar');
+
+      document.getElementById('modal-form-view').style.display = 'none';
+      document.getElementById('modal-success-view').style.display = 'block';
+    } catch {
+      errEl.textContent = 'Algo deu errado. Tente novamente ou entre em contato diretamente.';
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Solicitar minha vaga';
+    }
+  }
+
+  // Demo card
   document.querySelector('.risk-phrase').addEventListener('click', function() {
     const f = document.getElementById('finding');
     f.style.display = f.style.display === 'none' ? 'block' : 'none';

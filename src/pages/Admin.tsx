@@ -6,7 +6,7 @@ import { SojCard } from "@/components/layout/Primitives";
 import {
   Loader2, Building2, FileText, ScanSearch, MessageSquare,
   ThumbsUp, ThumbsDown, AlertTriangle, ExternalLink,
-  CheckCircle2, XCircle, Clock, Activity,
+  CheckCircle2, XCircle, Clock, Activity, UserPlus,
 } from "lucide-react";
 import { env } from "@/config/env";
 import { cn } from "@/lib/utils";
@@ -22,6 +22,17 @@ type Stats = {
   total_analyses: number;
   analyses_this_month: number;
   total_feedbacks: number;
+  total_waitlist: number;
+};
+
+type WaitlistEntry = {
+  id: string;
+  name: string;
+  email: string;
+  company: string | null;
+  role: string | null;
+  message: string | null;
+  created_at: string;
 };
 type Feedback = { id: string; category: string; message: string; page_url: string | null; created_at: string };
 type Org       = { id: string; name: string; plan_id: string; created_at: string; contract_count: number; analysis_count: number };
@@ -52,6 +63,7 @@ export default function Admin() {
   const [analysesPerDay, setAnalysesPerDay] = useState<DayCount[]>([]);
   const [recentContracts, setRecentContracts] = useState<Contract[]>([]);
   const [cronHealth, setCronHealth]         = useState<CronJob[]>([]);
+  const [waitlist, setWaitlist]             = useState<WaitlistEntry[]>([]);
 
   useEffect(() => {
     if (isAdmin === false) return;
@@ -60,12 +72,14 @@ export default function Admin() {
       const d = data as {
         stats: Stats; feedbacks: Feedback[]; organizations: Org[];
         analyses_per_day: DayCount[]; recent_contracts: Contract[]; cron_health: CronJob[];
+        waitlist: WaitlistEntry[];
       };
       setStats(d.stats);
       setFeedbacks(d.feedbacks ?? []);
       setOrgs(d.organizations ?? []);
       setAnalysesPerDay(d.analyses_per_day ?? []);
       setRecentContracts(d.recent_contracts ?? []);
+      setWaitlist(d.waitlist ?? []);
       setCronHealth(d.cron_health ?? []);
       setLoading(false);
     });
@@ -103,10 +117,10 @@ export default function Admin() {
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {[
+            { label: "Waitlist",         value: stats.total_waitlist,       icon: UserPlus },
             { label: "Organizações",    value: stats.total_orgs,           icon: Building2 },
             { label: "Contratos/mês",   value: stats.contracts_this_month, icon: FileText },
             { label: "Análises/mês",    value: stats.analyses_this_month,  icon: ScanSearch },
-            { label: "Análises total",  value: stats.total_analyses,       icon: ScanSearch },
             { label: "Feedbacks",       value: stats.total_feedbacks,      icon: MessageSquare },
           ].map(({ label, value, icon: Icon }) => (
             <SojCard key={label} className="flex flex-col gap-1 p-4">
@@ -206,6 +220,42 @@ export default function Admin() {
         >
           Ver no Sentry <ExternalLink className="h-3.5 w-3.5" />
         </a>
+      </SojCard>
+
+      {/* Waitlist — solicitações de acesso antecipado */}
+      <SojCard className="flex flex-col gap-3">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-medium">Acesso antecipado — waitlist</h2>
+          <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+            {waitlist.length} solicitação{waitlist.length !== 1 ? "ões" : ""}
+          </span>
+        </div>
+        {waitlist.length === 0 ? (
+          <p className="text-xs text-muted-foreground py-4 text-center">Nenhuma solicitação ainda.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border text-left">
+                  {["Nome", "Email", "Empresa", "Perfil", "Data"].map((h, i) => (
+                    <th key={h} className={cn("pb-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground", i >= 3 && "text-right")}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border">
+                {waitlist.map((w) => (
+                  <tr key={w.id}>
+                    <td className="py-2.5 font-medium text-sm">{w.name}</td>
+                    <td className="py-2.5 text-xs text-muted-foreground">{w.email}</td>
+                    <td className="py-2.5 text-xs text-muted-foreground">{w.company ?? "—"}</td>
+                    <td className="py-2.5 text-right text-xs text-muted-foreground">{w.role ?? "—"}</td>
+                    <td className="py-2.5 text-right text-xs text-muted-foreground">{fmtDate(w.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </SojCard>
 
       {/* Feed de atividade recente */}
