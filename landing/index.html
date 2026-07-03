@@ -696,20 +696,24 @@ footer {
         </div>
         <div class="field-row">
           <div class="field">
+            <label for="wl-phone">WhatsApp / Celular</label>
+            <input id="wl-phone" type="tel" placeholder="(11) 99999-9999">
+          </div>
+          <div class="field">
             <label for="wl-company">Empresa</label>
             <input id="wl-company" type="text" placeholder="Nome da empresa">
           </div>
-          <div class="field">
-            <label for="wl-role">Perfil</label>
-            <select id="wl-role">
-              <option value="">Selecione...</option>
-              <option>Advogado autônomo</option>
-              <option>Departamento jurídico</option>
-              <option>Escritório de advocacia</option>
-              <option>Empresário / Gestor</option>
-              <option>Outro</option>
-            </select>
-          </div>
+        </div>
+        <div class="field">
+          <label for="wl-role">Perfil</label>
+          <select id="wl-role">
+            <option value="">Selecione...</option>
+            <option>Advogado autônomo</option>
+            <option>Departamento jurídico</option>
+            <option>Escritório de advocacia</option>
+            <option>Empresário / Gestor</option>
+            <option>Outro</option>
+          </select>
         </div>
         <div class="field">
           <label for="wl-message">Como podemos te ajudar? <span style="font-weight:400;color:#8A9BB0">(opcional)</span></label>
@@ -761,6 +765,7 @@ footer {
     const payload = {
       name:    document.getElementById('wl-name').value.trim(),
       email:   document.getElementById('wl-email').value.trim(),
+      phone:   document.getElementById('wl-phone').value.trim() || null,
       company: document.getElementById('wl-company').value.trim() || null,
       role:    document.getElementById('wl-role').value || null,
       message: document.getElementById('wl-message').value.trim() || null,

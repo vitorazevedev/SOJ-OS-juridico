@@ -102,9 +102,9 @@ export type Database = {
         Relationships: []
       }
       waitlist: {
-        Row: { id: string; name: string; email: string; company: string | null; role: string | null; message: string | null; source: string | null; created_at: string | null }
-        Insert: { id?: string; name: string; email: string; company?: string | null; role?: string | null; message?: string | null; source?: string | null; created_at?: string | null }
-        Update: { id?: string; name?: string; email?: string; company?: string | null; role?: string | null; message?: string | null; source?: string | null; created_at?: string | null }
+        Row: { id: string; name: string; email: string; phone: string | null; company: string | null; role: string | null; message: string | null; source: string | null; created_at: string | null }
+        Insert: { id?: string; name: string; email: string; phone?: string | null; company?: string | null; role?: string | null; message?: string | null; source?: string | null; created_at?: string | null }
+        Update: { id?: string; name?: string; email?: string; phone?: string | null; company?: string | null; role?: string | null; message?: string | null; source?: string | null; created_at?: string | null }
         Relationships: []
       }
       user_feedback: {

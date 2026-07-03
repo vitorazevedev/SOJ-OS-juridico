@@ -29,6 +29,7 @@ type WaitlistEntry = {
   id: string;
   name: string;
   email: string;
+  phone: string | null;
   company: string | null;
   role: string | null;
   message: string | null;
@@ -237,8 +238,8 @@ export default function Admin() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left">
-                  {["Nome", "Email", "Empresa", "Perfil", "Data"].map((h, i) => (
-                    <th key={h} className={cn("pb-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground", i >= 3 && "text-right")}>{h}</th>
+                  {["Nome", "Email", "WhatsApp", "Empresa", "Perfil", "Data"].map((h, i) => (
+                    <th key={h} className={cn("pb-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground", i >= 4 && "text-right")}>{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -247,6 +248,7 @@ export default function Admin() {
                   <tr key={w.id}>
                     <td className="py-2.5 font-medium text-sm">{w.name}</td>
                     <td className="py-2.5 text-xs text-muted-foreground">{w.email}</td>
+                    <td className="py-2.5 text-xs text-muted-foreground">{w.phone ?? "—"}</td>
                     <td className="py-2.5 text-xs text-muted-foreground">{w.company ?? "—"}</td>
                     <td className="py-2.5 text-right text-xs text-muted-foreground">{w.role ?? "—"}</td>
                     <td className="py-2.5 text-right text-xs text-muted-foreground">{fmtDate(w.created_at)}</td>
