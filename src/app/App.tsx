@@ -1,5 +1,6 @@
 
 import { lazy, Suspense } from "react";
+import * as Sentry from "@sentry/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -30,6 +31,7 @@ const PageLoader = () => (
 
 export default function App() {
   return (
+    <Sentry.ErrorBoundary fallback={<p className="flex items-center justify-center min-h-screen text-sm text-muted-foreground">Algo deu errado. Recarregue a página.</p>}>
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
@@ -64,5 +66,6 @@ export default function App() {
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
+    </Sentry.ErrorBoundary>
   );
 }
