@@ -396,6 +396,27 @@ footer {
 .field input:focus, .field select:focus, .field textarea:focus {
   outline: none; border-color: var(--esmeralda);
 }
+/* Campo de telefone com DDI + máscara */
+.phone-wrap {
+  display: flex;
+  border: 1.5px solid var(--line); border-radius: 8px;
+  background: var(--cinza); overflow: hidden;
+  transition: border-color .15s;
+}
+.phone-wrap:focus-within { border-color: var(--esmeralda); }
+.phone-ddi {
+  flex-shrink: 0;
+  border: none; border-right: 1.5px solid var(--line);
+  background: transparent; padding: 10px 10px;
+  font-family: var(--body); font-size: 14px; color: var(--navy);
+  cursor: pointer; outline: none; appearance: none;
+  -webkit-appearance: none;
+}
+.phone-number {
+  flex: 1; border: none !important; background: transparent !important;
+  padding: 10px 12px; font-family: var(--body); font-size: 14px; color: var(--navy);
+  outline: none !important; border-radius: 0 !important;
+}
 .field textarea { resize: none; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .modal-submit {
@@ -697,7 +718,16 @@ footer {
         <div class="field-row">
           <div class="field">
             <label for="wl-phone">WhatsApp / Celular</label>
-            <input id="wl-phone" type="tel" placeholder="(11) 99999-9999">
+            <div class="phone-wrap">
+              <select class="phone-ddi" id="wl-ddi" aria-label="DDI">
+                <option value="+55">🇧🇷 +55</option>
+                <option value="+1">🇺🇸 +1</option>
+                <option value="+351">🇵🇹 +351</option>
+                <option value="+54">🇦🇷 +54</option>
+              </select>
+              <input id="wl-phone" class="phone-number" type="tel"
+                     placeholder="(11) 99999-9999" autocomplete="tel" maxlength="15">
+            </div>
           </div>
           <div class="field">
             <label for="wl-company">Empresa</label>
@@ -738,6 +768,24 @@ footer {
   const SUPABASE_URL = 'https://igolxkyahbavripvfeak.supabase.co';
   const SUPABASE_ANON = 'sb_publishable_oujMak_Co0OnlJ30JeLZaw_Qnl85crO';
 
+  // ── Máscara de telefone ──
+  function maskPhone(v) {
+    const d = v.replace(/\D/g, '').slice(0, 11);
+    if (!d) return '';
+    if (d.length <= 2)  return `(${d}`;
+    if (d.length <= 6)  return `(${d.slice(0,2)}) ${d.slice(2)}`;
+    if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
+    return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
+  }
+  document.getElementById('wl-phone').addEventListener('input', function(e) {
+    const pos = this.selectionStart;
+    const raw = this.value;
+    this.value = maskPhone(raw);
+    // Reposiciona cursor se o usuário estiver editando no meio do campo
+    const diff = this.value.length - raw.length;
+    this.setSelectionRange(pos + diff, pos + diff);
+  });
+
   function openModal() {
     document.getElementById('waitlist-modal').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -765,7 +813,9 @@ footer {
     const payload = {
       name:    document.getElementById('wl-name').value.trim(),
       email:   document.getElementById('wl-email').value.trim(),
-      phone:   document.getElementById('wl-phone').value.trim() || null,
+      phone:   document.getElementById('wl-phone').value.trim()
+               ? `${document.getElementById('wl-ddi').value} ${document.getElementById('wl-phone').value.trim()}`
+               : null,
       company: document.getElementById('wl-company').value.trim() || null,
       role:    document.getElementById('wl-role').value || null,
       message: document.getElementById('wl-message').value.trim() || null,
