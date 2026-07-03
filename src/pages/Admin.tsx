@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { SojCard } from "@/components/layout/Primitives";
-import { Loader2, Building2, FileText, ScanSearch, MessageSquare, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Loader2, Building2, FileText, ScanSearch, MessageSquare, ThumbsUp, ThumbsDown, AlertTriangle, ExternalLink } from "lucide-react";
+import { env } from "@/config/env";
 
 type Stats = {
   total_orgs: number;
@@ -106,6 +107,29 @@ export default function Admin() {
           ))}
         </div>
       )}
+
+      {/* Erros — Sentry */}
+      <SojCard className="flex items-center justify-between gap-4 p-5">
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-xl bg-risk-critical-dim flex items-center justify-center shrink-0">
+            <AlertTriangle className="h-4 w-4 text-risk-critical" />
+          </div>
+          <div>
+            <p className="text-sm font-medium">Monitoramento de erros</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Erros de JavaScript em produção são capturados pelo Sentry em tempo real.
+            </p>
+          </div>
+        </div>
+        <a
+          href={env.sentryProjectUrl ?? "https://sentry.io"}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 h-9 px-4 rounded-lg border border-border text-sm hover:bg-muted/40 transition-colors shrink-0"
+        >
+          Ver no Sentry <ExternalLink className="h-3.5 w-3.5" />
+        </a>
+      </SojCard>
 
       {/* Organizações */}
       <SojCard className="flex flex-col gap-3">
