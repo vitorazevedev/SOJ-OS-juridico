@@ -110,12 +110,33 @@ Plataforma SaaS de inteligência contratual. O usuário envia um contrato (PDF, 
 | **Supabase** | Banco de dados, autenticação, armazenamento, funções | **R$ 0** (plano Free) |
 | **Netlify** | Hospedagem do frontend | **R$ 0** (plano Free) |
 | **Sentry** | Monitoramento de erros | **R$ 0** (5k eventos/mês grátis) |
-| **Resend** | Envio de emails (alertas de obrigações) | **R$ 0** (3k emails/mês grátis) |
+| **Resend** | Envio de emails automáticos do sistema (transacional) | **R$ 0** (3k emails/mês grátis) |
 | **Google Fonts** | Tipografia Cormorant Garamond + Inter | **R$ 0** |
 | **Claude API (Anthropic)** | IA para parse + análise | **~R$ 0,50–1,00 por contrato** |
 
 **Custo total da fase de testes:** apenas o consumo da Claude API conforme os contratos analisados.
 *Exemplo: 30 contratos no mês = R$ 15–30.*
+
+### Domínio — investimento anual (único custo fixo imediato)
+
+| Domínio | Onde comprar | Custo/ano | Recomendação |
+|---|---|---|---|
+| `ponderum.com.br` | registro.br | **R$ 40** (1 ano) / R$ 76 (2 anos) / R$ 184 (5 anos) | Prioritário — registrador oficial, sem intermediários |
+| `ponderum.com` | Squarespace Domains | **~R$ 67–96** | Opcional — protege a marca globalmente |
+| **Total (os dois)** | | **~R$ 107–136/ano** | |
+
+> **Nota:** o `.com.br` é suficiente para o lançamento. O `.com` pode ser comprado depois para proteger a marca.
+
+### Email com domínio próprio — opções
+
+O Resend (já integrado) é exclusivamente transacional — envia alertas automáticos do sistema, mas **não serve como caixa de entrada** (não dá para receber emails). Para ter `vitor@ponderum.com.br`, `kober@ponderum.com.br` e `fellipe@ponderum.com.br` é necessário um serviço separado:
+
+| Opção | Custo | Indicado para |
+|---|---|---|
+| **Zoho Mail** | **R$ 0** (até 5 usuários) | Fase atual — cobre Vitor, Kober e Fellipe sem custo |
+| **Google Workspace** | ~R$ 34/usuário/mês (~R$ 102/mês para 3) | Quando o time crescer — Gmail, Drive, Meet integrados |
+
+**Recomendação para agora:** Zoho Mail gratuito. Os 3 sócios já ficam com emails `@ponderum.com.br` sem custo. Quando o produto escalar, migra para Google Workspace mantendo os endereços.
 
 ### Quando escalar: fase Beta/Produção
 
@@ -135,9 +156,9 @@ Estas questões **bloqueiam o lançamento público** ou afetam o produto diretam
 
 | # | Pendência | Responsável | Impacto |
 |---|---|---|---|
-| 1 | **Domínio** `ponderum.com.br` — registro e apontamento | Kober / Vitor | Landing page e email oficial |
-| 2 | **Email oficial** (ex: `contato@ponderum.com.br`) | Fellipe / Kober | Emails de alerta e suporte |
-| 3 | **WhatsApp de suporte** | Kober | Contato com usuários da waitlist |
+| 1 | **Domínio** `ponderum.com.br` — disponível em registro.br por R$ 40/ano. Decisão: registrar 1 ou 2 anos? Comprar o `.com` também (~R$ 67/ano na Squarespace)? | Kober / Vitor | Landing page, email oficial e Google OAuth em produção |
+| 2 | **Email oficial** — recomendação: Zoho Mail gratuito para Vitor, Kober e Fellipe (`@ponderum.com.br`). Precisa do domínio registrado primeiro. | Vitor (configurar) | Comunicação com usuários e suporte |
+| 3 | **WhatsApp de suporte** — qual número? | Kober | Contato com usuários da waitlist |
 | 4 | **Termos de Uso e Política de Privacidade** — revisão e aprovação | **Fellipe** | Obrigatório para lançamento público (LGPD) |
 | 5 | **Prazo de retenção de dados** — quanto tempo guardar contratos inativos? | **Fellipe** | Hoje: sinaliza após 24 meses (sem excluir) |
 | 6 | **Arte vetorial do símbolo** (SVG) | **Fellipe** | Sidebar e landing page têm "P" placeholder |
