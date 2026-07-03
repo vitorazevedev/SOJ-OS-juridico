@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { z } from "zod";
 import { supabase } from "@/lib/supabase";
 import { createObligation, type NewObligationData } from "@/hooks/useObligations";
 import {
@@ -48,6 +49,29 @@ const RESPONSIBLE_OPTIONS = [
   { value: "ambas", label: "Ambas as partes" },
 ];
 
+// ── Zod schema ───────────────────────────────────────────────────────────────
+const brlToFloat = (v: string) =>
+  parseFloat(v.replace(/\./g, "").replace(",", "."));
+
+const obligationSchema = z.object({
+  contract_id:     z.string().min(1, "Selecione um contrato"),
+  description:     z.string().trim().min(5, "Mínimo de 5 caracteres").max(500, "Máximo de 500 caracteres"),
+  due_date:        z.string().optional().refine(
+    (v) => !v || !isNaN(Date.parse(v)), "Data inválida"
+  ),
+  value_brl:       z.string().optional().refine(
+    (v) => !v || (!isNaN(brlToFloat(v)) && brlToFloat(v) >= 0),
+    "Valor inválido — use o formato 1.000,00"
+  ),
+  penalty_text:    z.string().max(200, "Máximo de 200 caracteres").optional(),
+  custom_qty:      z.string().optional().refine(
+    (v) => !v || (Number(v) > 0 && Number(v) <= 999),
+    "Intervalo deve ser entre 1 e 999"
+  ),
+});
+
+type ObligationErrors = Partial<Record<keyof z.infer<typeof obligationSchema>, string>>;
+
 type Props = { open: boolean; onClose: () => void };
 
 const EMPTY = {
@@ -66,6 +90,7 @@ const EMPTY = {
 export function NewObligationModal({ open, onClose }: Props) {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [form, setForm] = useState(EMPTY);
+  const [errors, setErrors] = useState<ObligationErrors>({});
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -85,12 +110,32 @@ export function NewObligationModal({ open, onClose }: Props) {
 
   const handleClose = () => {
     setForm(EMPTY);
+    setErrors({});
     onClose();
+  };
+
+  const validateField = (field: keyof ObligationErrors, value: string) => {
+    const result = obligationSchema.shape[field]?.safeParse(value);
+    if (result && !result.success) {
+      setErrors((prev) => ({ ...prev, [field]: result.error.issues[0]?.message }));
+    } else {
+      setErrors((prev) => { const next = { ...prev }; delete next[field]; return next; });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.contract_id || !form.description.trim()) return;
+    const result = obligationSchema.safeParse(form);
+    if (!result.success) {
+      const errs: ObligationErrors = {};
+      result.error.issues.forEach((i) => {
+        const f = i.path[0] as keyof ObligationErrors;
+        if (!errs[f]) errs[f] = i.message;
+      });
+      setErrors(errs);
+      return;
+    }
+    setErrors({});
     setSaving(true);
     let recurrenceValue: string | null = null;
     if (form.recurrence === "custom") {
@@ -130,7 +175,7 @@ export function NewObligationModal({ open, onClose }: Props) {
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 mt-2">
           <div>
             <label className={labelCls}>Contrato *</label>
-            <Select value={form.contract_id} onValueChange={set("contract_id")}>
+            <Select value={form.contract_id} onValueChange={(v) => { set("contract_id")(v); validateField("contract_id", v); }}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione o contrato" />
               </SelectTrigger>
@@ -142,18 +187,19 @@ export function NewObligationModal({ open, onClose }: Props) {
                 ))}
               </SelectContent>
             </Select>
+            {errors.contract_id && <p className="text-[11px] text-destructive mt-1">{errors.contract_id}</p>}
           </div>
 
           <div>
             <label className={labelCls}>Descrição *</label>
             <textarea
-              required
               rows={2}
               value={form.description}
-              onChange={setInput("description")}
+              onChange={(e) => { setInput("description")(e); validateField("description", e.target.value); }}
               placeholder="Ex: Pagamento de R$ 5.000 até o dia 10 de cada mês"
-              className={inputCls + " resize-none"}
+              className={inputCls + " resize-none" + (errors.description ? " border-destructive/70" : "")}
             />
+            {errors.description && <p className="text-[11px] text-destructive mt-1">{errors.description}</p>}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -195,9 +241,10 @@ export function NewObligationModal({ open, onClose }: Props) {
               <input
                 type="date"
                 value={form.due_date}
-                onChange={setInput("due_date")}
-                className={inputCls}
+                onChange={(e) => { setInput("due_date")(e); validateField("due_date", e.target.value); }}
+                className={inputCls + (errors.due_date ? " border-destructive/70" : "")}
               />
+              {errors.due_date && <p className="text-[11px] text-destructive mt-1">{errors.due_date}</p>}
             </div>
             <div>
               <label className={labelCls}>Recorrência</label>
@@ -257,10 +304,11 @@ export function NewObligationModal({ open, onClose }: Props) {
                 type="text"
                 inputMode="decimal"
                 value={form.value_brl}
-                onChange={setInput("value_brl")}
+                onChange={(e) => { setInput("value_brl")(e); validateField("value_brl", e.target.value); }}
                 placeholder="0,00"
-                className={inputCls}
+                className={inputCls + (errors.value_brl ? " border-destructive/70" : "")}
               />
+              {errors.value_brl && <p className="text-[11px] text-destructive mt-1">{errors.value_brl}</p>}
             </div>
             <div>
               <label className={labelCls}>Penalidade (texto)</label>

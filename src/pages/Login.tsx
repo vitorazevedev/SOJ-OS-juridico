@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { z } from "zod";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/features/auth/components/AuthProvider";
@@ -10,6 +11,22 @@ import { toast } from "sonner";
 import { Loader2, Mail } from "lucide-react";
 
 type Mode = "login" | "signup" | "forgot" | "check_email";
+
+const loginSchema = z.object({
+  email:    z.string().email("Email inválido"),
+  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
+});
+
+const signupSchema = loginSchema.extend({
+  name:    z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  orgName: z.string().trim().min(2, "Nome da empresa deve ter pelo menos 2 caracteres"),
+});
+
+const forgotSchema = z.object({
+  email: z.string().email("Email inválido"),
+});
+
+type FormErrors = Partial<Record<"email" | "password" | "name" | "orgName", string>>;
 
 const translateError = (msg: string): string => {
   const m = msg.toLowerCase();
@@ -30,12 +47,15 @@ export default function Login() {
   const { session, loading: authLoading } = useAuth();
   const [mode, setMode] = useState<Mode>("login");
   const [loading, setLoading] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [orgName, setOrgName] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+  const clearErrors = () => setFieldErrors({});
 
   const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname || "/";
 
@@ -45,6 +65,14 @@ export default function Login() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    const result = loginSchema.safeParse({ email, password });
+    if (!result.success) {
+      const errs: FormErrors = {};
+      result.error.issues.forEach((i) => { const f = i.path[0] as keyof FormErrors; if (!errs[f]) errs[f] = i.message; });
+      setFieldErrors(errs);
+      return;
+    }
+    clearErrors();
     setLoading(true);
     try {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -61,14 +89,18 @@ export default function Login() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!orgName.trim() || !name.trim()) {
-      toast.error("Preencha todos os campos");
+    const result = signupSchema.safeParse({ email, password, name, orgName });
+    if (!result.success) {
+      const errs: FormErrors = {};
+      result.error.issues.forEach((i) => { const f = i.path[0] as keyof FormErrors; if (!errs[f]) errs[f] = i.message; });
+      setFieldErrors(errs);
       return;
     }
     if (!acceptedTerms) {
       toast.error("É necessário aceitar os Termos de Uso e a Política de Privacidade");
       return;
     }
+    clearErrors();
     setLoading(true);
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -96,6 +128,12 @@ export default function Login() {
 
   const handleForgot = async (e: React.FormEvent) => {
     e.preventDefault();
+    const result = forgotSchema.safeParse({ email });
+    if (!result.success) {
+      setFieldErrors({ email: result.error.issues[0]?.message });
+      return;
+    }
+    clearErrors();
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -190,18 +228,13 @@ export default function Login() {
               <p className="text-sm text-muted-foreground">
                 Digite seu email e enviaremos um link para redefinir sua senha.
               </p>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="voce@empresa.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  autoComplete="email"
-                  autoFocus
+                <Input id="email" type="email" placeholder="voce@empresa.com" value={email}
+                  onChange={(e) => setEmail(e.target.value)} autoComplete="email" autoFocus
+                  className={fieldErrors.email ? "border-destructive/70" : ""}
                 />
+                {fieldErrors.email && <p className="text-[11px] text-destructive">{fieldErrors.email}</p>}
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
@@ -223,69 +256,50 @@ export default function Login() {
               <form onSubmit={mode === "login" ? handleEmailLogin : handleSignup} className="space-y-4">
                 {mode === "signup" && (
                   <>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Label htmlFor="name">Seu nome</Label>
-                      <Input
-                        id="name"
-                        type="text"
-                        placeholder="Maria Silva"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                        autoComplete="name"
+                      <Input id="name" type="text" placeholder="Maria Silva" value={name}
+                        onChange={(e) => setName(e.target.value)} autoComplete="name"
+                        className={fieldErrors.name ? "border-destructive/70" : ""}
                       />
+                      {fieldErrors.name && <p className="text-[11px] text-destructive">{fieldErrors.name}</p>}
                     </div>
-                    <div className="space-y-2">
+                    <div className="space-y-1">
                       <Label htmlFor="orgName">Nome da organização</Label>
-                      <Input
-                        id="orgName"
-                        type="text"
-                        placeholder="Acme Advocacia"
-                        value={orgName}
-                        onChange={(e) => setOrgName(e.target.value)}
-                        required
-                        autoComplete="organization"
+                      <Input id="orgName" type="text" placeholder="Acme Advocacia" value={orgName}
+                        onChange={(e) => setOrgName(e.target.value)} autoComplete="organization"
+                        className={fieldErrors.orgName ? "border-destructive/70" : ""}
                       />
+                      {fieldErrors.orgName && <p className="text-[11px] text-destructive">{fieldErrors.orgName}</p>}
                     </div>
                   </>
                 )}
 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="voce@empresa.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    autoComplete="email"
+                  <Input id="email" type="email" placeholder="voce@empresa.com" value={email}
+                    onChange={(e) => setEmail(e.target.value)} autoComplete="email"
+                    className={fieldErrors.email ? "border-destructive/70" : ""}
                   />
+                  {fieldErrors.email && <p className="text-[11px] text-destructive">{fieldErrors.email}</p>}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password">Senha</Label>
                     {mode === "login" && (
-                      <button
-                        type="button"
-                        onClick={() => setMode("forgot")}
-                        className="text-xs text-muted-foreground hover:text-primary transition-colors"
-                      >
+                      <button type="button" onClick={() => setMode("forgot")}
+                        className="text-xs text-muted-foreground hover:text-primary transition-colors">
                         Esqueceu a senha?
                       </button>
                     )}
                   </div>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
+                  <Input id="password" type="password" placeholder="••••••••" value={password}
+                    onChange={(e) => setPassword(e.target.value)} minLength={6}
                     autoComplete={mode === "login" ? "current-password" : "new-password"}
+                    className={fieldErrors.password ? "border-destructive/70" : ""}
                   />
+                  {fieldErrors.password && <p className="text-[11px] text-destructive">{fieldErrors.password}</p>}
                 </div>
 
                 {mode === "signup" && (
