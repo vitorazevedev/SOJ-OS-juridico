@@ -6,7 +6,6 @@ import {
   Calendar,
   Wand2,
   Settings,
-  Scale,
   LogOut,
 } from "lucide-react";
 import {
@@ -71,8 +70,9 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="border-b border-sidebar-border h-14 flex items-center justify-center px-3">
         <div className="flex items-center gap-2 w-full">
+          {/* Placeholder até receber o SVG vetorizado do Fellipe */}
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
-            <Scale className="h-4 w-4 text-primary-foreground" />
+            <span className="font-cormorant text-xl font-semibold text-primary-foreground leading-none select-none">P</span>
           </div>
           {!collapsed && (
             <div className="flex flex-col leading-tight">

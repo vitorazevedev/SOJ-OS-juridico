@@ -12,6 +12,10 @@ export default {
         mono: ['"JetBrains Mono"', '"Fira Mono"', 'monospace'],
       },
       colors: {
+        teal: {
+          DEFAULT: "hsl(var(--teal))",
+          dim: "hsl(var(--teal-dim))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

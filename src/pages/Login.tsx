@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, Mail, ScaleIcon } from "lucide-react";
+import { Loader2, Mail } from "lucide-react";
 
 type Mode = "login" | "signup" | "forgot" | "check_email";
 
@@ -145,7 +145,7 @@ export default function Login() {
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
           <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center mb-3">
-            <ScaleIcon className="h-6 w-6 text-primary-foreground" />
+            <span className="font-cormorant text-3xl font-semibold text-primary-foreground leading-none select-none">P</span>
           </div>
           <h1 className="font-cormorant text-3xl font-light tracking-wider">Ponderum</h1>
           <p className="text-xs text-muted-foreground tracking-wide mt-0.5">Inteligência contratual</p>

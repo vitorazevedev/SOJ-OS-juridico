@@ -2,33 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Ponderum Design System — Dark legal-tech UI. Navy/Teal palette. All colors HSL. */
+/* Ponderum Design System v1.2 — paleta corrigida por Fellipe (03/07/2026).
+   Navy #0A1628 · Esmeralda #067173 · Teal #2EC4A9 · Cinza claro #F5F6F8 · Cinza-azul #8A9BB0
+   Esmeralda = acento primário (CTAs, botões de ação) com texto branco.
+   Teal = acento secundário (ícones, labels, sidebar ativa em fundo escuro). */
 
 @layer base {
   :root {
-    /* Base — Ink #0A1628 */
-    --background: 218 60% 10%;
+    /* Navy #0A1628 — base, fundos escuros */
+    --background: 216 60% 10%;
     --foreground: 0 0% 96%;
-    --card: 219 55% 13%;
+    --card: 216 55% 13%;
     --card-foreground: 0 0% 96%;
-    --popover: 219 55% 13%;
+    --popover: 216 55% 13%;
     --popover-foreground: 0 0% 96%;
-    /* Primary — Teal #2EC4A9 */
-    --primary: 172 61% 47%;
-    --primary-foreground: 219 61% 8%;
-    --primary-dim: 172 61% 47% / 0.12;
-    --secondary: 219 45% 17%;
+    /* Esmeralda #067173 — acento primário, CTAs, botões de ação */
+    --primary: 181 90% 24%;
+    --primary-foreground: 0 0% 96%;
+    --primary-dim: 181 90% 24% / 0.12;
+    /* Teal #2EC4A9 — acento secundário (ícones, labels, risk-low) */
+    --teal: 172 61% 47%;
+    --teal-dim: 172 61% 47% / 0.12;
+    --secondary: 216 45% 17%;
     --secondary-foreground: 0 0% 90%;
-    --muted: 219 45% 17%;
-    /* Mid #8A9BB0 */
+    --muted: 216 45% 17%;
+    /* Cinza-azulado #8A9BB0 */
     --muted-foreground: 214 20% 62%;
-    --accent: 219 45% 19%;
+    --accent: 216 45% 19%;
     --accent-foreground: 0 0% 96%;
     --destructive: 0 78% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 219 40% 22%;
-    --input: 219 40% 22%;
-    --ring: 172 61% 47%;
+    --border: 216 40% 22%;
+    --input: 216 40% 22%;
+    --ring: 181 90% 24%;
     --radius: 0.625rem;
     --risk-critical: 0 78% 60%;
     --risk-critical-dim: 0 78% 60% / 0.12;
@@ -36,6 +42,7 @@
     --risk-high-dim: 22 100% 62% / 0.12;
     --risk-medium: 42 96% 55%;
     --risk-medium-dim: 42 96% 55% / 0.12;
+    /* Risk-low usa Teal — acento secundário em contexto de risco */
     --risk-low: 172 61% 47%;
     --risk-low-dim: 172 61% 47% / 0.12;
     --info: 210 90% 62%;
@@ -43,14 +50,15 @@
     --text-1: 0 0% 96%;
     --text-2: 214 20% 70%;
     --text-3: 214 15% 55%;
-    /* Sidebar — deeper navy */
-    --sidebar-background: 218 65% 8%;
+    /* Sidebar — navy ainda mais profundo; usa Teal para itens ativos
+       (melhor contraste que Esmeralda em fundos escuros). */
+    --sidebar-background: 216 65% 8%;
     --sidebar-foreground: 214 20% 70%;
     --sidebar-primary: 172 61% 47%;
-    --sidebar-primary-foreground: 219 61% 8%;
-    --sidebar-accent: 219 50% 13%;
+    --sidebar-primary-foreground: 216 60% 8%;
+    --sidebar-accent: 216 50% 13%;
     --sidebar-accent-foreground: 0 0% 96%;
-    --sidebar-border: 219 40% 17%;
+    --sidebar-border: 216 40% 17%;
     --sidebar-ring: 172 61% 47%;
   }
 }

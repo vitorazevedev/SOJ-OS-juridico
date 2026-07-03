@@ -6,7 +6,7 @@ import BottomNav from "./BottomNav";
 import OnboardingModal from "./OnboardingModal";
 import { FeedbackButton } from "./FeedbackButton";
 import { SearchPanel } from "./SearchPanel";
-import { Bell, CalendarClock, Scale, Search, X } from "lucide-react";
+import { Bell, CalendarClock, Search, X } from "lucide-react";
 import { UrgentObligationsContext, useUrgentObligationsProvider } from "@/hooks/useUrgentObligations";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
 import { cn } from "@/lib/utils";
@@ -216,7 +216,7 @@ export default function AppLayout() {
             ) : (
               <>
                 <div className="flex items-center gap-2">
-                  <Scale className="h-5 w-5 text-primary" />
+                  <span className="font-cormorant text-xl font-semibold text-primary leading-none">P</span>
                   <span className="text-sm font-semibold">{mobileTitle}</span>
                 </div>
                 <div className="flex items-center gap-1">
