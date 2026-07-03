@@ -9,3 +9,27 @@
 
 [build.environment]
   NODE_VERSION = "20"
+
+# ── Security headers ──────────────────────────────────────────────────────────
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # Impede que o app seja carregado dentro de um iframe (clickjacking)
+    X-Frame-Options = "DENY"
+
+    # Impede que o browser "adivinhe" o tipo do arquivo (MIME sniffing)
+    X-Content-Type-Options = "nosniff"
+
+    # Não envia a URL de origem em requisições para outros domínios
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+    # Força HTTPS por 1 ano (só ativo em produção com HTTPS)
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+
+    # Permissões de APIs do browser — desativa o que o app não usa
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), payment=()"
+
+    # CSP: permite recursos do próprio domínio + Supabase + Google Fonts + Sentry
+    # 'unsafe-inline' em style-src é necessário para Tailwind/shadcn funcionarem.
+    # Remover quando migrar para CSS-in-JS ou CSS Modules com hashes.
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' https://js.sentry-cdn.com https://*.ingest.sentry.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://*.supabase.co; connect-src 'self' https://*.supabase.co https://*.ingest.sentry.io https://*.ingest.us.sentry.io; frame-ancestors 'none';"
