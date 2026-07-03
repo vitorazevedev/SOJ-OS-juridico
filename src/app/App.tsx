@@ -22,6 +22,7 @@ const Generator = lazy(() => import("@/pages/Generator"));
 const Settings = lazy(() => import("@/pages/Settings"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
+const Admin = lazy(() => import("@/pages/Admin"));
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -58,6 +59,7 @@ export default function App() {
                   <Route path="/obligations" element={<Obligations />} />
                   <Route path="/generator" element={<Generator />} />
                   <Route path="/settings" element={<Settings />} />
+                  <Route path="/admin" element={<Admin />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

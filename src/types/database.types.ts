@@ -127,6 +127,7 @@ export type Database = {
     }
     Functions: {
       get_org_id: { Args: Record<PropertyKey, never>; Returns: string }
+      get_admin_dashboard: { Args: Record<PropertyKey, never>; Returns: Json }
     }
     Enums: { [_ in never]: never }
     CompositeTypes: { [_ in never]: never }
