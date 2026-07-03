@@ -49,6 +49,22 @@ function maxLabelFor(file: File): string {
   return `${Math.round(max / (1024 * 1024))}MB`;
 }
 
+// Valida os primeiros bytes do arquivo (magic bytes) para garantir que o tipo
+// real corresponde à extensão declarada — impede renomear um .exe para .pdf.
+async function validateMagicBytes(file: File): Promise<boolean> {
+  const buf = await file.slice(0, 8).arrayBuffer();
+  const bytes = new Uint8Array(buf);
+  const hex   = Array.from(bytes).map((b) => b.toString(16).padStart(2, "0")).join("");
+
+  const name  = file.name.toLowerCase();
+  if (name.endsWith(".pdf"))  return hex.startsWith("25504446");          // %PDF
+  if (name.endsWith(".docx")) return hex.startsWith("504b0304");          // PK zip (OOXML)
+  if (name.endsWith(".png"))  return hex.startsWith("89504e47");          // PNG
+  if (name.endsWith(".jpg") || name.endsWith(".jpeg"))
+    return hex.startsWith("ffd8ff");                                       // JPEG
+  return false; // extensão não reconhecida
+}
+
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 const formatDate = (iso: string) =>
@@ -231,6 +247,8 @@ export default function Contracts() {
     try {
       for (const file of Array.from(files)) {
         if (file.size > maxBytesFor(file)) { toast.error(`${file.name}: arquivo maior que ${maxLabelFor(file)}`); continue; }
+        const validMagic = await validateMagicBytes(file);
+        if (!validMagic) { toast.error(`${file.name}: tipo de arquivo inválido ou não suportado`); continue; }
         const inserted = await uploadContract(file, markProcessing);
         if (inserted) refetch();
       }
