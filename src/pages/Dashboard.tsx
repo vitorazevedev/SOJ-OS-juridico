@@ -133,7 +133,7 @@ export default function Dashboard() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
-            {greeting()}, {firstName} 👋
+            {greeting()}, {firstName}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">Portfólio jurídico · {formatToday()}</p>
         </div>
