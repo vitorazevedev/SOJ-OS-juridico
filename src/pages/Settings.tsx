@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { z } from "zod";
 import { useNavigate } from "react-router-dom";
 import { SojCard } from "@/components/layout/Primitives";
 import { cn } from "@/lib/utils";
@@ -57,6 +58,22 @@ import { ProfileTab } from "@/components/settings/ProfileTab";
 import { NotificationsTab } from "@/components/settings/NotificationsTab";
 import { formatDocument, validateDocument } from "@/lib/brazilianDocs";
 
+// ── Zod schemas ──────────────────────────────────────────────────────────────
+const orgSchema = z.object({
+  name:   z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres").max(120, "Máximo de 120 caracteres"),
+  cnpj:   z.string().optional().refine(
+    (v) => !v || validateDocument(v).valid, "CNPJ/CPF inválido"
+  ),
+  sector: z.string().max(120, "Máximo de 120 caracteres").optional(),
+});
+
+const inviteSchema = z.object({
+  email: z.string().email("Email inválido"),
+});
+
+type OrgErrors    = Partial<Record<"name" | "cnpj" | "sector", string>>;
+type InviteErrors = Partial<Record<"email", string>>;
+
 const PLAN_INFO: Record<string, { name: string; color: string; price: string; feats: string[] }> = {
   starter: {
     name: "Starter",
@@ -101,6 +118,8 @@ export default function Settings() {
   const { users, updateRole, removeUser } = useOrgUsers();
   const fileRef = useRef<HTMLInputElement>(null);
   const [orgForm, setOrgForm] = useState({ name: "", cnpj: "", sector: "" });
+  const [orgErrors, setOrgErrors] = useState<OrgErrors>({});
+  const [inviteErrors, setInviteErrors] = useState<InviteErrors>({});
   const [cnpjError, setCnpjError] = useState("");
   const [savingOrg, setSavingOrg] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
@@ -143,10 +162,14 @@ export default function Settings() {
   const trialPct = trialDaysLeft != null ? Math.max(0, Math.min(100, (trialDaysLeft / 7) * 100)) : 0;
 
   const handleSaveOrg = async () => {
-    if (!orgForm.name.trim()) {
-      toast({ title: "Nome da empresa é obrigatório", variant: "destructive" });
+    const result = orgSchema.safeParse(orgForm);
+    if (!result.success) {
+      const errs: OrgErrors = {};
+      result.error.issues.forEach((i) => { const f = i.path[0] as keyof OrgErrors; if (!errs[f]) errs[f] = i.message; });
+      setOrgErrors(errs);
       return;
     }
+    setOrgErrors({});
     setSavingOrg(true);
     try {
       await updateOrg({
@@ -211,10 +234,12 @@ export default function Settings() {
   };
 
   const handleSendInvite = () => {
-    if (!inviteForm.email.trim()) {
-      toast({ title: "Informe o email do convidado", variant: "destructive" });
+    const result = inviteSchema.safeParse(inviteForm);
+    if (!result.success) {
+      setInviteErrors({ email: result.error.issues[0]?.message });
       return;
     }
+    setInviteErrors({});
     toast({
       title: "Convite registrado",
       description: `Compartilhe o link de cadastro com ${inviteForm.email}. O envio automático por email será habilitado em breve.`,
@@ -365,33 +390,35 @@ export default function Settings() {
                 <label className="text-xs text-muted-foreground">Nome da empresa *</label>
                 <input
                   value={orgForm.name}
-                  onChange={(e) => setOrgForm({ ...orgForm, name: e.target.value })}
-                  className={inputCls}
+                  onChange={(e) => { setOrgForm({ ...orgForm, name: e.target.value }); setOrgErrors((p) => ({ ...p, name: undefined })); }}
+                  className={cn(inputCls, orgErrors.name && "border-destructive/70")}
                   style={{ padding: "11px 12px", minHeight: 44 }}
-                  placeholder="Ex: Trivia Growth"
+                  placeholder="Ex: Ponderum"
                 />
+                {orgErrors.name && <p className="text-[10px] text-destructive">{orgErrors.name}</p>}
               </div>
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs text-muted-foreground">CNPJ</label>
                 <input
                   value={orgForm.cnpj}
-                  onChange={(e) => handleCnpjChange(e.target.value)}
-                  className={cn(inputCls, cnpjError && "border-destructive/70 focus:border-destructive")}
+                  onChange={(e) => { handleCnpjChange(e.target.value); setOrgErrors((p) => ({ ...p, cnpj: undefined })); }}
+                  className={cn(inputCls, (cnpjError || orgErrors.cnpj) && "border-destructive/70 focus:border-destructive")}
                   style={{ padding: "11px 12px", minHeight: 44 }}
                   placeholder="00.000.000/0000-00"
                   inputMode="numeric"
                 />
-                {cnpjError && <p className="text-[10px] text-destructive">{cnpjError}</p>}
+                {(cnpjError || orgErrors.cnpj) && <p className="text-[10px] text-destructive">{cnpjError || orgErrors.cnpj}</p>}
               </div>
               <div className="flex flex-col gap-1.5 md:col-span-2">
                 <label className="text-xs text-muted-foreground">Setor</label>
                 <input
                   value={orgForm.sector}
-                  onChange={(e) => setOrgForm({ ...orgForm, sector: e.target.value })}
-                  className={inputCls}
+                  onChange={(e) => { setOrgForm({ ...orgForm, sector: e.target.value }); setOrgErrors((p) => ({ ...p, sector: undefined })); }}
+                  className={cn(inputCls, orgErrors.sector && "border-destructive/70")}
                   style={{ padding: "11px 12px", minHeight: 44 }}
                   placeholder="Ex: Tecnologia, Saúde, Construção..."
                 />
+                {orgErrors.sector && <p className="text-[10px] text-destructive">{orgErrors.sector}</p>}
               </div>
             </div>
             <div className="flex justify-end pt-2">
@@ -690,9 +717,11 @@ export default function Settings() {
               <Input
                 type="email"
                 value={inviteForm.email}
-                onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                onChange={(e) => { setInviteForm({ ...inviteForm, email: e.target.value }); setInviteErrors({}); }}
                 placeholder="convidado@empresa.com"
+                className={inviteErrors.email ? "border-destructive/70" : ""}
               />
+              {inviteErrors.email && <p className="text-[11px] text-destructive">{inviteErrors.email}</p>}
             </div>
             <div className="flex flex-col gap-1.5">
               <Label className="text-xs text-muted-foreground">Papel</Label>
