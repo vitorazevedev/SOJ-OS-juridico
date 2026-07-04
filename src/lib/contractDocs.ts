@@ -380,12 +380,12 @@ function drawReportFooters(pdf: jsPDF, label: string) {
     pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor(...PC.mid);
     pdf.text(label, ml, ph - 9);
     pdf.text(`Pág. ${p} / ${total}`, pw - mr, ph - 9, { align: "right" });
-    // Preenche o campo PÁGINAS no header apenas na primeira página
+    // Preenche PÁGINAS no header da p.1 abaixo do valor de DATA (que fica em y≈17)
     if (p === 1) {
       pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(...PC.mid);
-      pdf.text("PÁGINAS", pw - mr - 48, 18);
+      pdf.text("PÁGINAS", pw - mr - 48, 24);
       pdf.setFontSize(10); pdf.setTextColor(...PC.navy);
-      pdf.text(`${total}`, pw - mr - 48, 23);
+      pdf.text(`${total}`, pw - mr - 48, 29);
     }
   }
 }
@@ -512,24 +512,27 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
 
       // Original
       if (cl.original_text) {
-        check(10);
-        pdf.setFillColor(254, 242, 242); pdf.roundedRect(ml + 3, y, cw - 3, 5, 1, 1, "F");
+        check(14);
+        // Faixa de rótulo (7mm) + corpo separado por gap abaixo
+        pdf.setFillColor(254, 242, 242);
+        pdf.roundedRect(ml + 3, y, cw - 3, 7, 1, 1, "F");
         pdf.setFont("helvetica", "bold"); pdf.setFontSize(7.5); pdf.setTextColor(180, 30, 30);
-        pdf.text("ORIGINAL (RISCO)", ml + 6, y + 3.5);
-        y += 6;
+        pdf.text("ORIGINAL (RISCO)", ml + 6, y + 4.5);
+        y += 9; // garante saída completa da faixa antes do texto
         writeTxt(cl.original_text, 8.5, false, [60, 60, 60], cw - 10);
-        y += 2;
+        y += 3;
       }
 
       // Sugestão
       if (cl.suggestion) {
-        check(10);
-        pdf.setFillColor(236, 253, 245); pdf.roundedRect(ml + 3, y, cw - 3, 5, 1, 1, "F");
+        check(14);
+        pdf.setFillColor(236, 253, 245);
+        pdf.roundedRect(ml + 3, y, cw - 3, 7, 1, 1, "F");
         pdf.setFont("helvetica", "bold"); pdf.setFontSize(7.5); pdf.setTextColor(...PC.esm);
-        pdf.text("SUGESTÃO", ml + 6, y + 3.5);
-        y += 6;
+        pdf.text("SUGESTÃO", ml + 6, y + 4.5);
+        y += 9;
         writeTxt(cl.suggestion, 8.5, false, [60, 60, 60], cw - 10);
-        y += 2;
+        y += 3;
       }
       y += 4;
     });
