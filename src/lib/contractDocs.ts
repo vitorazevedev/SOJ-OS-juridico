@@ -1,9 +1,12 @@
 import {
   Document,
+  Footer,
+  LineRuleType,
   Packer,
+  PageNumber,
   Paragraph,
   TextRun,
-  HeadingLevel,
+
   AlignmentType,
   ImageRun,
 } from "docx";
@@ -87,43 +90,89 @@ export function buildContractSections(
   };
 }
 
+// ── ABNT NBR helpers ──────────────────────────────────────────────────────
+// Margens: 3cm esquerda/superior, 2cm direita/inferior (em twips: 1cm = 567)
+const ABNT_MARGIN = { top: 1701, right: 1134, bottom: 1134, left: 1701 };
+// Fonte 12pt = 24 half-points; espaçamento 1,5 linhas = 360 unidades
+const abntBody = (text: string, opts?: { bold?: boolean; center?: boolean }): Paragraph =>
+  new Paragraph({
+    alignment: opts?.center ? AlignmentType.CENTER : AlignmentType.JUSTIFIED,
+    spacing: { line: 360, lineRule: LineRuleType.AUTO, before: 0, after: 0 },
+    indent: opts?.center ? undefined : { firstLine: 709 }, // 1,25cm
+    children: [new TextRun({ text, font: "Arial", size: 24, bold: !!opts?.bold })],
+  });
+
+const abntHeading = (text: string, level = 1): Paragraph =>
+  new Paragraph({
+    alignment: AlignmentType.LEFT,
+    spacing: { line: 360, lineRule: LineRuleType.AUTO, before: 280, after: 140 },
+    children: [new TextRun({ text, font: "Arial", size: level === 1 ? 28 : 24, bold: true })],
+  });
+
+const abntBlank = (): Paragraph =>
+  new Paragraph({ spacing: { line: 360, lineRule: LineRuleType.AUTO }, children: [new TextRun("")] });
+
 export async function generateContractDocxBlob(sections: ContractSections, logo?: LogoData | null): Promise<Blob> {
   const children: Paragraph[] = [];
 
+  // ── Capa ────────────────────────────────────────────────────────────────
   if (logo) {
-    const maxW = 120;
+    const maxW = 80;
     const ratio = logo.height / Math.max(1, logo.width);
     const w = Math.min(maxW, logo.width);
     const h = Math.round(w * ratio);
     children.push(
-      new Paragraph({
-        alignment: AlignmentType.CENTER,
-        children: [new ImageRun({ data: logo.bytes, transformation: { width: w, height: h }, type: logo.mime } as ConstructorParameters<typeof ImageRun>[0])],
-      }),
-      new Paragraph({ children: [new TextRun("")] }),
+      new Paragraph({ alignment: AlignmentType.CENTER, children: [new ImageRun({ data: logo.bytes, transformation: { width: w, height: h }, type: logo.mime } as ConstructorParameters<typeof ImageRun>[0])] }),
+      abntBlank(),
     );
   }
 
   children.push(
-    new Paragraph({ heading: HeadingLevel.HEADING_1, alignment: AlignmentType.CENTER, children: [new TextRun({ text: sections.title, bold: true, size: 32 })] }),
-    new Paragraph({ children: [new TextRun("")] }),
-    new Paragraph({ children: [new TextRun(sections.parties.contratante)] }),
-    new Paragraph({ children: [new TextRun(sections.parties.contratado)] }),
-    new Paragraph({ children: [new TextRun("")] }),
+    abntBlank(), abntBlank(),
+    abntBody(sections.title, { bold: true, center: true }),
+    abntBlank(), abntBlank(),
+    abntBody(sections.parties.contratante),
+    abntBlank(),
+    abntBody(sections.parties.contratado),
+    abntBlank(), abntBlank(),
   );
 
+  // ── Cláusulas ────────────────────────────────────────────────────────────
   for (const c of sections.clauses) {
-    children.push(
-      new Paragraph({ heading: HeadingLevel.HEADING_2, children: [new TextRun({ text: c.heading, bold: true, size: 26 })] }),
-      new Paragraph({ children: [new TextRun(c.body)] }),
-      new Paragraph({ children: [new TextRun("")] }),
-    );
+    children.push(abntHeading(c.heading, 2), abntBody(c.body), abntBlank());
   }
-  for (const f of sections.footer) children.push(new Paragraph({ children: [new TextRun(f)] }));
+
+  // ── Bloco de assinaturas ─────────────────────────────────────────────────
+  children.push(
+    abntBlank(), abntBlank(),
+    abntBody("Por estarem assim justos e contratados, firmam o presente instrumento em 2 (duas) vias de igual teor.", { center: true }),
+    abntBlank(), abntBlank(),
+    abntBody("_________________________________", { center: true }),
+    abntBody("CONTRATANTE", { center: true }),
+    abntBlank(),
+    abntBody("_________________________________", { center: true }),
+    abntBody("CONTRATADO", { center: true }),
+    abntBlank(), abntBlank(),
+  );
+
+  // ── Rodapé / avisos ──────────────────────────────────────────────────────
+  for (const f of sections.footer) {
+    children.push(new Paragraph({
+      alignment: AlignmentType.JUSTIFIED,
+      spacing: { line: 240, lineRule: LineRuleType.AUTO },
+      children: [new TextRun({ text: f, font: "Arial", size: 18, color: "888888" })],
+    }));
+  }
 
   const doc = new Document({
     styles: { default: { document: { run: { font: "Arial", size: 24 } } } },
-    sections: [{ properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 } } }, children }],
+    sections: [{
+      properties: { page: { size: { width: 11906, height: 16838 }, margin: ABNT_MARGIN } },
+      footers: {
+        default: new Footer({ children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ children: [PageNumber.CURRENT], font: "Arial", size: 20 })] })] }),
+      },
+      children,
+    }],
   });
 
   const blob = await Packer.toBlob(doc);
@@ -131,49 +180,89 @@ export async function generateContractDocxBlob(sections: ContractSections, logo?
 }
 
 export function generateContractPdfBlob(sections: ContractSections, logo?: LogoData | null): Blob {
-  const pdf = new jsPDF({ unit: "mm", format: "a4" });
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-  const margin = 20;
-  const maxWidth = pageWidth - margin * 2;
-  let y = margin;
+  // ABNT NBR: margens 3cm (esq/sup) e 2cm (dir/inf), Arial 12pt, espaç. 1,5
+  const pdf  = new jsPDF({ unit: "mm", format: "a4" });
+  const pw   = pdf.internal.pageSize.getWidth();
+  const ph   = pdf.internal.pageSize.getHeight();
+  const ml   = 30; // margem esq (3cm)
+  const mr   = 20; // margem dir (2cm)
+  const mt   = 30; // margem sup (3cm)
+  const mb   = 20; // margem inf (2cm)
+  const cw   = pw - ml - mr;
+  const lh   = 7;  // line-height para 12pt × 1,5
+  let y = mt;
 
-  const ensureSpace = (h: number) => { if (y + h > pageHeight - margin) { pdf.addPage(); y = margin; } };
-  const writeWrapped = (text: string, opts: { size?: number; bold?: boolean; align?: "left" | "center" } = {}) => {
-    const size = opts.size ?? 11;
-    pdf.setFont("helvetica", opts.bold ? "bold" : "normal");
-    pdf.setFontSize(size);
-    const lines = pdf.splitTextToSize(text, maxWidth) as string[];
-    const lineHeight = size * 0.45;
+  const navy: [number,number,number]  = [10, 22, 40];
+  const esm:  [number,number,number]  = [6, 113, 115];
+  const gray: [number,number,number]  = [100, 100, 110];
+
+  const check = (need = lh) => { if (y + need > ph - mb) { pdf.addPage(); y = mt; } };
+
+  const block = (text: string, opts?: { bold?: boolean; center?: boolean; size?: number; color?: [number,number,number] }) => {
+    const sz = opts?.size ?? 12;
+    pdf.setFont("helvetica", opts?.bold ? "bold" : "normal");
+    pdf.setFontSize(sz);
+    pdf.setTextColor(...(opts?.color ?? navy));
+    const lines = pdf.splitTextToSize(text, cw) as string[];
+    const lhLocal = sz * 0.53;
     for (const line of lines) {
-      ensureSpace(lineHeight);
-      pdf.text(line, opts.align === "center" ? pageWidth / 2 : margin, y, { align: opts.align ?? "left" });
-      y += lineHeight;
+      check(lhLocal);
+      const x = opts?.center ? pw / 2 : ml;
+      pdf.text(line, x, y, { align: opts?.center ? "center" : "left" });
+      y += lhLocal;
     }
   };
 
+  // ── Logo ─────────────────────────────────────────────────────────────────
   if (logo) {
-    const maxW = 40;
-    const ratio = logo.height / Math.max(1, logo.width);
-    const w = Math.min(maxW, logo.width / 4);
-    const h = w * ratio;
-    try { pdf.addImage(logo.dataUrl, logo.mime.toUpperCase(), (pageWidth - w) / 2, y, w, h); y += h + 6; } catch { /* ignore */ }
+    const w = Math.min(40, logo.width / 4);
+    const h = w * (logo.height / Math.max(1, logo.width));
+    try { pdf.addImage(logo.dataUrl, logo.mime.toUpperCase(), (pw - w) / 2, y, w, h); y += h + 10; } catch { /**/ }
   }
 
-  writeWrapped(sections.title, { size: 16, bold: true, align: "center" });
-  y += 6;
-  writeWrapped(sections.parties.contratante);
-  writeWrapped(sections.parties.contratado);
-  y += 4;
+  // ── Capa ─────────────────────────────────────────────────────────────────
+  y += 20;
+  block(sections.title, { bold: true, center: true, size: 14 });
+  y += 20;
+  block(sections.parties.contratante, { size: 12 });
+  y += lh * 0.5;
+  block(sections.parties.contratado, { size: 12 });
+  y += 20;
 
+  // ── Cláusulas ─────────────────────────────────────────────────────────────
   for (const c of sections.clauses) {
-    y += 2;
-    writeWrapped(c.heading, { size: 12, bold: true });
-    writeWrapped(c.body);
+    y += lh;
+    block(c.heading, { bold: true, size: 12 });
+    y += lh * 0.3;
+    block(c.body, { size: 12 });
   }
 
-  y += 4;
-  for (const f of sections.footer) writeWrapped(f);
+  // ── Assinaturas ───────────────────────────────────────────────────────────
+  y += lh * 3;
+  check(30);
+  block("Por estarem assim justos e contratados, firmam o presente instrumento em 2 (duas) vias de igual teor.", { center: true, size: 12 });
+  y += lh * 3;
+  block("________________________________", { center: true });
+  block("CONTRATANTE", { center: true });
+  y += lh * 2;
+  block("________________________________", { center: true });
+  block("CONTRATADO", { center: true });
+
+  // ── Avisos ────────────────────────────────────────────────────────────────
+  y += lh * 2;
+  for (const f of sections.footer) block(f, { size: 9, color: gray });
+
+  // ── Rodapé paginado ───────────────────────────────────────────────────────
+  const totalPgs = (pdf as unknown as { internal: { getNumberOfPages(): number } }).internal.getNumberOfPages();
+  for (let p = 1; p <= totalPgs; p++) {
+    pdf.setPage(p);
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor(...esm);
+    pdf.text("Ponderum · Inteligência Contratual", ml, ph - 10);
+    pdf.setTextColor(...gray);
+    pdf.text(`Pág. ${p} / ${totalPgs}`, pw - mr, ph - 10, { align: "right" });
+    pdf.setDrawColor(...esm); pdf.setLineWidth(0.3);
+    pdf.line(ml, ph - 14, pw - mr, ph - 14);
+  }
 
   return new Blob([pdf.output("arraybuffer")], { type: PDF_MIME });
 }
@@ -214,6 +303,93 @@ export type AnalysisPdfData = {
   clauses: { title: string; severity: string; category: string | null; original_text: string | null; suggestion: string | null; exposure_likely: number | null }[];
 };
 
+// ── Paleta para PDFs de relatório (tema claro — otimizado para impressão) ──
+const PC = {
+  navy:   [10, 22, 40]      as [number,number,number], // #0A1628
+  esm:    [6, 113, 115]     as [number,number,number], // #067173 Esmeralda
+  mid:    [138, 155, 176]   as [number,number,number], // #8A9BB0
+  light:  [245, 246, 248]   as [number,number,number], // #F5F6F8
+  border: [218, 222, 230]   as [number,number,number], // linha divisória
+  white:  [255, 255, 255]   as [number,number,number],
+};
+
+/** Desenha o cabeçalho padrão Ponderum e retorna o y após o cabeçalho. */
+function drawReportHeader(pdf: jsPDF, opts: {
+  title: string; subtitle: string; date: string;
+  fields: { label: string; value: string }[];
+}): { y: number; ml: number; mr: number; cw: number } {
+  const pw = pdf.internal.pageSize.getWidth();
+  const ml = 25, mr = 20, cw = pw - ml - mr;
+
+  // Faixa de acento (Esmeralda, 3mm)
+  pdf.setFillColor(...PC.esm);
+  pdf.rect(0, 0, pw, 3, "F");
+
+  // Coluna direita: DATA + PÁGINAS (preenchido no footer depois)
+  const rx = pw - mr - 48;
+  let y = 12;
+
+  pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(...PC.mid);
+  pdf.text("DOCUMENTO", ml, y);
+  pdf.text("DATA", rx, y);
+  y += 5;
+
+  pdf.setFont("helvetica", "bold"); pdf.setFontSize(14); pdf.setTextColor(...PC.navy);
+  pdf.text(opts.title, ml, y);
+  pdf.setFont("helvetica", "normal"); pdf.setFontSize(10);
+  pdf.text(opts.date, rx, y);
+  y += 5;
+
+  pdf.setFont("helvetica", "normal"); pdf.setFontSize(8.5); pdf.setTextColor(...PC.mid);
+  pdf.text(opts.subtitle, ml, y);
+  y += 10;
+
+  // Faixa de metadados (cinza claro)
+  const bandH = 17;
+  pdf.setFillColor(...PC.light);
+  pdf.rect(0, y, pw, bandH, "F");
+  pdf.setDrawColor(...PC.border); pdf.setLineWidth(0.3);
+  pdf.line(0, y, pw, y);
+  pdf.line(0, y + bandH, pw, y + bandH);
+
+  const colW = cw / Math.max(opts.fields.length, 1);
+  opts.fields.forEach((f, i) => {
+    const x = ml + i * colW;
+    // Separador vertical entre colunas
+    if (i > 0) { pdf.setDrawColor(...PC.border); pdf.line(x - 3, y + 2, x - 3, y + bandH - 2); }
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(...PC.mid);
+    pdf.text(f.label, x, y + 5);
+    pdf.setFont("helvetica", i === 0 ? "bold" : "normal"); pdf.setFontSize(9.5); pdf.setTextColor(...PC.navy);
+    const val = (pdf.splitTextToSize(f.value || "—", colW - 6) as string[])[0];
+    pdf.text(val, x, y + 11.5);
+  });
+
+  return { y: y + bandH + 6, ml, mr, cw };
+}
+
+/** Rodapé paginado padrão. Chamado após gerar todas as páginas. */
+function drawReportFooters(pdf: jsPDF, label: string) {
+  const pw = pdf.internal.pageSize.getWidth();
+  const ph = pdf.internal.pageSize.getHeight();
+  const ml = 25, mr = 20;
+  const total = (pdf as unknown as { internal: { getNumberOfPages(): number } }).internal.getNumberOfPages();
+  for (let p = 1; p <= total; p++) {
+    pdf.setPage(p);
+    pdf.setDrawColor(...PC.border); pdf.setLineWidth(0.3);
+    pdf.line(ml, ph - 14, pw - mr, ph - 14);
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor(...PC.mid);
+    pdf.text(label, ml, ph - 9);
+    pdf.text(`Pág. ${p} / ${total}`, pw - mr, ph - 9, { align: "right" });
+    // Preenche o campo PÁGINAS no header apenas na primeira página
+    if (p === 1) {
+      pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(...PC.mid);
+      pdf.text("PÁGINAS", pw - mr - 48, 18);
+      pdf.setFontSize(10); pdf.setTextColor(...PC.navy);
+      pdf.text(`${total}`, pw - mr - 48, 23);
+    }
+  }
+}
+
 const SEV_LABEL: Record<string, string> = { critico: "CRÍTICO", alto: "ALTO", medio: "MÉDIO", baixo: "BAIXO" };
 const SEV_RGB: Record<string, [number, number, number]> = {
   critico: [220, 38, 38],
@@ -235,170 +411,131 @@ function fmtDatePdf(iso: string | null | undefined): string {
 export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
   const { contract, analysis, clauses } = data;
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
-  const pageW = pdf.internal.pageSize.getWidth();
-  const pageH = pdf.internal.pageSize.getHeight();
-  const ml = 20;
-  const mr = 20;
-  const cw = pageW - ml - mr;
-  let y = ml;
+  const ph  = pdf.internal.pageSize.getHeight();
 
-  const checkPage = (need = 10) => {
-    if (y + need > pageH - mr) { pdf.addPage(); y = ml; }
+  const score   = analysis.risk_score ?? 0;
+  const sevRgb: [number,number,number] = score >= 70 ? [220, 38, 38] : score >= 40 ? [234, 88, 12] : score >= 20 ? [202, 138, 4] : [6, 113, 115];
+  const sevLabel = score >= 70 ? "CRÍTICO" : score >= 40 ? "ALTO" : score >= 20 ? "MÉDIO" : "BAIXO";
+
+  // ── Cabeçalho ──────────────────────────────────────────────────────────────
+  // Score badge inline no campo da direita
+  const scoreTxt = `${score} · ${sevLabel}`;
+  const { y: y0, ml, cw } = drawReportHeader(pdf, {
+    title:    "Relatório de Análise Contratual",
+    subtitle: "Ponderum · Inteligência Contratual",
+    date:     fmtDatePdf(analysis.analyzed_at),
+    fields: [
+      { label: "CONTRATO",    value: contract.name },
+      { label: "CONTRAPARTE", value: contract.party ?? "—" },
+      { label: "TIPO",        value: contract.type ?? "—" },
+      { label: "SCORE",       value: scoreTxt },
+    ],
+  });
+  // Colore o valor de score com a cor do risco
+  const scoreX = ml + cw * 0.75;
+  pdf.setFont("helvetica", "bold"); pdf.setFontSize(9.5); pdf.setTextColor(...sevRgb);
+  pdf.text(scoreTxt, scoreX, y0 - 6 + 17 - 6); // posição alinhada com os outros valores
+
+  let y = y0;
+  const check = (need = 8) => { if (y + need > ph - 20) { pdf.addPage(); y = 20; } };
+
+  const writeTxt = (text: string, sz = 10, bold = false, color = PC.navy, maxW = cw) => {
+    pdf.setFont("helvetica", bold ? "bold" : "normal"); pdf.setFontSize(sz); pdf.setTextColor(...color);
+    const lines = pdf.splitTextToSize(text, maxW) as string[];
+    lines.forEach((l) => { check(sz * 0.5); pdf.text(l, ml, y); y += sz * 0.5; });
   };
 
-  const writeLines = (text: string, size = 10, bold = false, color: [number, number, number] = [30, 30, 30]) => {
-    pdf.setFontSize(size);
-    pdf.setFont("helvetica", bold ? "bold" : "normal");
-    pdf.setTextColor(...color);
-    const lines = pdf.splitTextToSize(text, cw) as string[];
-    lines.forEach((l) => {
-      checkPage(5);
-      pdf.text(l, ml, y);
-      y += 5;
-    });
+  const sectionHeader = (title: string) => {
+    check(12);
+    pdf.setFillColor(...PC.esm); pdf.rect(ml, y, 2, 7, "F");
+    pdf.setFont("helvetica", "bold"); pdf.setFontSize(11); pdf.setTextColor(...PC.navy);
+    pdf.text(title, ml + 5, y + 5);
+    y += 12;
   };
 
-  // ── Header bar ──────────────────────────────────────────────────────────
-  pdf.setFillColor(0, 20, 14);
-  pdf.rect(0, 0, pageW, 18, "F");
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(13);
-  pdf.setTextColor(0, 229, 160);
-  pdf.text("Ponderum — Análise Contratual", ml, 12);
-  y = 26;
-
-  // ── Contract meta ────────────────────────────────────────────────────────
-  writeLines(contract.name, 14, true, [15, 15, 15]);
-  y += 1;
-  writeLines(
-    [contract.party, contract.type, `Analisado em ${fmtDatePdf(analysis.analyzed_at)}`].filter(Boolean).join("  ·  "),
-    9, false, [100, 100, 100]
-  );
-  y += 4;
-
-  // ── Risk score ───────────────────────────────────────────────────────────
-  const score = analysis.risk_score ?? 0;
-  const scoreColor: [number, number, number] = score >= 70 ? [220, 38, 38] : score >= 40 ? [234, 88, 12] : [22, 163, 74];
-  pdf.setFillColor(245, 245, 245);
-  pdf.roundedRect(ml, y, cw, 14, 3, 3, "F");
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(10);
-  pdf.setTextColor(80, 80, 80);
-  pdf.text("Score de Risco", ml + 5, y + 6);
-  pdf.setFontSize(18);
-  pdf.setTextColor(...scoreColor);
-  pdf.text(`${score}`, ml + 5, y + 12);
-  pdf.setFontSize(10);
-  pdf.setTextColor(80, 80, 80);
-  pdf.text(`${clauses.length} cláusulas identificadas`, ml + 22, y + 12);
-  if (analysis.financial_total != null) {
-    const ftLabel = "Exposição total:";
-    const ftValue = fmtBRLPdf(analysis.financial_total);
-    pdf.text(ftLabel, ml + 100, y + 6);
-    pdf.setFont("helvetica", "bold");
-    pdf.setTextColor(220, 38, 38);
-    pdf.text(ftValue, ml + 100, y + 12);
-  }
-  y += 20;
-
-  // ── Summary ──────────────────────────────────────────────────────────────
+  // ── Resumo executivo ──────────────────────────────────────────────────────
   if (analysis.summary) {
-    writeLines("Resumo Executivo", 11, true, [15, 15, 15]);
-    y += 1;
-    pdf.setFillColor(248, 248, 248);
+    sectionHeader("Resumo Executivo");
     const summaryLines = pdf.splitTextToSize(analysis.summary, cw - 10) as string[];
-    const boxH = summaryLines.length * 5 + 8;
-    checkPage(boxH);
+    const boxH = summaryLines.length * 4.5 + 8;
+    check(boxH);
+    pdf.setFillColor(...PC.light);
     pdf.roundedRect(ml, y, cw, boxH, 2, 2, "F");
-    pdf.setFontSize(9);
-    pdf.setFont("helvetica", "normal");
-    pdf.setTextColor(50, 50, 50);
-    summaryLines.forEach((l, i) => { pdf.text(l, ml + 5, y + 6 + i * 5); });
+    pdf.setFontSize(9); pdf.setFont("helvetica", "normal"); pdf.setTextColor(...PC.navy);
+    summaryLines.forEach((l, i) => { pdf.text(l, ml + 5, y + 6 + i * 4.5); });
     y += boxH + 6;
   }
 
-  // ── Clauses ──────────────────────────────────────────────────────────────
-  writeLines("Cláusulas de Risco", 11, true, [15, 15, 15]);
-  y += 2;
-
-  clauses.forEach((cl, idx) => {
-    const sevRgb = SEV_RGB[cl.severity] ?? [100, 100, 100];
-    const hasExposure = cl.exposure_likely != null;
-    // Reserve space on the right for the exposure badge so long titles wrap
-    // instead of running underneath/over it.
-    const titleMaxWidth = cw - 35 - (hasExposure ? 32 : 5);
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(9);
-    const titleLines = (pdf.splitTextToSize(cl.title, titleMaxWidth) as string[]).slice(0, 2);
-    const headerH = Math.max(10, titleLines.length * 5 + 5);
-
-    const needH = headerH + 7 + (cl.original_text ? Math.ceil(cl.original_text.length / 80) * 5 + 8 : 0)
-                     + (cl.suggestion ? Math.ceil(cl.suggestion.length / 80) * 5 + 8 : 0);
-    checkPage(Math.min(needH, 60));
-
-    // Clause header
-    pdf.setFillColor(245, 245, 245);
-    pdf.roundedRect(ml, y, cw, headerH, 2, 2, "F");
-    pdf.setFillColor(...sevRgb);
-    pdf.roundedRect(ml, y, 2, headerH, 1, 1, "F");
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(9);
-    pdf.setTextColor(...sevRgb);
-    pdf.text(`${idx + 1}. [${SEV_LABEL[cl.severity] ?? cl.severity}]`, ml + 5, y + 6.5);
-    pdf.setFont("helvetica", "normal");
-    pdf.setTextColor(20, 20, 20);
-    titleLines.forEach((line, i) => { pdf.text(line, ml + 35, y + 6.5 + i * 5); });
-    if (hasExposure) {
-      pdf.setFont("helvetica", "bold");
-      pdf.setTextColor(220, 38, 38);
-      pdf.text(fmtBRLPdf(cl.exposure_likely), ml + cw - 5, y + 6.5, { align: "right" });
-    }
-    y += headerH + 7;
-
-    if (cl.original_text) {
-      checkPage(10);
-      pdf.setFontSize(8);
-      pdf.setFont("helvetica", "bold");
-      pdf.setTextColor(180, 30, 30);
-      pdf.text("Original (Risco):", ml + 4, y);
-      y += 4;
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(60, 60, 60);
-      const origLines = pdf.splitTextToSize(cl.original_text, cw - 10) as string[];
-      origLines.forEach((l) => { checkPage(5); pdf.text(l, ml + 4, y); y += 4.5; });
-      y += 2;
-    }
-
-    if (cl.suggestion) {
-      checkPage(10);
-      pdf.setFontSize(8);
-      pdf.setFont("helvetica", "bold");
-      pdf.setTextColor(0, 140, 100);
-      pdf.text("Sugestão:", ml + 4, y);
-      y += 4;
-      pdf.setFont("helvetica", "normal");
-      pdf.setTextColor(60, 60, 60);
-      const sugLines = pdf.splitTextToSize(cl.suggestion, cw - 10) as string[];
-      sugLines.forEach((l) => { checkPage(5); pdf.text(l, ml + 4, y); y += 4.5; });
-      y += 2;
-    }
-
-    y += 4;
-  });
-
-  // ── Footer ───────────────────────────────────────────────────────────────
-  const totalPages = (pdf as unknown as { internal: { getNumberOfPages(): number } }).internal.getNumberOfPages();
-  for (let p = 1; p <= totalPages; p++) {
-    pdf.setPage(p);
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(8);
-    pdf.setTextColor(160, 160, 160);
-    pdf.text(
-      `Ponderum — Inteligência Contratual  ·  Gerado em ${fmtDatePdf(new Date().toISOString())}  ·  Pág. ${p}/${totalPages}`,
-      ml, pageH - 8
-    );
+  // ── Exposição financeira ──────────────────────────────────────────────────
+  if (analysis.financial_total != null) {
+    check(18);
+    pdf.setFillColor(...PC.light);
+    pdf.roundedRect(ml, y, cw, 14, 2, 2, "F");
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor(...PC.mid);
+    pdf.text("Exposição financeira total estimada:", ml + 5, y + 6);
+    pdf.setFont("helvetica", "bold"); pdf.setFontSize(12); pdf.setTextColor(220, 38, 38);
+    pdf.text(fmtBRLPdf(analysis.financial_total), ml + 5, y + 12);
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor(...PC.mid);
+    pdf.text(`${clauses.length} cláusula(s) identificada(s)`, ml + 80, y + 12);
+    y += 20;
   }
 
+  // ── Cláusulas ────────────────────────────────────────────────────────────
+  if (clauses.length > 0) {
+    sectionHeader(`Cláusulas Identificadas  (${clauses.length})`);
+
+    clauses.forEach((cl, idx) => {
+      const sev = SEV_RGB[cl.severity] ?? ([100, 100, 100] as [number,number,number]);
+      const hasExp = cl.exposure_likely != null;
+      const titleW = cw - 35 - (hasExp ? 32 : 5);
+      const titleLines = (pdf.splitTextToSize(cl.title, titleW) as string[]).slice(0, 2);
+      const hdrH = Math.max(10, titleLines.length * 5 + 5);
+      const needH = hdrH + 7
+        + (cl.original_text ? Math.min((pdf.splitTextToSize(cl.original_text, cw - 14) as string[]).length * 4.5 + 10, 40) : 0)
+        + (cl.suggestion    ? Math.min((pdf.splitTextToSize(cl.suggestion,    cw - 14) as string[]).length * 4.5 + 10, 40) : 0);
+      check(Math.min(needH, 60));
+
+      // Cabeçalho da cláusula
+      pdf.setFillColor(...PC.light);
+      pdf.roundedRect(ml, y, cw, hdrH, 2, 2, "F");
+      pdf.setFillColor(...sev);
+      pdf.rect(ml, y, 3, hdrH, "F");
+      pdf.setFont("helvetica", "bold"); pdf.setFontSize(8.5); pdf.setTextColor(...sev);
+      pdf.text(`${idx + 1}. ${SEV_LABEL[cl.severity] ?? cl.severity.toUpperCase()}`, ml + 6, y + 6.5);
+      pdf.setFont("helvetica", "normal"); pdf.setTextColor(...PC.navy);
+      titleLines.forEach((l, i) => pdf.text(l, ml + 34, y + 6.5 + i * 5));
+      if (hasExp) {
+        pdf.setFont("helvetica", "bold"); pdf.setTextColor(220, 38, 38);
+        pdf.text(fmtBRLPdf(cl.exposure_likely), ml + cw - 3, y + 6.5, { align: "right" });
+      }
+      y += hdrH + 7;
+
+      // Original
+      if (cl.original_text) {
+        check(10);
+        pdf.setFillColor(254, 242, 242); pdf.roundedRect(ml + 3, y, cw - 3, 5, 1, 1, "F");
+        pdf.setFont("helvetica", "bold"); pdf.setFontSize(7.5); pdf.setTextColor(180, 30, 30);
+        pdf.text("ORIGINAL (RISCO)", ml + 6, y + 3.5);
+        y += 6;
+        writeTxt(cl.original_text, 8.5, false, [60, 60, 60], cw - 10);
+        y += 2;
+      }
+
+      // Sugestão
+      if (cl.suggestion) {
+        check(10);
+        pdf.setFillColor(236, 253, 245); pdf.roundedRect(ml + 3, y, cw - 3, 5, 1, 1, "F");
+        pdf.setFont("helvetica", "bold"); pdf.setFontSize(7.5); pdf.setTextColor(...PC.esm);
+        pdf.text("SUGESTÃO", ml + 6, y + 3.5);
+        y += 6;
+        writeTxt(cl.suggestion, 8.5, false, [60, 60, 60], cw - 10);
+        y += 2;
+      }
+      y += 4;
+    });
+  }
+
+  drawReportFooters(pdf, "Ponderum · Relatório de Análise Contratual");
   return new Blob([pdf.output("arraybuffer")], { type: PDF_MIME });
 }
 
@@ -417,117 +554,106 @@ const STATUS_LABEL_PDF: Record<string, string> = {
   analisado: "Analisado",
 };
 
-// Resumo legível dos mesmos dados do export JSON (LGPD Art. 18) — pensado para
-// alguém abrir e entender sem precisar interpretar um arquivo de dados bruto.
+// Resumo legível dos mesmos dados do export JSON (LGPD Art. 18).
 export function generateDataSummaryPdf(data: DataSummaryPdfInput): Blob {
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
-  const pageW = pdf.internal.pageSize.getWidth();
-  const pageH = pdf.internal.pageSize.getHeight();
-  const ml = 20;
-  const mr = 20;
-  const cw = pageW - ml - mr;
-  let y = ml;
+  const ph  = pdf.internal.pageSize.getHeight();
+  const org = data.organization;
 
-  const checkPage = (need = 10) => {
-    if (y + need > pageH - mr) { pdf.addPage(); y = ml; }
+  const { y: y0, ml, cw } = drawReportHeader(pdf, {
+    title:    "Resumo de Dados Pessoais",
+    subtitle: "Ponderum · Portabilidade de dados — LGPD Art. 18",
+    date:     fmtDatePdf(data.exported_at),
+    fields: [
+      { label: "ORGANIZAÇÃO", value: org?.name ?? "—" },
+      { label: "PLANO",       value: org?.plan_id ?? "—" },
+      { label: "CNPJ",        value: org?.cnpj ?? "—" },
+      { label: "CRIADA EM",   value: fmtDatePdf(org?.created_at) },
+    ],
+  });
+
+  let y = y0;
+  const check = (need = 8) => { if (y + need > ph - 20) { pdf.addPage(); y = 20; } };
+
+  const secHeader = (title: string) => {
+    check(12);
+    pdf.setFillColor(...PC.esm); pdf.rect(ml, y, 2, 7, "F");
+    pdf.setFont("helvetica", "bold"); pdf.setFontSize(11); pdf.setTextColor(...PC.navy);
+    pdf.text(title, ml + 5, y + 5);
+    y += 12;
   };
 
-  const sectionTitle = (text: string) => {
-    checkPage(12);
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(11);
-    pdf.setTextColor(15, 15, 15);
-    pdf.text(text, ml, y);
-    y += 6;
-  };
-
-  const row = (cols: string[], widths: number[], opts?: { bold?: boolean; color?: [number, number, number] }) => {
-    checkPage(6);
-    pdf.setFont("helvetica", opts?.bold ? "bold" : "normal");
-    pdf.setFontSize(9);
-    pdf.setTextColor(...(opts?.color ?? [50, 50, 50]));
+  const tableRow = (cols: string[], widths: number[], header = false) => {
+    check(6);
+    if (header) {
+      pdf.setFillColor(...PC.light); pdf.rect(ml, y - 3.5, cw, 6, "F");
+    }
+    pdf.setFont("helvetica", header ? "bold" : "normal");
+    pdf.setFontSize(header ? 8 : 9);
+    pdf.setTextColor(...(header ? PC.mid : PC.navy));
     let x = ml;
     cols.forEach((c, i) => {
-      const lines = pdf.splitTextToSize(c, widths[i] - 2) as string[];
-      pdf.text(lines[0] ?? "", x, y);
+      const v = (pdf.splitTextToSize(c, widths[i] - 2) as string[])[0] ?? "";
+      pdf.text(v, x, y);
       x += widths[i];
     });
+    pdf.setDrawColor(...PC.border); pdf.setLineWidth(0.2);
+    pdf.line(ml, y + 2, ml + cw, y + 2);
+    y += header ? 6 : 5.5;
+  };
+
+  const fieldRow = (label: string, value: string) => {
+    check(6);
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(8.5); pdf.setTextColor(...PC.mid);
+    pdf.text(label, ml, y);
+    pdf.setFont("helvetica", "normal"); pdf.setTextColor(...PC.navy);
+    pdf.text(value, ml + 35, y);
     y += 5;
   };
 
-  // ── Header ───────────────────────────────────────────────────────────────
-  pdf.setFillColor(0, 20, 14);
-  pdf.rect(0, 0, pageW, 18, "F");
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(13);
-  pdf.setTextColor(0, 229, 160);
-  pdf.text("Ponderum — Resumo dos Meus Dados (LGPD)", ml, 12);
-  y = 26;
-
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(9);
-  pdf.setTextColor(100, 100, 100);
-  pdf.text(`Gerado em ${fmtDatePdf(data.exported_at)} · cópia legível do export oficial em JSON`, ml, y);
-  y += 10;
-
-  // ── Organização ──────────────────────────────────────────────────────────
-  sectionTitle("Organização");
-  if (data.organization) {
-    row(["Nome", data.organization.name ?? "—"], [35, cw - 35]);
-    row(["CNPJ", data.organization.cnpj ?? "—"], [35, cw - 35]);
-    row(["Setor", data.organization.sector ?? "—"], [35, cw - 35]);
-    row(["Plano", data.organization.plan_id ?? "—"], [35, cw - 35]);
-    row(["Criada em", fmtDatePdf(data.organization.created_at)], [35, cw - 35]);
+  // ── Organização ─────────────────────────────────────────────────────────
+  secHeader("Organização");
+  if (org) {
+    fieldRow("Nome",      org.name    ?? "—");
+    fieldRow("CNPJ",      org.cnpj    ?? "—");
+    fieldRow("Setor",     org.sector  ?? "—");
+    fieldRow("Plano",     org.plan_id ?? "—");
+    fieldRow("Criada em", fmtDatePdf(org.created_at));
   }
   y += 4;
 
   // ── Usuários ─────────────────────────────────────────────────────────────
-  sectionTitle(`Usuários (${data.users.length})`);
-  const userColW = [cw * 0.35, cw * 0.45, cw * 0.2];
-  row(["Nome", "E-mail", "Papel"], userColW, { bold: true, color: [80, 80, 80] });
-  data.users.forEach((u) => row([u.name ?? "—", u.email ?? "—", u.role ?? "—"], userColW));
+  secHeader(`Usuários  (${data.users.length})`);
+  const uW = [cw * 0.33, cw * 0.43, cw * 0.24];
+  tableRow(["NOME", "E-MAIL", "PAPEL"], uW, true);
+  data.users.forEach((u) => tableRow([u.name ?? "—", u.email ?? "—", u.role ?? "—"], uW));
   y += 4;
 
   // ── Contratos ────────────────────────────────────────────────────────────
-  sectionTitle(`Contratos (${data.contracts.length})`);
-  const ctColW = [cw * 0.4, cw * 0.25, cw * 0.2, cw * 0.15];
-  row(["Nome", "Tipo", "Status", "Enviado em"], ctColW, { bold: true, color: [80, 80, 80] });
+  secHeader(`Contratos  (${data.contracts.length})`);
+  const cW = [cw * 0.38, cw * 0.24, cw * 0.2, cw * 0.18];
+  tableRow(["NOME", "TIPO", "STATUS", "ENVIADO EM"], cW, true);
   data.contracts.forEach((c) =>
-    row(
-      [c.name ?? "—", c.type ?? "—", STATUS_LABEL_PDF[c.status ?? ""] ?? c.status ?? "—", fmtDatePdf(c.created_at)],
-      ctColW
-    )
+    tableRow([c.name ?? "—", c.type ?? "—", STATUS_LABEL_PDF[c.status ?? ""] ?? c.status ?? "—", fmtDatePdf(c.created_at)], cW)
   );
   y += 4;
 
   // ── Obrigações ───────────────────────────────────────────────────────────
-  sectionTitle(`Obrigações (${data.contract_obligations.length})`);
-  const obColW = [cw * 0.55, cw * 0.25, cw * 0.2];
-  row(["Descrição", "Vencimento", "Status"], obColW, { bold: true, color: [80, 80, 80] });
+  secHeader(`Obrigações  (${data.contract_obligations.length})`);
+  const oW = [cw * 0.55, cw * 0.25, cw * 0.2];
+  tableRow(["DESCRIÇÃO", "VENCIMENTO", "STATUS"], oW, true);
   data.contract_obligations.forEach((o) =>
-    row([o.description ?? "—", fmtDatePdf(o.due_date), o.status ?? "—"], obColW)
+    tableRow([o.description ?? "—", fmtDatePdf(o.due_date), o.status ?? "—"], oW)
   );
   y += 4;
 
   // ── Contratos gerados ────────────────────────────────────────────────────
-  sectionTitle(`Contratos gerados (${data.generated_contracts.length})`);
-  const genColW = [cw * 0.7, cw * 0.3];
-  row(["Nome", "Gerado em"], genColW, { bold: true, color: [80, 80, 80] });
-  data.generated_contracts.forEach((g) => row([g.name ?? "—", fmtDatePdf(g.created_at)], genColW));
+  secHeader(`Contratos gerados  (${data.generated_contracts.length})`);
+  const gW = [cw * 0.7, cw * 0.3];
+  tableRow(["NOME", "GERADO EM"], gW, true);
+  data.generated_contracts.forEach((g) => tableRow([g.name ?? "—", fmtDatePdf(g.created_at)], gW));
 
-  // ── Footer ───────────────────────────────────────────────────────────────
-  const totalPages = (pdf as unknown as { internal: { getNumberOfPages(): number } }).internal.getNumberOfPages();
-  for (let p = 1; p <= totalPages; p++) {
-    pdf.setPage(p);
-    pdf.setFont("helvetica", "normal");
-    pdf.setFontSize(8);
-    pdf.setTextColor(160, 160, 160);
-    pdf.text(
-      `Ponderum — Inteligência Contratual  ·  Resumo de dados pessoais (LGPD Art. 18)  ·  Pág. ${p}/${totalPages}`,
-      ml, pageH - 8
-    );
-  }
-
+  drawReportFooters(pdf, "Ponderum · Resumo de dados pessoais (LGPD Art. 18)");
   return new Blob([pdf.output("arraybuffer")], { type: PDF_MIME });
 }
 
