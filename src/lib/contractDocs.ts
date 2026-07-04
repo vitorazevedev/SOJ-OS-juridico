@@ -518,9 +518,9 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
         pdf.roundedRect(ml + 3, y, cw - 3, 7, 1, 1, "F");
         pdf.setFont("helvetica", "bold"); pdf.setFontSize(7.5); pdf.setTextColor(180, 30, 30);
         pdf.text("ORIGINAL (RISCO)", ml + 6, y + 4.5);
-        y += 9; // garante saída completa da faixa antes do texto
+        y += 12; // 7mm faixa + 5mm de respiro antes do texto
         writeTxt(cl.original_text, 8.5, false, [60, 60, 60], cw - 10);
-        y += 3;
+        y += 4;
       }
 
       // Sugestão
@@ -530,9 +530,9 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
         pdf.roundedRect(ml + 3, y, cw - 3, 7, 1, 1, "F");
         pdf.setFont("helvetica", "bold"); pdf.setFontSize(7.5); pdf.setTextColor(...PC.esm);
         pdf.text("SUGESTÃO", ml + 6, y + 4.5);
-        y += 9;
+        y += 12;
         writeTxt(cl.suggestion, 8.5, false, [60, 60, 60], cw - 10);
-        y += 3;
+        y += 4;
       }
       y += 4;
     });
