@@ -83,7 +83,7 @@ mitigações e organiza prazos e obrigações.
 | **Supabase** | Supabase Inc. (EUA) | Banco de dados, autenticação, armazenamento de arquivos | Todos os dados da plataforma |
 | **Anthropic / Claude API** | Anthropic PBC (EUA) | Análise de contratos por IA (extração de texto e identificação de riscos) | Conteúdo dos contratos enviados para análise |
 | **Resend** | Resend Inc. (EUA) | Envio de e-mails transacionais (alertas, confirmações) | Nome e e-mail do destinatário |
-| **Netlify** | Netlify Inc. (EUA) | Hospedagem da interface web | IPs de acesso e logs de requisição |
+| **Vercel** | Vercel Inc. (EUA) | Hospedagem da interface web | IPs de acesso e logs de requisição |
 | **Sentry** | Functional Software Inc. (EUA) | Monitoramento de erros em produção | Dados técnicos de erros (sem dados pessoais identificáveis nas mensagens) |
 
 **Nota importante sobre a Anthropic/Claude:** o conteúdo dos contratos enviados
