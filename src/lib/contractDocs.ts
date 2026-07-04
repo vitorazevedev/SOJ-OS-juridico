@@ -515,7 +515,8 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
         check(14);
         // Faixa de rótulo (7mm) + corpo separado por gap abaixo
         pdf.setFillColor(254, 242, 242);
-        pdf.roundedRect(ml + 3, y, cw - 3, 7, 1, 1, "F");
+        pdf.roundedRect(ml, y, cw, 7, 2, 2, "F");
+        pdf.setFillColor(220, 38, 38); pdf.rect(ml, y, 3, 7, "F");
         pdf.setFont("helvetica", "bold"); pdf.setFontSize(7.5); pdf.setTextColor(180, 30, 30);
         pdf.text("ORIGINAL (RISCO)", ml + 6, y + 4.5);
         y += 12; // 7mm faixa + 5mm de respiro antes do texto
@@ -527,7 +528,8 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
       if (cl.suggestion) {
         check(14);
         pdf.setFillColor(236, 253, 245);
-        pdf.roundedRect(ml + 3, y, cw - 3, 7, 1, 1, "F");
+        pdf.roundedRect(ml, y, cw, 7, 2, 2, "F");
+        pdf.setFillColor(...PC.esm); pdf.rect(ml, y, 3, 7, "F");
         pdf.setFont("helvetica", "bold"); pdf.setFontSize(7.5); pdf.setTextColor(...PC.esm);
         pdf.text("SUGESTÃO", ml + 6, y + 4.5);
         y += 12;
