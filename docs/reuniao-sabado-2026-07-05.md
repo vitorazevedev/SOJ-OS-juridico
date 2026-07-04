@@ -108,7 +108,7 @@ Plataforma SaaS de inteligência contratual. O usuário envia um contrato (PDF, 
 | Serviço | Função | Custo atual |
 |---|---|---|
 | **Supabase** | Banco de dados, autenticação, armazenamento, funções | **R$ 0** (plano Free) |
-| **Netlify** | Hospedagem do frontend | **R$ 0** (plano Free) |
+| **Netlify** | Hospedagem do frontend | **R$ 0** (plano Free) ⚠️ créditos esgotados — novos deploys bloqueados até renovar ou fazer upgrade |
 | **Sentry** | Monitoramento de erros | **R$ 0** (5k eventos/mês grátis) |
 | **Resend** | Envio de emails automáticos do sistema (transacional) | **R$ 0** (3k emails/mês grátis) |
 | **Google Fonts** | Tipografia Cormorant Garamond + Inter | **R$ 0** |
@@ -157,6 +157,7 @@ Estas questões **bloqueiam o lançamento público** ou afetam o produto diretam
 | # | Pendência | Responsável | Impacto |
 |---|---|---|---|
 | 1 | **Domínio** `ponderum.com.br` — disponível em registro.br por R$ 40/ano. Decisão: registrar 1 ou 2 anos? Comprar o `.com` também (~R$ 67/ano na Squarespace)? | Kober / Vitor | Landing page, email oficial e Google OAuth em produção |
+| 0 | **Netlify — upgrade para Pro (~R$ 100/mês)** — créditos gratuitos esgotados. O site atual continua no ar, mas novos deploys estão bloqueados. Opções: (a) esperar renovação mensal dos créditos gratuitos; (b) migrar para Vercel Free (6.000 min/mês vs 300 do Netlify); (c) fazer upgrade para Netlify Pro antes do lançamento. | **Kober** | Bloqueia lançamento para primeiros usuários se não resolvido |
 | 2 | **Email oficial** — recomendação: Zoho Mail gratuito para Vitor, Kober e Fellipe (`@ponderum.com.br`). Precisa do domínio registrado primeiro. | Vitor (configurar) | Comunicação com usuários e suporte |
 | 3 | **WhatsApp de suporte** — qual número? | Kober | Contato com usuários da waitlist |
 | 4 | **Termos de Uso e Política de Privacidade** — revisão e aprovação | **Fellipe** | Obrigatório para lançamento público (LGPD) |
@@ -180,6 +181,7 @@ Estas são tarefas de desenvolvimento, não precisam de decisão dos sócios —
 | 4 | Publicar landing page (ativar deploy no Netlify) | Aprovações do Fellipe | 15 min |
 | 5 | Configurar canal de suporte no painel Dev | WhatsApp/email (#2 e #3) | 1h |
 | 6 | ~~Zod validation em todos os formulários~~ | — | ✅ Concluído |
+| **Netlify** — resolver créditos esgotados antes de publicar qualquer atualização | Decisão do Kober (seção 5) | 15 min (upgrade ou migração) |
 | 7 | Continuar extração de componentes (Settings 773 linhas, Generator 716 linhas) | — | 4–6h |
 | 8 | Atualizar Vite para v6 (corrigir 2 vulnerabilidades dev restantes) | — | 2h + teste |
 | 9 | Testes automatizados mínimos (fluxo de upload + análise) | — | 6–8h |
