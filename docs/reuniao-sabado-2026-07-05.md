@@ -89,7 +89,7 @@ Plataforma SaaS de inteligência contratual. O usuário envia um contrato (PDF, 
 | Row Level Security (RLS) | ✅ Auditado | Todas as 20 tabelas — isolamento total entre organizações confirmado |
 | Autenticação JWT | ✅ | Supabase GoTrue — padrão da indústria |
 | Login com Google (OAuth) | ✅ Configurado | Google Cloud Console + Supabase — testado em 03/07/2026 |
-| Validação de entrada (Zod) | ✅ Parcial | Generator + quota; Contracts e Obligations ainda sem schema formal |
+| Validação de entrada (Zod) | ✅ Completo | Generator, Obrigações, Login/Cadastro e Configurações — todos os formulários críticos |
 | Rate limiting no login | ✅ | 5 tentativas por 5 min por IP (configurado no Supabase) |
 | Headers HTTP | ✅ | CSP, HSTS, X-Frame-Options, Permissions-Policy (Netlify) |
 | Anti-prompt injection | ✅ | System prompt hardened + conteúdo do contrato isolado em tags XML |
@@ -179,7 +179,7 @@ Estas são tarefas de desenvolvimento, não precisam de decisão dos sócios —
 | 3 | Substituir "P" placeholder pelo SVG real na sidebar e landing | SVG do Fellipe | 30 min |
 | 4 | Publicar landing page (ativar deploy no Netlify) | Aprovações do Fellipe | 15 min |
 | 5 | Configurar canal de suporte no painel Dev | WhatsApp/email (#2 e #3) | 1h |
-| 6 | Zod validation em Contratos e Obrigações | — | 3–4h |
+| 6 | ~~Zod validation em todos os formulários~~ | — | ✅ Concluído |
 | 7 | Continuar extração de componentes (Settings 773 linhas, Generator 716 linhas) | — | 4–6h |
 | 8 | Atualizar Vite para v6 (corrigir 2 vulnerabilidades dev restantes) | — | 2h + teste |
 | 9 | Testes automatizados mínimos (fluxo de upload + análise) | — | 6–8h |
