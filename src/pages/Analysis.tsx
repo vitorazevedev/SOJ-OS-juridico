@@ -318,6 +318,9 @@ function AnalisadoView({
               <div className="hidden md:block"><GaugeChart score={riskScore} /></div>
               <RiskBadge score={riskScore} />
               <p className="text-[11px] md:text-xs text-muted-foreground mt-3">{clauses.length} cláusulas identificadas</p>
+              <p className="text-[10px] text-muted-foreground/70 mt-2 leading-tight px-1 border-t border-border pt-2">
+                Estimativa gerada por IA — não é avaliação jurídica definitiva. Consulte um advogado.
+              </p>
               <div className="grid grid-cols-2 gap-2 mt-4 w-full">
                 {([
                   ["Crítico", "bg-risk-critical", sevCount.critico],
@@ -340,9 +343,12 @@ function AnalisadoView({
               {analysis.financial_total != null && (
                 <div className="grid grid-cols-1 gap-2.5">
                   <div className="rounded-lg bg-risk-critical-dim p-3">
-                    <p className="text-[10px] md:text-[11px] text-muted-foreground uppercase tracking-wider">Exposição financeira total</p>
+                    <p className="text-[10px] md:text-[11px] text-muted-foreground uppercase tracking-wider">Exposição financeira total estimada</p>
                     <p className="text-base md:text-lg font-semibold text-risk-critical tabular-nums mt-1">
                       {fmtBRL(analysis.financial_total)}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/70 mt-1.5">
+                      Estimativa de IA com base nas cláusulas identificadas — não é cálculo financeiro ou jurídico definitivo.
                     </p>
                   </div>
                 </div>
