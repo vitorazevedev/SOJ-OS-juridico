@@ -126,16 +126,22 @@ ${contractText}
 INSTRUÇÕES:
 - Identifique TODAS as cláusulas com potencial de risco jurídico ou financeiro
 - Para cada cláusula: cite o trecho EXATO do contrato (original_text deve ser cópia fiel)
-- exposure_likely_cents: estimativa do impacto financeiro em centavos de real (0 se não aplicável)
 - Severity: critico (risco grave, impacto direto), alto (risco significativo), medio (atenção necessária), baixo (melhoria recomendada)
 - Categories: Penalidades e Multas | Rescisão e Vigência | Responsabilidade | Propriedade Intelectual | Dados Pessoais (LGPD) | Pagamento e Reajuste | Foro e Jurisdição | Obrigações Contratuais
+
+REGRAS PARA VALORES FINANCEIROS (crítico para responsabilidade jurídica):
+- has_explicit_amount: true APENAS quando o trecho do contrato contém valor monetário (R$, USD, €) ou percentual específico e apurável que fundamente a estimativa. false para riscos difusos sem valor determinado.
+- exposure_likely_cents: estimativa central em centavos de real. OBRIGATORIAMENTE 0 quando has_explicit_amount for false.
+- exposure_min_cents: limite inferior da faixa (igual a exposure_likely_cents se não houver faixa).
+- exposure_max_cents: limite superior da faixa (igual a exposure_likely_cents se não houver faixa). NUNCA use multiplicador arbitrário — baseie-se no contrato.
+- financial_total_cents: soma APENAS dos exposure_likely_cents onde has_explicit_amount for true.
 
 RETORNE este JSON:
 {
   "risk_score": <0-100>,
   "risk_level": "<low|medium|high|critical>",
   "summary": "<resumo executivo em 3-5 frases em português>",
-  "financial_total_cents": <soma de exposure_likely_cents>,
+  "financial_total_cents": <soma apenas de cláusulas com has_explicit_amount true>,
   "clauses": [
     {
       "title": "<título descritivo da cláusula de risco>",
@@ -143,7 +149,10 @@ RETORNE este JSON:
       "category": "<categoria>",
       "original_text": "<trecho EXATO do contrato>",
       "suggestion": "<redação alternativa recomendada>",
-      "exposure_likely_cents": <número inteiro>
+      "has_explicit_amount": <true|false>,
+      "exposure_min_cents": <inteiro, 0 se has_explicit_amount false>,
+      "exposure_likely_cents": <inteiro, 0 se has_explicit_amount false>,
+      "exposure_max_cents": <inteiro, 0 se has_explicit_amount false>
     }
   ]
 }`,
@@ -159,8 +168,13 @@ RETORNE este JSON:
     const riskScore: number = Math.min(100, Math.max(0, Number(result.risk_score) || 0))
     const riskLevel: string = result.risk_level || scoreToLevel(riskScore)
     const summary: string = result.summary || ''
-    const financialTotal: number = Number(result.financial_total_cents) || 0
     const clauses: unknown[] = Array.isArray(result.clauses) ? result.clauses : []
+
+    // Recalcula o total financeiro no código — só soma cláusulas com has_explicit_amount true.
+    // Não confia no valor retornado pela IA para garantir consistência com a barreira técnica.
+    const financialTotal: number = (clauses as Record<string, unknown>[])
+      .filter(cl => cl.has_explicit_amount === true)
+      .reduce((sum, cl) => sum + (Number(cl.exposure_likely_cents) || 0), 0)
 
     // Delete existing analysis if any (re-analyze flow)
     const { data: existing } = await serviceClient
@@ -198,21 +212,31 @@ RETORNE este JSON:
     }
 
     // Insert clause risks
+    // Barreira técnica: valores financeiros só são aceitos quando a IA confirma
+    // has_explicit_amount = true (cláusula líquida com valor apurável no contrato).
+    // Isso impede que estimativas sem base monetária explícita sejam exibidas ao usuário
+    // como se fossem cálculos financeiros determinísticos.
     if (clauses.length > 0) {
       const clauseRows = (clauses as Record<string, unknown>[])
         .slice(0, 50)
-        .map((cl, i) => ({
-          analysis_id: analysis.id,
-          title: String(cl.title ?? '').slice(0, 200),
-          severity: String(cl.severity ?? 'baixo'),
-          category: cl.category ? String(cl.category).slice(0, 100) : null,
-          original_text: cl.original_text ? String(cl.original_text) : null,
-          suggestion: cl.suggestion ? String(cl.suggestion) : null,
-          exposure_min: 0,
-          exposure_max: Number(cl.exposure_likely_cents) * 2 || 0,
-          exposure_likely: Number(cl.exposure_likely_cents) || 0,
-          sort_order: i,
-        }))
+        .map((cl, i) => {
+          const hasExplicit = cl.has_explicit_amount === true
+          const likely = hasExplicit ? (Number(cl.exposure_likely_cents) || 0) : 0
+          const min    = hasExplicit ? (Number(cl.exposure_min_cents)    || likely) : 0
+          const max    = hasExplicit ? (Number(cl.exposure_max_cents)    || likely) : 0
+          return {
+            analysis_id: analysis.id,
+            title: String(cl.title ?? '').slice(0, 200),
+            severity: String(cl.severity ?? 'baixo'),
+            category: cl.category ? String(cl.category).slice(0, 100) : null,
+            original_text: cl.original_text ? String(cl.original_text) : null,
+            suggestion: cl.suggestion ? String(cl.suggestion) : null,
+            exposure_min:    min,
+            exposure_likely: likely,
+            exposure_max:    max,
+            sort_order: i,
+          }
+        })
       await serviceClient.from('clause_risks').insert(clauseRows)
     }
 
