@@ -9,17 +9,16 @@
 | ID | Descrição | Severidade | Responsável | Prazo | Status |
 |---|---|---|---|---|---|
 | ~~SD-001~~ | RLS das tabelas não verificada | Alta | @qa | — | **Resolvido 2026-06-23/24** — auditoria completa via Management API confirmou RLS correta em todas as tabelas (políticas isolam por `org_id`/`get_org_id()`, sem vazamento entre orgs). Políticas versionadas em `supabase/migrations/20260623000000_story007_version_existing_rls_policies.sql`. Ver STORY-007 |
-| SD-002 | Sem validação Zod em formulários existentes (contratos, obrigações) | Média | @dev | — | **Parcial** — `Generator.tsx` tem Zod (STORY-006, 2026-06-21). `Contracts.tsx`/`Obligations.tsx`/`Settings.tsx` ainda sem schema Zod formal |
+| ~~SD-002~~ | Sem validação Zod em formulários existentes (contratos, obrigações) | Média | @dev | — | **Resolvido 2026-07-11** — `Generator.tsx` (STORY-006), `Settings.tsx` (org/invite) e `NewObligationModal.tsx` já tinham Zod. Único gap real era o diálogo de renomear em `Contracts.tsx`, agora com `renameSchema` |
 | SD-003 | `supabase/config.toml` ainda referencia project-ref antigo nos comentários | Baixa | @devops | — | Já tratado em STORY-001 |
 | SD-004 | Limite de contratos/mês por plano (Starter: 5) era só texto na UI, sem aplicação real — qualquer cliente podia consumir IA ilimitadamente | Alta | @dev | — | **Resolvido 2026-06-24** — `parse-contract` agora verifica a cota mensal antes de chamar a Claude API e retorna HTTP 402 se excedida. Testado com conta descartável (bloqueou no 6º contrato do plano Starter; não bloqueou no plano Pro) |
+| ~~SD-005~~ | `npm run test` estava quebrado — Vitest sem `test` config (sem `environment`/`setupFiles`) rodava por engano os testes internos do `.triviaiox-core` (que falham por dependência faltando), e zero testes reais do produto existiam | Média | @dev | — | **Resolvido 2026-07-11** — `vite.config.ts` configurado (jsdom + globals + exclude `.triviaiox-core`). 29 testes novos cobrindo as barreiras de fronteira: magic bytes de upload (`fileValidation.test.ts` — impede executável renomeado para .pdf/.docx), validação de CPF/CNPJ (`brazilianDocs.test.ts`), e validação Zod do formulário do gerador (`generatorForm.test.ts`) |
 
 ---
 
 ## Mitigações Planejadas
 
-| ID | Mitigação | Story |
-|---|---|---|
-| SD-002 | Adicionar Zod schemas nos formulários restantes (`Contracts.tsx`, `Obligations.tsx`, `Settings.tsx`) | A criar |
+_Nenhuma pendente no momento._
 
 ---
 
