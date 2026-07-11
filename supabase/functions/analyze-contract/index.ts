@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
   try {
     const res = await anthropic.messages.create({
       model: MODEL,
-      max_tokens: 4096,
+      max_tokens: 8192,
       system: SYSTEM_PROMPT,
       messages: [
         {
@@ -126,7 +126,11 @@ ${contractText}
 INSTRUÇÕES:
 - Identifique TODAS as cláusulas com potencial de risco jurídico ou financeiro
 - Para cada cláusula: cite o trecho EXATO do contrato (original_text deve ser cópia fiel)
-- Severity: critico (risco grave, impacto direto), alto (risco significativo), medio (atenção necessária), baixo (melhoria recomendada)
+- Severity — classifique usando os critérios abaixo como referência mínima. Se a cláusula se enquadrar em um dos exemplos, use o nível indicado. Se não se enquadrar em nenhum exemplo mas ainda representar risco real, classifique pelo seu julgamento e acrescente uma justificativa curta (até 6 palavras) entre parênteses no final do título.
+  - critico: risco existencial ou financeiro desproporcional. Ex: multa rescisória sem teto; indenização ilimitada; garantia pessoal ilimitada dos sócios/administradores; ausência total de cláusula de limitação de responsabilidade; confissão de dívida; multa penal que excede o valor da obrigação principal (art. 412 CC); renúncia a direito de defesa/contraditório em disputa.
+  - alto: risco financeiro relevante, porém limitável. Ex: rescisão unilateral sem indenização (mesmo com aviso prévio); multa elevada mas dentro de padrão de mercado; renovação automática sem opção clara de saída; não concorrência excessivamente ampla em escopo/prazo; reajuste vinculado a índice desfavorável ou não definido; exclusividade sem contrapartida.
+  - medio: risco operacional, sem exposição financeira direta clara. Ex: ausência de SLA definido; prazo de pagamento desfavorável; confidencialidade não recíproca; ausência de mecanismo de resolução de disputas (mediação/arbitragem) antes da via judicial.
+  - baixo: questão formal ou de redação, sem risco material. Ex: ausência de cláusula de foro; erro de referência cruzada entre cláusulas; inconsistência de formatação/numeração/terminologia.
 - Categories: Penalidades e Multas | Rescisão e Vigência | Responsabilidade | Propriedade Intelectual | Dados Pessoais (LGPD) | Pagamento e Reajuste | Foro e Jurisdição | Obrigações Contratuais
 
 REGRAS PARA VALORES FINANCEIROS (crítico para responsabilidade jurídica):
@@ -199,7 +203,7 @@ RETORNE este JSON:
         financial_total: financialTotal,
         status: 'completed',
         model_used: MODEL,
-        prompt_version: 'v2',
+        prompt_version: 'v3',
         tokens_input: res.usage.input_tokens,
         tokens_output: res.usage.output_tokens,
         analyzed_at: new Date().toISOString(),
