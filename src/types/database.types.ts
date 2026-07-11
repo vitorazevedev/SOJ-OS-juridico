@@ -17,14 +17,6 @@ export type Database = {
           { foreignKeyName: "audit_logs_org_id_fkey"; columns: ["org_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] }
         ]
       }
-      billing_history: {
-        Row: { amount_cents: number; billing_date: string; created_at: string | null; description: string; id: string; org_id: string; status: string; stripe_invoice_id: string | null }
-        Insert: { amount_cents: number; billing_date: string; created_at?: string | null; description: string; id?: string; org_id: string; status?: string; stripe_invoice_id?: string | null }
-        Update: { amount_cents?: number; billing_date?: string; created_at?: string | null; description?: string; id?: string; org_id?: string; status?: string; stripe_invoice_id?: string | null }
-        Relationships: [
-          { foreignKeyName: "billing_history_org_id_fkey"; columns: ["org_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] }
-        ]
-      }
       clause_risks: {
         Row: { analysis_id: string; category: string | null; created_at: string | null; exposure_likely: number | null; exposure_max: number | null; exposure_min: number | null; id: string; original_text: string | null; severity: string; sort_order: number | null; suggestion: string | null; title: string }
         Insert: { analysis_id: string; category?: string | null; created_at?: string | null; exposure_likely?: number | null; exposure_max?: number | null; exposure_min?: number | null; id?: string; original_text?: string | null; severity: string; sort_order?: number | null; suggestion?: string | null; title: string }
