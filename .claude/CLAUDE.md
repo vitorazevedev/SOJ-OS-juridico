@@ -29,7 +29,7 @@ Três princípios invioláveis que nunca quebram:
 - **State/Cache:** TanStack Query v5
 - **Routing:** React Router v6 (lazy-loaded)
 - **Backend:** Supabase (Auth, Postgres, Storage, Realtime)
-- **Deploy:** Netlify (frontend) + Supabase Edge Functions (backend)
+- **Deploy:** Vercel (frontend) + Supabase Edge Functions (backend)
 
 ---
 

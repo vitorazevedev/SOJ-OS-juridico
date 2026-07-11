@@ -7,7 +7,7 @@
 - Supabase (Auth, Postgres, Storage, Realtime) — projeto: `igolxkyahbavripvfeak`
 - React Router v6 (lazy-loaded pages)
 - TanStack Query v5
-- Netlify (deploy)
+- Vercel (deploy)
 - **Framework AIOX:** Triviaiox instalado em `.triviaiox-core/` e `.claude/`
 
 ## Project structure (Bulletproof React)

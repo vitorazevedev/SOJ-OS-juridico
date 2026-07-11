@@ -24,7 +24,7 @@ O **SOJ (Sistema Operacional Jurídico)** é uma plataforma SaaS legal-tech que 
 | Database | Supabase Postgres | SQL completo, RLS, Realtime nativo |
 | Storage | Supabase Storage | Bucket `contracts` para documentos e logos |
 | Realtime | Supabase Realtime | Subscriptions em tabelas críticas |
-| Deploy FE | Netlify | CI/CD automático, edge functions, preview deploys |
+| Deploy FE | Vercel | CI/CD automático, preview deploys |
 | Deploy BE | Supabase Edge Functions | Deno, próximo ao banco, sem cold start crítico |
 
 ---
