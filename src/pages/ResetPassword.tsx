@@ -55,9 +55,7 @@ export default function ResetPassword() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center mb-3">
-            <span className="font-cormorant text-3xl font-semibold text-primary-foreground leading-none select-none">P</span>
-          </div>
+          <img src="/ponderum-icon-white.png" alt="Ponderum" className="h-12 w-12 mb-3 object-contain" />
           <h1 className="text-2xl font-semibold tracking-tight">Redefinir senha</h1>
           <p className="text-xs text-muted-foreground tracking-wide mt-1">Ponderum · Inteligência contratual</p>
         </div>

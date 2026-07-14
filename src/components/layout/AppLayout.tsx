@@ -216,7 +216,7 @@ export default function AppLayout() {
             ) : (
               <>
                 <div className="flex items-center gap-2">
-                  <span className="font-cormorant text-xl font-semibold text-primary leading-none">P</span>
+                  <img src="/ponderum-icon-white.png" alt="Ponderum" className="h-5 w-5 object-contain" />
                   <span className="text-sm font-semibold">{mobileTitle}</span>
                 </div>
                 <div className="flex items-center gap-1">

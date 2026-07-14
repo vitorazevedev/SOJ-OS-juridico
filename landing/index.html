@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ponderum — Inteligência Contratual</title>
 <meta name="description" content="Contratos sob controle. Decisões com clareza. O Ponderum organiza e prioriza riscos contratuais para que a decisão continue sendo sua, só que mais rápida e mais bem informada.">
+<link rel="icon" type="image/png" href="ponderum-icon-dark.png">
 
 <!-- Ponderum Brand Guidelines v1.2 (Fellipe, 03/07/2026)
      Navy #0A1628 · Esmeralda #067173 · Teal #2EC4A9 · Cinza claro #F5F6F8 · Cinza-azul #8A9BB0
@@ -67,18 +68,7 @@ nav {
   height: 68px;
 }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
-.brand-symbol {
-  width: 32px; height: 32px; border-radius: 8px;
-  background: var(--esmeralda);
-  display: flex; align-items: center; justify-content: center;
-}
-.brand-symbol img { width: 20px; height: 20px; object-fit: contain; filter: brightness(0) invert(1); }
-/* Placeholder enquanto o SVG não estiver pronto */
-.brand-symbol-p {
-  font-family: var(--display);
-  font-size: 20px; font-weight: 600;
-  color: #fff; line-height: 1;
-}
+.brand-symbol img { width: 30px; height: 30px; object-fit: contain; }
 .brand-name { font-family: var(--display); font-size: 22px; font-weight: 600; color: var(--navy); letter-spacing: 0.01em; }
 .nav-links { display: flex; gap: 30px; }
 .nav-links a { font-size: 14px; font-weight: 500; color: #3C4A5E; text-decoration: none; transition: color .15s; }
@@ -451,10 +441,8 @@ footer {
 <nav>
   <div class="wrap nav-inner">
     <a href="#" class="brand">
-      <!-- Substituir pela imagem SVG do Fellipe quando disponível:
-           <img src="/ponderum-symbol.svg" alt="Ponderum"> -->
       <div class="brand-symbol">
-        <span class="brand-symbol-p">P</span>
+        <img src="ponderum-icon-dark.png" alt="Ponderum">
       </div>
       <span class="brand-name">Ponderum</span>
     </a>
@@ -667,8 +655,8 @@ footer {
     <div class="footer-grid">
       <div>
         <div class="footer-brand">
-          <div class="brand-symbol" style="width:24px;height:24px;border-radius:5px;">
-            <span style="font-family:var(--display);font-size:14px;font-weight:600;color:#fff;line-height:1;">P</span>
+          <div class="brand-symbol">
+            <img src="ponderum-icon-white.png" alt="Ponderum" style="width:22px;height:22px;">
           </div>
           <span class="footer-brand-name">Ponderum</span>
         </div>

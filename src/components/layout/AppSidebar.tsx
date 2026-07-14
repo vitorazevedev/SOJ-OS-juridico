@@ -70,10 +70,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <SidebarHeader className="border-b border-sidebar-border h-14 flex items-center justify-center px-3">
         <div className="flex items-center gap-2 w-full">
-          {/* Placeholder até receber o SVG vetorizado do Fellipe */}
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center shrink-0">
-            <span className="font-cormorant text-xl font-semibold text-primary-foreground leading-none select-none">P</span>
-          </div>
+          <img src="/ponderum-icon-white.png" alt="Ponderum" className="h-8 w-8 shrink-0 object-contain" />
           {!collapsed && (
             <div className="flex flex-col leading-tight">
               <span className="font-cormorant text-lg font-light tracking-wider">Ponderum</span>
