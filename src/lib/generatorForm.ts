@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { buildContractSections } from "@/lib/contractDocs";
+import { buildContractSections } from "@/lib/contractSections";
 import { validateDocument } from "@/lib/brazilianDocs";
 
 export const STEPS = ["Tipo de Contrato", "Informações", "Revisar", "Concluído"];

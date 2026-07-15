@@ -13,7 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { downloadBlob, generateDataSummaryPdf } from "@/lib/contractDocs";
 import { exportOrgDataJson, fetchOrgExportData } from "@/lib/dataExport";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/features/auth/components/AuthProvider";
@@ -32,6 +31,7 @@ export function PrivacyTab() {
   const handleExportData = async () => {
     setExporting(true);
     try {
+      const { downloadBlob } = await import("@/lib/contractDocs");
       const blob = await exportOrgDataJson();
       const dateStr = new Date().toISOString().slice(0, 10);
       downloadBlob(blob, `soj-dados-${dateStr}.json`);
@@ -46,6 +46,7 @@ export function PrivacyTab() {
   const handleExportSummaryPdf = async () => {
     setExportingSummary(true);
     try {
+      const { downloadBlob, generateDataSummaryPdf } = await import("@/lib/contractDocs");
       const data = await fetchOrgExportData();
       const blob = generateDataSummaryPdf(data);
       const dateStr = new Date().toISOString().slice(0, 10);

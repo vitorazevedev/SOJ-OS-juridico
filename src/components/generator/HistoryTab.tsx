@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { FileText, Download, Trash2, MoreHorizontal, Search, Inbox } from "lucide-react";
 import { useGeneratedContracts, deleteGeneratedContract, type GeneratedContract } from "@/hooks/useGeneratedContracts";
-import { generatePdfFromText, fetchLogoData, downloadBlob } from "@/lib/contractDocs";
 import { getCurrentOrgLogoSignedUrl } from "@/hooks/useOrganization";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
@@ -40,12 +39,14 @@ function HistoryRow({ item, onDeleted }: { item: GeneratedContract; onDeleted: (
 
   const handleDocx = async () => {
     if (!item.file_path) { toast.error("Arquivo não encontrado"); return; }
+    const { downloadBlob } = await import("@/lib/contractDocs");
     const { data, error } = await supabase.storage.from("contracts").download(item.file_path);
     if (error || !data) { toast.error("Erro ao baixar DOCX"); return; }
     downloadBlob(data, `${slug}.docx`);
   };
 
   const handlePdf = async () => {
+    const { generatePdfFromText, fetchLogoData, downloadBlob } = await import("@/lib/contractDocs");
     const text = item.content_docx || `CONTRATO\n\n${item.party_a ?? ""} ↔ ${item.party_b ?? ""}`;
     const logoSigned = await getCurrentOrgLogoSignedUrl();
     const logo = await fetchLogoData(logoSigned);

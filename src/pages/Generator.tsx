@@ -10,13 +10,7 @@ import { SendForSignatureDialog } from "@/components/generator/SendForSignatureD
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { saveGeneratedContract } from "@/hooks/useGeneratedContracts";
-import {
-  buildContractSections,
-  generateContractDocxBlob,
-  generateContractPdfBlob,
-  downloadBlob,
-  fetchLogoData,
-} from "@/lib/contractDocs";
+import { buildContractSections } from "@/lib/contractSections";
 import { useOrganization } from "@/hooks/useOrganization";
 import {
   STEPS,
@@ -67,6 +61,9 @@ export default function Generator() {
     }
     setSaving(true);
     try {
+      // Carregado sob demanda: docx/jsPDF só precisam entrar no bundle quando o
+      // usuário realmente gera um contrato, não no carregamento inicial da página.
+      const { generateContractDocxBlob, downloadBlob, fetchLogoData } = await import("@/lib/contractDocs");
       const sections = buildContractSections(tpl.title, form, tpl.id);
       const logo = await fetchLogoData(logoUrl);
       const docxBlob = await generateContractDocxBlob(sections, logo);
@@ -103,6 +100,7 @@ export default function Generator() {
 
   const handleDownloadPdf = async () => {
     try {
+      const { generateContractPdfBlob, downloadBlob, fetchLogoData } = await import("@/lib/contractDocs");
       const sections = buildContractSections(tpl.title, form, tpl.id);
       const logo = await fetchLogoData(logoUrl);
       const pdfBlob = generateContractPdfBlob(sections, logo);

@@ -1,7 +1,6 @@
 import { Download, FileText } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SojCard } from "@/components/layout/Primitives";
-import { generateAnalysisPdf, downloadBlob } from "@/lib/contractDocs";
 import { HighlightedText, SEV_HIGHLIGHT } from "@/features/analysis/components/HighlightedText";
 import { JuridicaTab } from "@/features/analysis/components/JuridicaTab";
 import { FinanceiroTab } from "@/features/analysis/components/FinanceiroTab";
@@ -32,7 +31,8 @@ export function AnalisadoView({
   indexes: ReturnType<typeof useEconomicIndexes>["indexes"];
   saveContractValue: (v: number) => Promise<void>;
 }) {
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
+    const { generateAnalysisPdf, downloadBlob } = await import("@/lib/contractDocs");
     const blob = generateAnalysisPdf({ contract, analysis, clauses });
     const slug = (contract.name || "analise").normalize("NFD").replace(/[̀-ͯ]/g, "")
       .toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60);
