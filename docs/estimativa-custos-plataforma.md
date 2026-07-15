@@ -45,7 +45,7 @@ Cada contrato passa por até 2 chamadas à API da Claude:
 | **Supabase** | Free | R$ 0 | Suficiente para teste com poucos usuários. **Atenção:** projetos gratuitos pausam após 7 dias de inatividade — não é viável para qualquer uso real com usuários externos, só para nós mesmos testando |
 | **Claude API (Anthropic)** | Pay-as-you-go | R$ 0–50 | Já configurada (`ANTHROPIC_API_KEY`). Custo só do que testarmos manualmente |
 | **Resend** | Free | R$ 0 | 3.000 emails/mês, 100/dia — já configurada e testada, suficiente para teste |
-| **Netlify** | Free | R$ 0 | 300 créditos/mês — suficiente para deploy de teste |
+| **Vercel** | Hobby (Free) | R$ 0 | 100GB de transferência/mês, 1M requisições — suficiente para deploy de teste. 1 desenvolvedor só (sem colaboração em equipe) |
 | **GitHub** | Free | R$ 0 | Repositório já criado, plano gratuito cobre o necessário |
 | **Domínio** | — | R$ 0 | Ainda não registrado (pendência conhecida — `RESEND_API_KEY` está usando o sandbox `onboarding@resend.dev` até termos um domínio verificado) |
 
@@ -62,7 +62,7 @@ Quando abrirmos para os 30 clientes beta de verdade, alguns planos free deixam d
 | **Supabase** | Pro | US$ 25 (~R$ 140) + uso | Pro inclui 8GB de banco, 100GB de storage, 100K usuários ativos — bem acima do que 30 clientes vão usar. Sem isso, o produto pausa sozinho |
 | **Claude API** | Pay-as-you-go | ~R$ 100–300 | 30 clientes × ~5-15 contratos/mês (mistura de Starter/Pro) × ~R$ 0,70–1,00/contrato = ~150–450 contratos/mês |
 | **Resend** | Free ou Pro | R$ 0–110 (US$ 0–20) | Free (3.000 emails/mês) provavelmente é suficiente para alertas de obrigações de 30 clientes. Pro (US$ 20/mês) só se o volume de alertas for maior que o esperado |
-| **Netlify** | Free ou Personal | R$ 0–50 (US$ 0–9) | Free provavelmente cobre; Personal (US$ 9/mês) se precisar de mais créditos de build |
+| **Vercel** | Hobby ou Pro | R$ 0–110 (US$ 0–20) | Hobby (free) provavelmente cobre 30 clientes beta; Pro (US$ 20/mês por assento) se precisar de colaboração em equipe (Vitor + Fellipe + Kober) ou mais volume de build |
 | **Domínio (.com.br ou .com)** | — | ~R$ 40–100/ano (~R$ 3–8/mês) | Necessário para sair do sandbox do Resend e enviar email de verdade para os clientes — **bloqueador atual para alertas de obrigações funcionarem com usuários reais** |
 | **GitHub** | Free | R$ 0 | Continua suficiente |
 
@@ -79,8 +79,8 @@ Aqui o custo escala principalmente com volume de contratos (IA) e armazenamento 
 | **Supabase** | Pro + uso, ou Team se precisar de compliance (SOC2/ISO) | R$ 200–800 (US$ 35–150) | Cresce com volume de dados/storage. Team (US$ 599/mês) só vale a pena se exigirmos SOC2/ISO 27001 para vender a clientes maiores |
 | **Claude API** | Pay-as-you-go | **R$ 2.000–10.000+** (US$ 400–2.000+) | O maior custo, e o mais diretamente ligado à receita: 200-500 clientes × 5-20 contratos/mês × R$ 0,70–1,00 = 700-10.000 contratos/mês. Esse é o número que vale monitorar mês a mês |
 | **Resend** | Pro ou Scale | R$ 110–900 (US$ 20–160) | Conforme o volume de alertas de obrigações crescer |
-| **Netlify** | Pro | R$ 110 (US$ 20) | Plano fixo, agora sem cobrança por membro de equipe |
-| **Domínio + SSL** | — | ~R$ 3–8/mês | SSL já incluso no Netlify automaticamente |
+| **Vercel** | Pro | R$ 110/assento (US$ 20) + uso | 1TB de transferência incluso, US$ 20/mês de crédito de uso; escala com tráfego acima disso |
+| **Domínio + SSL** | — | ~R$ 3–8/mês | SSL já incluso no Vercel automaticamente |
 | **GitHub** | Free ou Team | R$ 0–190 | Free cobre times pequenos; Team (US$ 4/usuário/mês) só se precisarmos de mais controle de acesso |
 
 **Total fase produção: ~R$ 2.500 – R$ 12.000+/mês**, variando principalmente com o volume de contratos processados pela IA.
@@ -103,7 +103,7 @@ Essas não existem hoje no produto, mas são comuns nessa fase de crescimento �
 ## Observações finais
 
 1. **O número que mais importa monitorar mês a mês é o custo de Claude API por contrato processado.** Se esse número subir descontroladamente sem aumento proporcional de clientes pagantes, é sinal de abuso de uso ou contratos anormalmente grandes — o rate limiting de 10 análises/hora por organização (já implementado) ajuda a conter isso.
-2. **Netlify vs. Vercel:** o projeto já está configurado para Netlify (`netlify.toml` existe no repositório, e o `CLAUDE.md` já documenta isso como decisão tomada) — não há necessidade de avaliar Vercel a menos que surja um motivo técnico específico.
+2. **Netlify vs. Vercel:** o projeto migrou de Netlify para Vercel em 10/07/2026 — os créditos gratuitos do Netlify se esgotaram e bloquearam novos deploys. O Vercel Free (Hobby) oferece uma cota de build bem maior (6.000 min/mês vs. 300 do Netlify), o que resolveu o bloqueio. O site em produção já está em `ponderum.vercel.app`.
 3. Os valores em R$ usam uma cotação aproximada de US$ 1 = R$ 5,50 — ajustar conforme a cotação real no momento da decisão.
 
 ## Fontes (preços consultados em 25/06/2026)
@@ -112,6 +112,5 @@ Essas não existem hoje no produto, mas são comuns nessa fase de crescimento �
 - [Supabase Pricing 2026 — UI Bakery](https://uibakery.io/blog/supabase-pricing)
 - [Resend Pricing](https://resend.com/pricing)
 - [Resend Pricing — StackScored](https://www.stackscored.com/pricing/transactional-email/resend/)
-- [Netlify Pricing](https://www.netlify.com/pricing/)
-- [Netlify Pricing updates April 2026](https://www.netlify.com/changelog/2026-04-14-pricing-updates-april-2026/)
+- [Vercel Pricing](https://vercel.com/pricing) (consultado em 14/07/2026)
 - Preços da API Claude (Sonnet 4.6, Haiku 4.5): documentação interna do modelo, valores oficiais Anthropic
