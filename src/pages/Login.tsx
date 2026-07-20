@@ -6,8 +6,9 @@ import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { CheckEmailView } from "@/components/auth/CheckEmailView";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
+import { RecoveryCodeForm } from "@/components/auth/RecoveryCodeForm";
 import { LoginSignupForm } from "@/components/auth/LoginSignupForm";
-import { loginSchema, signupSchema, forgotSchema, translateAuthError, type Mode, type FormErrors } from "@/lib/authForm";
+import { loginSchema, signupSchema, forgotSchema, recoveryCodeSchema, translateAuthError, type Mode, type FormErrors } from "@/lib/authForm";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -23,6 +24,7 @@ export default function Login() {
   const [name, setName] = useState("");
   const [orgName, setOrgName] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [recoveryCode, setRecoveryCode] = useState("");
 
   const clearErrors = () => setFieldErrors({});
 
@@ -95,14 +97,7 @@ export default function Login() {
     }
   };
 
-  const handleForgot = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const result = forgotSchema.safeParse({ email });
-    if (!result.success) {
-      setFieldErrors({ email: result.error.issues[0]?.message });
-      return;
-    }
-    clearErrors();
+  const sendRecoveryEmail = async () => {
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -112,7 +107,39 @@ export default function Login() {
         toast.error(translateAuthError(error.message));
         return;
       }
-      setMode("check_email");
+      setRecoveryCode("");
+      setMode("recovery_code");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgot = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = forgotSchema.safeParse({ email });
+    if (!result.success) {
+      setFieldErrors({ email: result.error.issues[0]?.message });
+      return;
+    }
+    clearErrors();
+    await sendRecoveryEmail();
+  };
+
+  const handleVerifyRecoveryCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = recoveryCodeSchema.safeParse({ code: recoveryCode });
+    if (!result.success) {
+      toast.error(result.error.issues[0]?.message ?? "Código inválido");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({ email, token: recoveryCode, type: "recovery" });
+      if (error) {
+        toast.error(translateAuthError(error.message));
+        return;
+      }
+      navigate("/reset-password", { replace: true });
     } finally {
       setLoading(false);
     }
@@ -145,6 +172,7 @@ export default function Login() {
     signup: "Crie sua organização",
     forgot: "Recuperar senha",
     check_email: "Verifique seu email",
+    recovery_code: "Digite o código recebido",
   };
 
   return (
@@ -173,6 +201,18 @@ export default function Login() {
               fieldErrors={fieldErrors}
               loading={loading}
               onSubmit={handleForgot}
+              onBackToLogin={() => setMode("login")}
+            />
+          )}
+
+          {mode === "recovery_code" && (
+            <RecoveryCodeForm
+              email={email}
+              code={recoveryCode}
+              setCode={setRecoveryCode}
+              loading={loading}
+              onSubmit={handleVerifyRecoveryCode}
+              onResend={sendRecoveryEmail}
               onBackToLogin={() => setMode("login")}
             />
           )}

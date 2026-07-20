@@ -22,7 +22,7 @@ export function ForgotPasswordForm({
   return (
     <form onSubmit={onSubmit} className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        Digite seu email e enviaremos um link para redefinir sua senha.
+        Digite seu email e enviaremos um código de verificação para redefinir sua senha.
       </p>
       <div className="space-y-1">
         <Label htmlFor="email">Email</Label>
@@ -34,7 +34,7 @@ export function ForgotPasswordForm({
       </div>
       <Button type="submit" className="w-full" disabled={loading}>
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-        Enviar link de recuperação
+        Enviar código de recuperação
       </Button>
       <button
         type="button"
