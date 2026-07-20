@@ -43,19 +43,6 @@ body {
 /* ── UTILITÁRIOS ── */
 .wrap { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
 
-/* ── RIBBON INTERNO ── */
-.ribbon {
-  background: var(--navy);
-  color: #C9D3E0;
-  text-align: center;
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  padding: 7px 10px;
-  text-transform: uppercase;
-}
-.ribbon b { color: var(--teal); }
-
 /* ── NAV ── */
 nav {
   position: sticky; top: 0; z-index: 50;
@@ -434,9 +421,6 @@ footer {
 </head>
 <body>
 
-<!-- Ribbon interno — remover antes de publicar -->
-<div class="ribbon">PROTÓTIPO INTERNO · NÃO PUBLICADO · <b>Aguardando aprovação formal (Documento 11)</b> · GVF Serviços de Tecnologia Ltda. (em constituição)</div>
-
 <!-- NAV -->
 <nav>
   <div class="wrap nav-inner">
@@ -641,8 +625,8 @@ footer {
         <h3>Acompanhe o desenvolvimento do Ponderum.</h3>
         <p>Novidades sobre o programa de acesso antecipado, sem spam.</p>
       </div>
-      <form class="form-row" onsubmit="event.preventDefault(); this.querySelector('button').textContent='Recebido ✓';">
-        <input type="email" placeholder="seu@email.com" required>
+      <form class="form-row" onsubmit="submitNewsletter(event)">
+        <input type="email" id="newsletter-email" placeholder="seu@email.com" required>
         <button type="submit" class="btn-primary">Quero receber</button>
       </form>
     </div>
@@ -832,6 +816,34 @@ footer {
       errEl.textContent = 'Algo deu errado. Tente novamente ou entre em contato diretamente.';
       errEl.style.display = 'block';
       btn.disabled = false; btn.textContent = 'Solicitar minha vaga';
+    }
+  }
+
+  async function submitNewsletter(e) {
+    e.preventDefault();
+    const input = document.getElementById('newsletter-email');
+    const btn = e.target.querySelector('button');
+    const email = input.value.trim();
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/waitlist`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON,
+          'Authorization': `Bearer ${SUPABASE_ANON}`,
+          'Prefer': 'return=minimal',
+        },
+        body: JSON.stringify({ name: email, email, source: 'newsletter' }),
+      });
+      if (!res.ok && res.status !== 409) throw new Error('Erro ao enviar');
+      btn.textContent = 'Recebido ✓';
+      input.disabled = true;
+    } catch {
+      btn.disabled = false;
+      btn.textContent = 'Quero receber';
     }
   }
 

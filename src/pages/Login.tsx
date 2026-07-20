@@ -76,7 +76,7 @@ export default function Login() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/app/`,
           data: { name: name.trim(), org_name: orgName.trim() },
         },
       });
@@ -106,7 +106,7 @@ export default function Login() {
     setLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${window.location.origin}/app/reset-password`,
       });
       if (error) {
         toast.error(translateAuthError(error.message));
@@ -127,7 +127,7 @@ export default function Login() {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: window.location.origin },
+        options: { redirectTo: `${window.location.origin}/app` },
       });
       if (error) {
         toast.error("Não foi possível entrar com Google");
