@@ -37,7 +37,7 @@ export default function App() {
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter basename="/app">
+        <BrowserRouter>
           <AuthProvider>
             <Suspense fallback={<PageLoader />}>
               <Routes>

@@ -1,21 +1,8 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "redirects": [
-    { "source": "/login", "destination": "/app/login" },
-    { "source": "/reset-password", "destination": "/app/reset-password" },
-    { "source": "/termos", "destination": "/app/termos" },
-    { "source": "/privacidade", "destination": "/app/privacidade" },
-    { "source": "/contracts", "destination": "/app/contracts" },
-    { "source": "/analysis", "destination": "/app/analysis" },
-    { "source": "/analysis/:id", "destination": "/app/analysis/:id" },
-    { "source": "/obligations", "destination": "/app/obligations" },
-    { "source": "/generator", "destination": "/app/generator" },
-    { "source": "/settings", "destination": "/app/settings" },
-    { "source": "/admin", "destination": "/app/admin" }
-  ],
   "rewrites": [
-    { "source": "/app/:path*", "destination": "/app/index.html" }
+    { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
     {
