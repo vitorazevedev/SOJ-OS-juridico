@@ -17,7 +17,7 @@ export const forgotSchema = z.object({
 });
 
 export const recoveryCodeSchema = z.object({
-  code: z.string().regex(/^\d{6}$/, "Código deve ter 6 dígitos"),
+  code: z.string().regex(/^\d{8}$/, "Código deve ter 8 dígitos"),
 });
 
 export type FormErrors = Partial<Record<"email" | "password" | "name" | "orgName", string>>;

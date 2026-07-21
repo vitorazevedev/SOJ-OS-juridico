@@ -27,11 +27,11 @@ export function RecoveryCodeForm({
       <div className="space-y-1">
         <p className="font-medium">Digite o código de verificação</p>
         <p className="text-sm text-muted-foreground">
-          Enviamos um código de 6 dígitos para <span className="font-medium text-foreground">{email}</span>
+          Enviamos um código de 8 dígitos para <span className="font-medium text-foreground">{email}</span>
         </p>
       </div>
 
-      <InputOTP maxLength={6} value={code} onChange={setCode} autoFocus>
+      <InputOTP maxLength={8} value={code} onChange={setCode} autoFocus>
         <InputOTPGroup>
           <InputOTPSlot index={0} />
           <InputOTPSlot index={1} />
@@ -39,10 +39,12 @@ export function RecoveryCodeForm({
           <InputOTPSlot index={3} />
           <InputOTPSlot index={4} />
           <InputOTPSlot index={5} />
+          <InputOTPSlot index={6} />
+          <InputOTPSlot index={7} />
         </InputOTPGroup>
       </InputOTP>
 
-      <Button type="submit" className="w-full" disabled={loading || code.length !== 6}>
+      <Button type="submit" className="w-full" disabled={loading || code.length !== 8}>
         {loading && <Loader2 className="h-4 w-4 animate-spin" />}
         Verificar código
       </Button>
