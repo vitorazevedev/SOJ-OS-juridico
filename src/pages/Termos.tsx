@@ -287,7 +287,7 @@ export default function Termos() {
           <p>14.3 Estes Termos, em conjunto com a Política de Privacidade, constituem o acordo integral entre o Usuário e o Ponderum quanto ao objeto aqui tratado.</p>
 
           <h2 className="text-base font-medium text-foreground mt-2">15. Contato</h2>
-          <p>15.1 Dúvidas sobre estes Termos podem ser encaminhadas para contato@ponderum.com.br.</p>
+          <p>15.1 Dúvidas sobre estes Termos podem ser encaminhadas para contato@ponderum.com.</p>
 
           <p className="pt-2 text-xs text-muted-foreground">
             Ponderum é uma marca da GVF Serviços de Tecnologia Ltda. © 2026. Todos os direitos reservados.

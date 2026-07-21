@@ -231,7 +231,7 @@ export default function Privacidade() {
           <p>
             10.1 Para exercer os direitos previstos nesta Política ou esclarecer dúvidas sobre o tratamento de
             dados pessoais, o titular pode entrar em contato com o Encarregado de Dados (DPO) do Ponderum por
-            meio do e-mail contato@ponderum.com.br.
+            meio do e-mail contato@ponderum.com.
           </p>
           <p>10.2 O Encarregado de Dados (DPO) do Ponderum é Vitor Moreira de Azevedo.</p>
 
