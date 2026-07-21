@@ -41,12 +41,7 @@ async function sendEmail(
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        // TODO: trocar para um remetente em domínio próprio verificado no Resend
-        // (ex.: "SOJ <alertas@soj.com.br>") quando o domínio estiver configurado com
-        // SPF/DKIM. Até então, onboarding@resend.dev é o único remetente que funciona sem
-        // verificação de domínio — mas o Resend só entrega esses emails para o endereço
-        // cadastrado na própria conta Resend, não para usuários reais do SOJ.
-        from: 'SOJ <onboarding@resend.dev>',
+        from: 'Ponderum <alertas@ponderum.com>',
         to: [to],
         subject,
         html,
@@ -70,12 +65,12 @@ function buildAlertEmail(
     daysLeft === 1 ? 'vence AMANHÃ' :
     `vence em ${daysLeft} dias`
 
-  const subject = `[SOJ] Obrigação ${urgencyLabel} — ${contractName}`
+  const subject = `[Ponderum] Obrigação ${urgencyLabel} — ${contractName}`
   const html = `
     <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
       <div style="background:#111;padding:16px 24px;border-radius:8px 8px 0 0">
-        <span style="color:#00e5a0;font-weight:700;font-size:18px">SOJ</span>
-        <span style="color:#888;font-size:12px;margin-left:8px">Sistema Operacional Jurídico</span>
+        <span style="color:#00e5a0;font-weight:700;font-size:18px">Ponderum</span>
+        <span style="color:#888;font-size:12px;margin-left:8px">Inteligência contratual</span>
       </div>
       <div style="border:1px solid #222;border-top:none;padding:24px;border-radius:0 0 8px 8px">
         <h2 style="margin:0 0 16px;font-size:16px;color:#111">
@@ -87,11 +82,11 @@ function buildAlertEmail(
           <p style="margin:4px 0 0;font-size:13px;color:#555">Vencimento: ${new Date(dueDate + 'T00:00:00').toLocaleDateString('pt-BR')}</p>
         </div>
         <p style="font-size:13px;color:#555;margin:0">
-          Acesse o SOJ para marcar esta obrigação como cumprida ou verificar os detalhes.
+          Acesse o Ponderum para marcar esta obrigação como cumprida ou verificar os detalhes.
         </p>
         <div style="margin-top:16px;padding-top:16px;border-top:1px solid #eee">
           <p style="font-size:11px;color:#999;margin:0">
-            Este alerta foi enviado automaticamente pelo SOJ. Não responda este email.
+            Este alerta foi enviado automaticamente pelo Ponderum. Não responda este email.
           </p>
         </div>
       </div>
