@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ponderum — Inteligência Contratual</title>
-<meta name="description" content="Contratos sob controle. Decisões com clareza. O Ponderum organiza e prioriza riscos contratuais para que a decisão continue sendo sua, só que mais rápida e mais bem informada.">
+<title>Ponderum | Inteligência Contratual</title>
+<meta name="description" content="Inteligência Contratual. Contratos sob controle. Decisões com clareza. A Ponderum organiza e prioriza riscos contratuais para que a decisão continue sendo sua, só que mais rápida e mais bem informada.">
 <link rel="icon" type="image/png" href="ponderum-icon-dark.png">
 
 <!-- Ponderum Brand Guidelines v1.2 (Fellipe, 03/07/2026)
@@ -197,11 +197,13 @@ h2 {
 .pain-card {
   background: #fff; border: 1px solid var(--line);
   border-radius: 12px; padding: 24px;
+  display: flex; align-items: flex-start; gap: 14px;
 }
 .pain-dot {
+  flex: none; margin-top: 5px;
   width: 10px; height: 10px;
   background: var(--esmeralda); border-radius: 2px;
-  margin-bottom: 14px; transform: rotate(45deg);
+  transform: rotate(45deg);
 }
 .pain-card p { font-size: 14.5px; color: #4B5A6E; }
 
@@ -223,13 +225,14 @@ h2 {
 .feature-card {
   background: var(--navy); border-radius: 14px; padding: 26px 22px; color: #fff;
   transition: transform .2s;
+  display: flex; align-items: flex-start; gap: 16px;
 }
 .feature-card:hover { transform: translateY(-4px); }
 .feature-icon {
+  flex: none;
   width: 32px; height: 32px; border-radius: 8px;
   background: rgba(46,196,169,0.15);
   display: flex; align-items: center; justify-content: center;
-  margin-bottom: 16px;
 }
 .feature-icon-dot {
   width: 10px; height: 10px;
@@ -351,7 +354,8 @@ footer {
 .modal-overlay.open { display: flex; }
 .modal-box {
   background: #fff; border-radius: 16px; padding: 36px 32px;
-  width: 100%; max-width: 480px; position: relative;
+  width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+  position: relative;
   animation: modalin .25s ease-out;
 }
 @keyframes modalin { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
@@ -447,7 +451,7 @@ footer {
     <div>
       <span class="eyebrow"><span class="eyebrow-dot"></span>Programa de acesso antecipado</span>
       <h1 class="hero-title">Contratos sob controle.<br>Decisões com <em>clareza</em>.</h1>
-      <p class="hero-sub">O Ponderum organiza, prioriza e explica riscos contratuais — para que a decisão continue sendo sua, só que mais rápida e mais bem informada.</p>
+      <p class="hero-sub">A Ponderum organiza, prioriza e explica riscos contratuais, para que a decisão continue sendo sua, só que mais rápida e mais bem informada.</p>
       <div class="cta-row">
         <button class="btn-primary" onclick="document.getElementById('acesso').scrollIntoView({behavior:'smooth'})">Solicitar acesso antecipado</button>
         <button class="btn-ghost" onclick="document.getElementById('como-funciona').scrollIntoView({behavior:'smooth'})">Ver como funciona</button>
@@ -468,10 +472,10 @@ footer {
       <div class="demo-finding" id="finding">
         <span class="finding-tag">RISCO ALTO</span>
         <p class="finding-title">Rescisão unilateral sem indenização</p>
-        <p class="finding-body">Aviso prévio de apenas 7 dias, sem compensação financeira à outra parte. Cláusula desequilibrada — considerar prazo mínimo maior ou multa proporcional.</p>
+        <p class="finding-body">Aviso prévio de apenas 7 dias, sem compensação financeira à outra parte. Cláusula desequilibrada: considerar prazo mínimo maior ou multa proporcional.</p>
         <button class="finding-btn">Ver sugestão de mitigação</button>
       </div>
-      <p class="demo-disclaimer">Ilustração do produto — clique no trecho destacado</p>
+      <p class="demo-disclaimer">Ilustração do produto. Clique no trecho destacado</p>
     </div>
   </div>
 </header>
@@ -482,7 +486,7 @@ footer {
     <div class="s-head reveal">
       <span class="s-label">O problema</span>
       <h2>Revisar contrato ainda consome tempo demais.</h2>
-      <p class="s-sub">Cláusulas importantes se perdem em documentos longos. Prazos e obrigações ficam dispersos. Cada revisor aplica um critério diferente — e é difícil explicar depois por que um risco foi, ou não foi, sinalizado.</p>
+      <p class="s-sub">Cláusulas importantes se perdem em documentos longos. Prazos e obrigações ficam dispersos. Cada revisor aplica um critério diferente, e é difícil explicar depois por que um risco foi, ou não foi, sinalizado.</p>
     </div>
     <div class="pain-grid">
       <div class="pain-card reveal"><div class="pain-dot"></div><p>Cláusulas relevantes se perdem em documentos longos e densos.</p></div>
@@ -513,32 +517,40 @@ footer {
   <div class="wrap">
     <div class="s-head reveal">
       <span class="s-label">Recursos</span>
-      <h2>O que o Ponderum organiza para você.</h2>
+      <h2>O que a Ponderum organiza para você.</h2>
     </div>
     <div class="feature-grid">
       <div class="feature-card reveal">
         <div class="feature-icon"><div class="feature-icon-dot"></div></div>
-        <h3>Identificação de riscos</h3>
-        <p>Pontos de atenção sinalizados com evidência direta no texto original.</p>
+        <div>
+          <h3>Identificação de riscos</h3>
+          <p>Pontos de atenção sinalizados com evidência direta no texto original.</p>
+        </div>
       </div>
       <div class="feature-card reveal">
         <div class="feature-icon"><div class="feature-icon-dot"></div></div>
-        <h3>Organização contratual</h3>
-        <p>Cláusulas, prazos, obrigações e penalidades, num só lugar.</p>
+        <div>
+          <h3>Organização contratual</h3>
+          <p>Cláusulas, prazos, obrigações e penalidades, num só lugar.</p>
+        </div>
       </div>
       <div class="feature-card reveal">
         <div class="feature-icon"><div class="feature-icon-dot"></div></div>
-        <h3>Sugestões de mitigação</h3>
-        <p>Alternativas de redação, sempre sujeitas à revisão humana.</p>
+        <div>
+          <h3>Sugestões de mitigação</h3>
+          <p>Alternativas de redação, sempre sujeitas à revisão humana.</p>
+        </div>
       </div>
       <div class="feature-card reveal">
         <div class="feature-icon"><div class="feature-icon-dot"></div></div>
-        <h3>Explicabilidade</h3>
-        <p>Cada achado mostra de onde veio e por que foi sinalizado.</p>
+        <div>
+          <h3>Explicabilidade</h3>
+          <p>Cada achado mostra de onde veio e por que foi sinalizado.</p>
+        </div>
       </div>
     </div>
     <div class="limits-note reveal">
-      O Ponderum não substitui o advogado, não emite parecer jurídico automático e não garante segurança jurídica absoluta. Ele organiza informação para que a decisão humana seja mais rápida e mais bem informada.
+      A Ponderum não substitui o advogado, não emite parecer jurídico automático e não garante segurança jurídica absoluta. Ela organiza informação para que a decisão humana seja mais rápida e mais bem informada.
     </div>
   </div>
 </section>
@@ -575,9 +587,9 @@ footer {
       <h2>Por que existimos.</h2>
     </div>
     <div class="reveal" style="max-width:720px;">
-      <p style="font-size:16px;color:#4B5A6E;margin-bottom:28px;">O Ponderum nasceu para resolver um problema comum a quem lida com contrato todos os dias: cláusulas de risco relevantes se perdem em documentos longos, e cada revisor aplica um critério diferente. Construímos uma plataforma que organiza, prioriza e explica riscos contratuais com apoio de inteligência artificial — sempre com a decisão final nas mãos de um profissional habilitado.</p>
+      <p style="font-size:16px;color:#4B5A6E;margin-bottom:28px;">A Ponderum nasceu para resolver um problema comum a quem lida com contrato todos os dias: cláusulas de risco relevantes se perdem em documentos longos, e cada revisor aplica um critério diferente. Construímos uma plataforma que organiza, prioriza e explica riscos contratuais com apoio de inteligência artificial, sempre com a decisão final nas mãos de um profissional habilitado.</p>
       <p style="font-family:var(--display);font-style:italic;font-size:22px;line-height:1.4;color:var(--navy);">Existe uma coisa que a nossa tecnologia nunca vai tirar de você.<br><strong style="font-style:normal;color:var(--esmeralda);">A decisão.</strong></p>
-      <p style="font-size:15px;color:#5A6A7E;margin-top:14px;">O Ponderum aponta riscos, explica cada achado e mostra o trecho exato do contrato que o originou. Analisa com rigor, sustenta com evidência e organiza o que importa. Mas quem decide é você. Sempre foi. Sempre será.</p>
+      <p style="font-size:15px;color:#5A6A7E;margin-top:14px;">A Ponderum aponta riscos, explica cada achado e mostra o trecho exato do contrato que o originou. Analisa com rigor, sustenta com evidência e organiza o que importa. Mas quem decide é você. Sempre foi. Sempre será.</p>
     </div>
   </div>
 </section>
@@ -613,16 +625,16 @@ footer {
     </div>
     <div class="faq-list reveal">
       <details open>
-        <summary>O Ponderum substitui o advogado? <span class="faq-plus">+</span></summary>
-        <p>Não. Ele organiza e prioriza informações contratuais para apoiar a decisão — a análise jurídica final é sempre humana.</p>
+        <summary>A Ponderum substitui o advogado? <span class="faq-plus">+</span></summary>
+        <p>Não. Ela organiza e prioriza informações contratuais para apoiar a decisão. A análise jurídica final é sempre humana.</p>
       </details>
       <details>
         <summary>Meus contratos ficam seguros? <span class="faq-plus">+</span></summary>
-        <p>Sim. Isolamos os dados de cada organização por controle de acesso a nível de banco de dados (Row Level Security) — testado em produção com bloqueio total confirmado entre organizações diferentes. Os dados ficam criptografados em repouso (AES-256) e em trânsito (TLS), hospedados no Brasil. Veja mais na nossa <a href="https://app.ponderum.com/privacidade" style="color:var(--esmeralda);">Política de Privacidade</a>.</p>
+        <p>Sim. Isolamos os dados de cada organização por controle de acesso a nível de banco de dados (Row Level Security), testado em produção com bloqueio total confirmado entre organizações diferentes. Os dados ficam criptografados em repouso (AES-256) e em trânsito (TLS), hospedados no Brasil. Veja mais na nossa <a href="https://app.ponderum.com/privacidade" style="color:var(--esmeralda);">Política de Privacidade</a>.</p>
       </details>
       <details>
         <summary>Quais formatos de arquivo são aceitos? <span class="faq-plus">+</span></summary>
-        <p>PDF, Word (.docx) e imagens de documentos escaneados (JPG, PNG). Tamanho máximo: 32 MB por arquivo.</p>
+        <p>PDF (até 32 MB), Word .docx (até 50 MB) e imagens de documentos escaneados em JPG ou PNG (até 5 MB).</p>
       </details>
       <details>
         <summary>Quanto custa? <span class="faq-plus">+</span></summary>
@@ -637,7 +649,7 @@ footer {
   <div class="wrap">
     <div class="cta-final reveal">
       <div>
-        <h3>Acompanhe o desenvolvimento do Ponderum.</h3>
+        <h3>Acompanhe o desenvolvimento da Ponderum.</h3>
         <p>Novidades sobre o programa de acesso antecipado, sem spam.</p>
       </div>
       <form class="form-row" onsubmit="submitNewsletter(event)">
@@ -659,7 +671,7 @@ footer {
           </div>
           <span class="footer-brand-name">Ponderum</span>
         </div>
-        <p style="font-size:13.5px;max-width:280px;color:#8DA0B8;">Inteligência contratual. Contratos sob controle, decisões com clareza.</p>
+        <p style="font-size:13.5px;max-width:280px;color:#8DA0B8;">Inteligência Contratual. Contratos sob controle. Decisões com clareza.</p>
       </div>
       <div class="footer-col">
         <h4>PRODUTO</h4>
@@ -670,14 +682,13 @@ footer {
       <div class="footer-col">
         <h4>EMPRESA</h4>
         <a href="#sobre">Sobre</a>
-        <a href="#">Contato <span class="pending-tag">a confirmar</span></a>
+        <a href="https://wa.me/5511964889002?text=Ol%C3%A1!%20Vim%20pelo%20site%20da%20Ponderum%20e%20gostaria%20de%20saber%20mais%20sobre%20a%20plataforma%2E" target="_blank" rel="noopener">Contato</a>
         <a href="https://app.ponderum.com/termos">Termos de Uso</a>
         <a href="https://app.ponderum.com/privacidade">Política de Privacidade</a>
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 GVF Serviços de Tecnologia Ltda. (em constituição). Todos os direitos reservados.</span>
-      <span style="color:#8DA0B8;">Clearance de marca em andamento (INPI)</span>
+      <span>© 2026 GVF Serviços de Tecnologia Ltda. Todos os direitos reservados.</span>
     </div>
   </div>
 </footer>
@@ -742,7 +753,7 @@ footer {
     <div id="modal-success-view" style="display:none" class="modal-success">
       <div class="check">✓</div>
       <h4>Solicitação recebida!</h4>
-      <p>Entraremos em contato assim que sua vaga estiver disponível.<br>Obrigado pelo interesse no Ponderum.</p>
+      <p>Entraremos em contato assim que sua vaga estiver disponível.<br>Obrigado pelo interesse na Ponderum.</p>
     </div>
   </div>
 </div>
