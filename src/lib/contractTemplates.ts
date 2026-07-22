@@ -314,4 +314,4 @@ export function getTemplateClauses(tplId: string, form: FormFields): ClauseItem[
 }
 
 export const DISCLAIMER =
-  'AVISO LEGAL: Este contrato foi gerado pelo Ponderum com base em modelos padrão de mercado. Recomendamos revisão por advogado habilitado antes da assinatura. O Ponderum não se responsabiliza por decisões tomadas com base neste documento sem orientação jurídica profissional.'
+  'AVISO LEGAL: Este contrato foi gerado pela Ponderum com base em modelos padrão de mercado. Recomendamos revisão por advogado habilitado antes da assinatura. A Ponderum não se responsabiliza por decisões tomadas com base neste documento sem orientação jurídica profissional.'

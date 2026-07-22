@@ -11,7 +11,7 @@ export default function Termos() {
         <div className="flex flex-col gap-4 text-sm leading-relaxed text-foreground/90">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Termos de Uso</h1>
           <p className="text-xs text-muted-foreground">
-            Ponderum — plataforma de inteligência contratual · Última atualização: 04 de julho de 2026
+            Ponderum, plataforma de inteligência contratual · Última atualização: 04 de julho de 2026
           </p>
 
           <h2 className="text-base font-medium text-foreground mt-2">1. Aceitação dos Termos</h2>
@@ -34,28 +34,28 @@ export default function Termos() {
 
           <h2 className="text-base font-medium text-foreground mt-2">2. Descrição do Serviço e Limitações</h2>
           <p>
-            2.1 O Ponderum é uma plataforma de software como serviço (SaaS) que permite o envio de contratos
+            2.1 A Ponderum é uma plataforma de software como serviço (SaaS) que permite o envio de contratos
             para análise automatizada por inteligência artificial, com o objetivo de identificar cláusulas de
             risco, sugerir alternativas de mitigação e organizar prazos e obrigações contratuais.
           </p>
-          <p>2.2 O Ponderum também oferece a geração de minutas contratuais a partir de modelos (templates) predefinidos.</p>
+          <p>2.2 A Ponderum também oferece a geração de minutas contratuais a partir de modelos (templates) predefinidos.</p>
           <p>
-            2.3 O Ponderum <strong>NÃO</strong> presta serviços de advocacia, não emite pareceres jurídicos, não
+            2.3 A Ponderum <strong>NÃO</strong> presta serviços de advocacia, não emite pareceres jurídicos, não
             garante a validade jurídica dos contratos analisados ou gerados, e não substitui a avaliação de
-            advogado habilitado. As saídas da Plataforma — incluindo score de risco, cláusulas identificadas,
-            sugestões de mitigação e estimativas de impacto financeiro — são estimativas geradas por
+            advogado habilitado. As saídas da Plataforma, incluindo score de risco, cláusulas identificadas,
+            sugestões de mitigação e estimativas de impacto financeiro, são estimativas geradas por
             inteligência artificial e devem ser revisadas por profissional habilitado antes de qualquer decisão
             jurídica, negocial ou de assinatura.
           </p>
           <p>
-            2.4 Toda minuta gerada pela Plataforma traz o aviso: "Este documento foi gerado pelo Ponderum com
+            2.4 Toda minuta gerada pela Plataforma traz o aviso: "Este documento foi gerado pela Ponderum com
             base em modelos padrão de mercado. Recomendamos revisão por advogado habilitado antes da
             assinatura." Esse aviso não pode ser removido pelo Usuário e integra a própria minuta.
           </p>
 
           <h2 className="text-base font-medium text-foreground mt-2">3. Elegibilidade</h2>
           <p>
-            3.1 O uso do Ponderum é destinado exclusivamente a pessoas jurídicas e a profissionais maiores de 18
+            3.1 O uso da Ponderum é destinado exclusivamente a pessoas jurídicas e a profissionais maiores de 18
             (dezoito) anos, atuando em nome próprio ou em nome de organização à qual estejam vinculados.
           </p>
           <p>
@@ -63,7 +63,7 @@ export default function Termos() {
             poderes para vincular a organização em nome da qual atua.
           </p>
           <p>
-            3.3 O Ponderum não coleta intencionalmente dados de menores de idade e poderá excluir, a qualquer
+            3.3 A Ponderum não coleta intencionalmente dados de menores de idade e poderá excluir, a qualquer
             tempo e sem aviso prévio, contas identificadas como pertencentes a menores.
           </p>
 
@@ -97,7 +97,7 @@ export default function Termos() {
 
           <h2 className="text-base font-medium text-foreground mt-2">5. Planos e Limites de Uso</h2>
           <p>
-            5.1 O Ponderum é oferecido nos seguintes planos, cujas condições comerciais podem ser atualizadas
+            5.1 A Ponderum é oferecido nos seguintes planos, cujas condições comerciais podem ser atualizadas
             mediante aviso prévio nos termos da Cláusula 12:
           </p>
           <ul className="list-disc pl-5 flex flex-col gap-1.5">
@@ -148,32 +148,32 @@ export default function Termos() {
             Plataforma para refletir a precificação definitiva desses planos.
           </p>
           <p>
-            5.7 O Ponderum poderá limitar tecnicamente o volume de uso conforme o plano contratado, inclusive
+            5.7 A Ponderum poderá limitar tecnicamente o volume de uso conforme o plano contratado, inclusive
             suspendendo temporariamente novas análises até a renovação do ciclo de cobrança ou upgrade de plano.
           </p>
           <p>
             5.8 Os tipos e tamanhos de arquivo aceitos pela Plataforma são: PDF (até 32 MB), Word/.docx (até 50
             MB) e imagens JPG/PNG de documentos digitalizados (até 5 MB). Esses limites podem ser alterados a
-            critério do Ponderum, mediante comunicação na própria Plataforma.
+            critério da Ponderum, mediante comunicação na própria Plataforma.
           </p>
 
           <h2 className="text-base font-medium text-foreground mt-2">6. Propriedade Intelectual</h2>
           <p>
             6.1 <strong>Contratos e arquivos enviados pelo Usuário.</strong> Os contratos, arquivos e demais
             conteúdos enviados pelo Usuário à Plataforma para análise permanecem de titularidade exclusiva do
-            Usuário ou da organização a que pertençam. O Ponderum não adquire qualquer direito de propriedade
+            Usuário ou da organização a que pertençam. A Ponderum não adquire qualquer direito de propriedade
             sobre esse conteúdo, utilizando-o exclusivamente para a prestação do serviço contratado, nos termos
             da Política de Privacidade.
           </p>
           <p>
             6.2 <strong>Minutas geradas pela Plataforma.</strong> As minutas contratuais geradas a partir de
-            modelos (templates) do Ponderum são disponibilizadas ao Usuário para seu uso, observado o aviso
+            modelos (templates) da Ponderum são disponibilizadas ao Usuário para seu uso, observado o aviso
             legal da Cláusula 2.4. Os modelos e templates subjacentes, enquanto estrutura, redação-padrão e
-            sistema de geração, permanecem de titularidade do Ponderum; o documento final gerado e preenchido
+            sistema de geração, permanecem de titularidade da Ponderum; o documento final gerado e preenchido
             com as informações do Usuário pode ser livremente utilizado por este para os fins a que se destina.
           </p>
           <p>
-            6.3 <strong>Propriedade do Ponderum.</strong> A marca Ponderum, o software, a interface, os
+            6.3 <strong>Propriedade da Ponderum.</strong> A marca Ponderum, o software, a interface, os
             algoritmos, os modelos de prompt, a documentação e demais elementos técnicos da Plataforma são de
             titularidade exclusiva da GVF Serviços de Tecnologia Ltda. ou de seus licenciantes, sendo vedada sua
             reprodução, engenharia reversa, descompilação ou uso não autorizado.
@@ -192,25 +192,25 @@ export default function Termos() {
             <li>sobrecarregar deliberadamente a infraestrutura da Plataforma ou utilizá-la de forma automatizada sem autorização prévia;</li>
             <li>compartilhar suas credenciais de acesso com terceiros não autorizados;</li>
             <li>
-              contornar, tentar contornar ou utilizar meios técnicos — incluindo capturas de tela, fotografia da
-              tela, extensões de navegador ou ferramentas de terceiros — para copiar, reproduzir ou redistribuir
+              contornar, tentar contornar ou utilizar meios técnicos, incluindo capturas de tela, fotografia da
+              tela, extensões de navegador ou ferramentas de terceiros, para copiar, reproduzir ou redistribuir
               o conteúdo gerado no Plano Freemium, em violação à Cláusula 5.2.
             </li>
           </ul>
           <p>
-            7.2 O descumprimento desta cláusula autoriza o Ponderum a suspender ou encerrar a conta do Usuário,
+            7.2 O descumprimento desta cláusula autoriza a Ponderum a suspender ou encerrar a conta do Usuário,
             sem prejuízo de outras medidas cabíveis.
           </p>
 
           <h2 className="text-base font-medium text-foreground mt-2">8. Natureza das Análises Geradas por Inteligência Artificial</h2>
           <p>
-            8.1 As análises realizadas pela Plataforma — incluindo score de risco, identificação de cláusulas,
-            sugestões de mitigação e estimativas de impacto financeiro em moeda corrente — são geradas por
+            8.1 As análises realizadas pela Plataforma, incluindo score de risco, identificação de cláusulas,
+            sugestões de mitigação e estimativas de impacto financeiro em moeda corrente, são geradas por
             sistema de inteligência artificial e constituem estimativas de apoio à decisão, não configurando
             parecer jurídico, garantia de resultado ou substituto da análise de advogado habilitado.
           </p>
           <p>
-            8.2 O Ponderum não garante a completude, exatidão ou ausência de erros nas análises geradas,
+            8.2 A Ponderum não garante a completude, exatidão ou ausência de erros nas análises geradas,
             incluindo a possibilidade de identificação incorreta, omissão de riscos relevantes ou interpretação
             inadequada de cláusulas (falsos positivos e falsos negativos).
           </p>
@@ -222,7 +222,7 @@ export default function Termos() {
 
           <h2 className="text-base font-medium text-foreground mt-2">9. Disponibilidade do Serviço</h2>
           <p>
-            9.1 O Ponderum envidará esforços razoáveis para manter a Plataforma disponível, porém não garante
+            9.1 A Ponderum envidará esforços razoáveis para manter a Plataforma disponível, porém não garante
             disponibilidade ininterrupta (uptime), podendo ocorrer indisponibilidades temporárias para
             manutenção, atualização ou por motivos alheios à sua vontade.
           </p>
@@ -230,12 +230,12 @@ export default function Termos() {
 
           <h2 className="text-base font-medium text-foreground mt-2">10. Limitação de Responsabilidade</h2>
           <p>
-            10.1 Na máxima extensão permitida pela legislação aplicável, o Ponderum não será responsável por
+            10.1 Na máxima extensão permitida pela legislação aplicável, a Ponderum não será responsável por
             danos indiretos, lucros cessantes, perda de dados ou de oportunidade de negócio decorrentes do uso
             ou da impossibilidade de uso da Plataforma.
           </p>
           <p>
-            10.2 O Ponderum não será responsável por decisões tomadas pelo Usuário com base exclusivamente nas
+            10.2 A Ponderum não será responsável por decisões tomadas pelo Usuário com base exclusivamente nas
             análises geradas pela Plataforma, sem a devida revisão por profissional habilitado.
           </p>
           <p>
@@ -252,7 +252,7 @@ export default function Termos() {
             termos da Política de Privacidade.
           </p>
           <p>
-            11.2 O Ponderum poderá suspender ou encerrar a conta do Usuário, mediante notificação, em caso de
+            11.2 A Ponderum poderá suspender ou encerrar a conta do Usuário, mediante notificação, em caso de
             descumprimento destes Termos, uso indevido da Plataforma ou por determinação legal ou judicial.
           </p>
           <p>
@@ -262,7 +262,7 @@ export default function Termos() {
 
           <h2 className="text-base font-medium text-foreground mt-2">12. Alterações destes Termos</h2>
           <p>
-            12.1 O Ponderum poderá alterar estes Termos a qualquer tempo, comprometendo-se a comunicar o Usuário
+            12.1 A Ponderum poderá alterar estes Termos a qualquer tempo, comprometendo-se a comunicar o Usuário
             com antecedência mínima de 5 (cinco) dias, por e-mail e por aviso na própria Plataforma, antes da
             entrada em vigor das alterações.
           </p>
@@ -284,7 +284,7 @@ export default function Termos() {
           <h2 className="text-base font-medium text-foreground mt-2">14. Disposições Gerais</h2>
           <p>14.1 Caso qualquer disposição destes Termos seja considerada inválida ou inexequível, as demais disposições permanecerão em pleno vigor.</p>
           <p>14.2 A tolerância quanto ao eventual descumprimento de qualquer disposição destes Termos não constituirá novação ou renúncia ao direito de exigir seu cumprimento.</p>
-          <p>14.3 Estes Termos, em conjunto com a Política de Privacidade, constituem o acordo integral entre o Usuário e o Ponderum quanto ao objeto aqui tratado.</p>
+          <p>14.3 Estes Termos, em conjunto com a Política de Privacidade, constituem o acordo integral entre o Usuário e a Ponderum quanto ao objeto aqui tratado.</p>
 
           <h2 className="text-base font-medium text-foreground mt-2">15. Contato</h2>
           <p>15.1 Dúvidas sobre estes Termos podem ser encaminhadas para contato@ponderum.com.</p>
