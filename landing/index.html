@@ -369,7 +369,7 @@ footer {
 .modal-box p.modal-sub { font-size: 14px; color: #5A6A7E; margin-bottom: 24px; }
 .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; min-width: 0; }
 .field label { font-size: 13px; font-weight: 600; color: var(--navy); }
-.field input, .field select, .field textarea {
+.field input:not(.phone-ddi):not(.phone-number), .field select, .field textarea {
   width: 100%; min-width: 0; box-sizing: border-box;
   border: 1.5px solid var(--line); border-radius: 8px;
   padding: 10px 12px; font-family: var(--body); font-size: 14px; color: var(--navy);
@@ -400,6 +400,9 @@ footer {
 }
 .field textarea { resize: none; }
 .field-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; }
+@media (max-width: 520px) {
+  .field-row { grid-template-columns: 1fr; }
+}
 .modal-submit {
   width: 100%; background: var(--esmeralda); color: #fff;
   border: none; border-radius: 8px; padding: 13px;
