@@ -23,9 +23,9 @@ export default function Privacidade() {
   return (
     <div className="min-h-screen bg-background px-4 py-10">
       <div className="max-w-2xl mx-auto flex flex-col gap-6">
-        <Link to="/login" className="text-sm text-primary hover:underline">
+        <a href="https://ponderum.com" className="text-sm text-primary hover:underline">
           ← Voltar
-        </Link>
+        </a>
 
         <div className="flex flex-col gap-4 text-sm leading-relaxed text-foreground/90">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Política de Privacidade</h1>
