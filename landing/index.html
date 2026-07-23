@@ -46,11 +46,10 @@ body {
 /* ── NAV ── */
 nav {
   position: sticky; top: 0; z-index: 50;
-  background: rgba(255,255,255,0.90);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--line);
+  background: #fff;
 }
 .nav-inner {
+  position: relative;
   display: flex; align-items: center; justify-content: space-between;
   height: 68px;
 }
@@ -58,7 +57,7 @@ nav {
 .brand-symbol img { width: 30px; height: 30px; object-fit: contain; }
 .brand-name { font-family: var(--display); font-size: 22px; font-weight: 600; color: var(--navy); letter-spacing: 0.01em; }
 .nav-links { display: flex; gap: 30px; }
-.nav-links a { font-size: 14px; font-weight: 500; color: #3C4A5E; text-decoration: none; transition: color .15s; }
+.nav-links a { font-size: 14px; font-weight: 500; color: #3C4A5E; text-decoration: none; transition: color .15s; background: transparent; -webkit-tap-highlight-color: transparent; }
 .nav-links a:hover { color: var(--esmeralda); }
 .btn-cta {
   background: var(--esmeralda); color: #fff; border: none;
@@ -86,7 +85,7 @@ nav {
 
 .eyebrow {
   display: inline-flex; align-items: center; gap: 8px;
-  font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.1em;
+  font-family: var(--body); font-weight: 700; font-size: 12px; letter-spacing: 0.06em;
   text-transform: uppercase; color: var(--esmeralda);
   background: #E9F5F3; border: 1px solid #CFEAE6;
   padding: 6px 12px 6px 8px; border-radius: 20px; margin-bottom: 26px;
@@ -145,27 +144,24 @@ h1.hero-title em { font-style: italic; color: var(--esmeralda); }
 .risk-phrase {
   background: rgba(46,196,169,0.18);
   border-bottom: 2px solid var(--teal);
-  color: #EAF7F4; padding: 1px 3px; border-radius: 3px; cursor: pointer;
+  color: #EAF7F4; padding: 1px 3px; border-radius: 3px;
 }
 .demo-finding {
-  margin-top: 14px; background: #0F2038;
-  border: 1px solid #23405C; border-left: 3px solid var(--teal);
-  border-radius: 8px; padding: 14px 16px;
+  margin-top: 22px; display: flex; flex-direction: column; gap: 14px;
   animation: fadeup .6s ease-out .3s both;
 }
 @keyframes fadeup { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-.finding-tag {
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.06em;
-  color: #FF9F6B; background: rgba(255,159,107,0.12);
-  padding: 3px 8px; border-radius: 20px; display: inline-block; margin-bottom: 8px;
+.compare-box { border-radius: 8px; padding: 12px 14px; }
+.compare-box.risk { background: rgba(229,72,77,0.12); border: 1px solid rgba(229,72,77,0.35); }
+.compare-box.suggestion { background: rgba(46,196,169,0.12); border: 1px solid rgba(46,196,169,0.35); }
+.compare-label {
+  font-family: var(--body); font-size: 11px; font-weight: 700;
+  display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+  letter-spacing: 0.01em;
 }
-.finding-title { font-size: 14px; color: #fff; margin-bottom: 5px; font-weight: 600; }
-.finding-body { font-size: 12.5px; color: #93A3B8; margin-bottom: 10px; }
-.finding-btn {
-  background: transparent; color: var(--teal);
-  border: 1px solid #24506F; font-size: 12px; font-weight: 600;
-  padding: 7px 12px; border-radius: 6px; cursor: pointer; font-family: var(--body);
-}
+.compare-label.risk { color: #FF6B6B; }
+.compare-label.suggestion { color: var(--teal); }
+.compare-text { font-size: 12.5px; line-height: 1.55; color: #D6DEE8; }
 .demo-disclaimer {
   font-family: var(--mono); font-size: 10px; color: #5E7086;
   text-align: center; margin-top: 14px;
@@ -177,7 +173,7 @@ section { padding: 92px 0; }
 .section-navy { background: var(--navy); color: #fff; }
 
 .s-label {
-  font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+  font-family: var(--body); font-weight: 700; font-size: 12px; letter-spacing: 0.08em;
   text-transform: uppercase; color: var(--esmeralda);
   display: block; margin-bottom: 12px;
 }
@@ -305,15 +301,6 @@ h2 {
   font-size: 13.5px; color: #D6DEE8; padding: 9px 0; border-top: 1px solid #1A2C42;
 }
 .plan-features li:first-child { border-top: none; }
-.locked-preview {
-  filter: blur(3px); font-family: var(--mono); font-size: 12px; color: #8DA0B8;
-  user-select: none;
-}
-.lock-tag {
-  font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.05em; text-transform: uppercase;
-  color: var(--teal); background: rgba(46,196,169,0.12); border: 1px solid rgba(46,196,169,0.3);
-  padding: 2px 7px; border-radius: 10px; white-space: nowrap; flex-shrink: 0;
-}
 .plan-btn {
   width: 100%; text-align: center; text-decoration: none; box-sizing: border-box;
   display: inline-block;
@@ -404,7 +391,7 @@ footer {
   font-size: 20px; color: #8A9BB0; line-height: 1;
 }
 .modal-close:hover { color: var(--navy); }
-.modal-box h3 { font-family: var(--display); font-size: 24px; font-weight: 600; color: var(--navy); margin-bottom: 6px; }
+.modal-box h3 { font-family: var(--body); font-size: 21px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
 .modal-box p.modal-sub { font-size: 14px; color: #5A6A7E; margin-bottom: 24px; }
 .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; min-width: 0; }
 .field label { font-size: 13px; font-weight: 600; color: var(--navy); }
@@ -509,16 +496,20 @@ footer {
       </div>
       <div class="demo-doc">
         "...em caso de rescisão, a parte contratante poderá encerrar o presente instrumento mediante
-        <span class="risk-phrase" onclick="document.getElementById('finding').classList.toggle('demo-finding'); this.closest('.demo-card').querySelector('.demo-finding').style.display='block'">aviso prévio de 7 (sete) dias, sem qualquer indenização</span>
+        <span class="risk-phrase">aviso prévio de 7 (sete) dias, sem qualquer indenização</span>
         à parte contratada, independentemente do motivo..."
       </div>
       <div class="demo-finding" id="finding">
-        <span class="finding-tag">RISCO ALTO</span>
-        <p class="finding-title">Rescisão unilateral sem indenização</p>
-        <p class="finding-body">Aviso prévio de apenas 7 dias, sem compensação financeira à outra parte. Cláusula desequilibrada: considerar prazo mínimo maior ou multa proporcional.</p>
-        <button class="finding-btn">Ver sugestão de mitigação</button>
+        <div class="compare-box risk">
+          <p class="compare-label risk">⚠ Original (Risco)</p>
+          <p class="compare-text">"...mediante aviso prévio de 7 (sete) dias, sem qualquer indenização à parte contratada, independentemente do motivo..."</p>
+        </div>
+        <div class="compare-box suggestion">
+          <p class="compare-label suggestion">✓ Sugestão</p>
+          <p class="compare-text">"...mediante aviso prévio de, no mínimo, 30 (trinta) dias, com indenização proporcional ao período remanescente do contrato..."</p>
+        </div>
       </div>
-      <p class="demo-disclaimer">Ilustração do produto. Clique no trecho destacado</p>
+      <p class="demo-disclaimer">Ilustração do produto</p>
     </div>
   </div>
 </header>
@@ -631,7 +622,7 @@ footer {
     </div>
     <div class="reveal" style="max-width:720px;">
       <p style="font-size:16px;color:#4B5A6E;margin-bottom:28px;">A Ponderum nasceu para resolver um problema comum a quem lida com contrato todos os dias: cláusulas de risco relevantes se perdem em documentos longos, e cada revisor aplica um critério diferente. Construímos uma plataforma que organiza, prioriza e explica riscos contratuais com apoio de inteligência artificial, sempre com a decisão final nas mãos de um profissional habilitado.</p>
-      <p style="font-family:var(--display);font-style:italic;font-size:22px;line-height:1.4;color:var(--navy);">Existe uma coisa que a nossa tecnologia nunca vai tirar de você.<br><strong style="font-style:normal;color:var(--esmeralda);">A decisão.</strong></p>
+      <p style="font-family:var(--body);font-weight:600;font-size:20px;line-height:1.5;color:var(--navy);">Existe uma coisa que a nossa tecnologia nunca vai tirar de você.<br><strong style="color:var(--esmeralda);">A decisão.</strong></p>
       <p style="font-size:15px;color:#5A6A7E;margin-top:14px;">A Ponderum aponta riscos, explica cada achado e mostra o trecho exato do contrato que o originou. Analisa com rigor, sustenta com evidência e organiza o que importa. Mas quem decide é você. Sempre foi. Sempre será.</p>
     </div>
   </div>
@@ -660,13 +651,6 @@ footer {
             <li>1 contrato analisado por mês</li>
             <li>Análise jurídica completa por IA</li>
             <li>Visualização do relatório, sem exportação</li>
-            <li class="locked">
-              <span>Score de risco</span>
-              <span class="locked-preview">87</span>
-              <span class="lock-tag">Starter</span>
-            </li>
-            <li class="locked"><span>Geração de contratos</span><span class="lock-tag">Starter</span></li>
-            <li class="locked"><span>Gestão de obrigações</span><span class="lock-tag">Starter</span></li>
           </ul>
           <button class="btn-primary plan-btn" style="background:transparent;border:1.5px solid #2A3F58;">Começar grátis</button>
         </div>
@@ -675,10 +659,14 @@ footer {
           <span class="plan-badge">Recomendado</span>
           <h3>Starter</h3>
           <div class="plan-price">Sob consulta</div>
-          <p class="plan-note">Sem período de teste gratuito.</p>
+          <p class="plan-note">Para aproveitar tudo que a plataforma oferece.</p>
           <ul class="plan-features">
-            <li>Acesso completo à plataforma</li>
             <li>Até 10 contratos analisados por mês</li>
+            <li>Análise jurídica completa por IA</li>
+            <li>Relatório completo, com exportação</li>
+            <li>Índice de Desequilíbrio</li>
+            <li>Geração de contratos</li>
+            <li>Gestão de obrigações</li>
             <li>1 administrador + 2 membros na equipe</li>
           </ul>
           <a href="https://wa.me/5511964889002?text=Ol%C3%A1!%20Vim%20pelo%20site%20da%20Ponderum%20e%20gostaria%20de%20saber%20mais%20sobre%20o%20plano%20Starter." target="_blank" rel="noopener" class="plan-btn plan-btn-whatsapp">Falar com especialista</a>
@@ -945,13 +933,6 @@ footer {
       btn.textContent = 'Quero receber';
     }
   }
-
-  // Demo card
-  document.querySelector('.risk-phrase').addEventListener('click', function() {
-    const f = document.getElementById('finding');
-    f.style.display = f.style.display === 'none' ? 'block' : 'none';
-  });
-  document.getElementById('finding').style.display = 'none';
 
   // Scroll reveal
   const observer = new IntersectionObserver((entries) => {
