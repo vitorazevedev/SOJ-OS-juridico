@@ -61,10 +61,11 @@ export function AppSidebar() {
   // equipe Ponderum so ve o menu regular (Dashboard/Contratos/...) se
   // tiver full_platform_access -- senao, so os menus internos que tiver.
   const showRegularNav = permsLoading || !isStaff || fullPlatformAccess;
-  // Gerador de Contrato e Gestao de Obrigacoes sao exclusivos do Starter
-  // pago -- Freemium nem ve os itens no menu.
+  // Gestao de Obrigacoes e exclusiva do Starter pago -- Freemium nem ve
+  // o item no menu. Gerar Contrato tambem e exclusivo, mas continua
+  // visivel com um selo "Starter" (a pagina ja mostra a tela de upgrade).
   const isStarter = org?.plan_status === "active";
-  const visibleItems = isStarter ? items : items.filter((i) => i.url !== "/obligations" && i.url !== "/generator");
+  const visibleItems = isStarter ? items : items.filter((i) => i.url !== "/obligations");
 
   const displayName = (user?.user_metadata?.name as string | undefined)?.trim() || user?.email || "Usuário";
   const planLabel = org ? (PLAN_LABELS[org.plan_id] ?? `Plano ${org.plan_id}`) : "—";
@@ -106,7 +107,12 @@ export function AppSidebar() {
                       )}
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!collapsed && <span className="flex-1">{item.title}</span>}
+                      {!collapsed && item.url === "/generator" && !isStarter && (
+                        <span className="text-[9px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground shrink-0">
+                          Starter
+                        </span>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
