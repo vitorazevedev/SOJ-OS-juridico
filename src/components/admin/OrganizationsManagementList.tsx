@@ -171,6 +171,7 @@ export function OrganizationsManagementList() {
                   <td className="py-2.5 text-muted-foreground text-xs">
                     <div>{org.admin_name ?? "—"}</div>
                     <div>{org.admin_email ?? "—"}</div>
+                    <div>{org.admin_phone ?? "—"}</div>
                   </td>
                   <td className="py-2.5 text-muted-foreground text-xs">{org.cnpj ?? "—"}</td>
                   <td className="py-2.5">
