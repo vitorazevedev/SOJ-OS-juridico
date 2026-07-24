@@ -6,9 +6,11 @@ import BottomNav from "./BottomNav";
 import OnboardingModal from "./OnboardingModal";
 import { FeedbackButton } from "./FeedbackButton";
 import { SearchPanel } from "./SearchPanel";
-import { Bell, CalendarClock, Search, X } from "lucide-react";
+import { Bell, CalendarClock, CreditCard, Search, X } from "lucide-react";
 import { UrgentObligationsContext, useUrgentObligationsProvider } from "@/hooks/useUrgentObligations";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
+import { useOrganization } from "@/hooks/useOrganization";
+import { SUBSCRIPTION_RENEWAL_WARNING_DAYS } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 const PAGE_TITLES: Record<string, string> = {
@@ -106,13 +108,20 @@ function NotificationsDropdown({
 export default function AppLayout() {
   const navigate = useNavigate();
   const urgentCtx = useUrgentObligationsProvider();
+  const { org } = useOrganization();
   const [panelOpen, setPanelOpen] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
+  const [renewalBannerDismissed, setRenewalBannerDismissed] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
   const { obligations, count } = urgentCtx;
   const showBanner = count > 0 && !bannerDismissed;
   const mobileTitle = useMobileTitle();
+
+  const renewalDaysLeft = org?.plan_status === "active" && org.plan_renews_at
+    ? Math.ceil((new Date(org.plan_renews_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+    : null;
+  const showRenewalBanner = renewalDaysLeft != null && renewalDaysLeft <= SUBSCRIPTION_RENEWAL_WARNING_DAYS && !renewalBannerDismissed;
 
   const panelRef = useRef<HTMLDivElement>(null);
   const mobilePanelRef = useRef<HTMLDivElement>(null);
@@ -309,6 +318,29 @@ export default function AppLayout() {
                 </button>
               </div>
               <button onClick={() => setBannerDismissed(true)} style={{ color: "hsl(var(--risk-critical))", opacity: 0.7 }}>
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
+          {showRenewalBanner && (
+            <div className="hidden md:flex items-center justify-between gap-3 px-6 py-2.5 border-b border-border"
+              style={{ background: "hsl(var(--risk-medium) / 0.12)" }}>
+              <div className="flex items-center gap-2 text-sm" style={{ color: "hsl(var(--risk-medium))" }}>
+                <CreditCard className="h-4 w-4 shrink-0" />
+                <span className="font-medium">
+                  {renewalDaysLeft! <= 0
+                    ? "Sua assinatura Starter venceu"
+                    : `Sua assinatura Starter vence em ${renewalDaysLeft} ${renewalDaysLeft === 1 ? "dia" : "dias"}`}
+                </span>
+                <button
+                  onClick={() => navigate("/settings?tab=plan")}
+                  className="ml-1 underline underline-offset-2 hover:opacity-80 transition-opacity"
+                >
+                  Renovar agora
+                </button>
+              </div>
+              <button onClick={() => setRenewalBannerDismissed(true)} style={{ color: "hsl(var(--risk-medium))", opacity: 0.7 }}>
                 <X className="h-4 w-4" />
               </button>
             </div>

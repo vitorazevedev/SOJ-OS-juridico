@@ -16,6 +16,7 @@ type StaffOrg = {
   plan_status: string;
   blocked: boolean;
   created_at: string;
+  plan_renews_at: string | null;
   admin_name: string | null;
   admin_email: string | null;
   admin_phone: string | null;
@@ -25,6 +26,11 @@ const PAGE_SIZE = 10;
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+}
+
+function renewalDaysLeft(iso: string | null): number | null {
+  if (!iso) return null;
+  return Math.ceil((new Date(iso).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
 }
 
 // "Freemium" e "Starter" pago sao a mesma organizacao (plan_id='starter'),
@@ -98,6 +104,21 @@ export function OrganizationsManagementList() {
     }
   };
 
+  const renewSubscription = async (org: StaffOrg) => {
+    setActingId(org.id);
+    try {
+      const { error } = await supabase.rpc("staff_renew_org_subscription", { p_org_id: org.id });
+      if (error) {
+        toast.error("Erro ao renovar assinatura");
+        return;
+      }
+      toast.success("Assinatura renovada por mais 30 dias");
+      fetchOrgs(page, search);
+    } finally {
+      setActingId(null);
+    }
+  };
+
   const setBlocked = async (org: StaffOrg, blocked: boolean) => {
     setActingId(org.id);
     try {
@@ -135,6 +156,7 @@ export function OrganizationsManagementList() {
               <th className="pb-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Contato</th>
               <th className="pb-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">CNPJ/CPF</th>
               <th className="pb-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">Plano</th>
+              <th className="pb-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground text-right">Vence em</th>
               <th className="pb-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground text-right">Criada em</th>
               <th className="pb-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground text-right">Ações</th>
             </tr>
@@ -142,6 +164,7 @@ export function OrganizationsManagementList() {
           <tbody className="divide-y divide-border">
             {orgs.map((org) => {
               const isTrial = org.plan_status === "trial";
+              const daysLeft = renewalDaysLeft(org.plan_renews_at);
               return (
                 <tr key={org.id}>
                   <td className="py-2.5">{org.name}</td>
@@ -164,6 +187,9 @@ export function OrganizationsManagementList() {
                         </span>
                       )}
                     </div>
+                  </td>
+                  <td className="py-2.5 text-right text-muted-foreground text-xs">
+                    {isTrial ? "—" : daysLeft == null ? "—" : daysLeft <= 0 ? "Vencida" : `${daysLeft}d`}
                   </td>
                   <td className="py-2.5 text-right text-muted-foreground text-xs">{fmtDate(org.created_at)}</td>
                   <td className="py-2.5 text-right">
@@ -188,9 +214,14 @@ export function OrganizationsManagementList() {
                             Confirmar upgrade (marcar como pago)
                           </DropdownMenuItem>
                         ) : (
-                          <DropdownMenuItem onClick={() => setPlanStatus(org, "trial")}>
-                            Rebaixar para Freemium
-                          </DropdownMenuItem>
+                          <>
+                            <DropdownMenuItem onClick={() => renewSubscription(org)}>
+                              Renovar assinatura (+30 dias)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setPlanStatus(org, "trial")}>
+                              Rebaixar para Freemium
+                            </DropdownMenuItem>
+                          </>
                         )}
                         <DropdownMenuItem onClick={() => setBlocked(org, !org.blocked)}>
                           {org.blocked ? "Desbloquear" : "Bloquear"}
@@ -203,7 +234,7 @@ export function OrganizationsManagementList() {
             })}
             {!loading && orgs.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-6 text-center text-xs text-muted-foreground">
+                <td colSpan={7} className="py-6 text-center text-xs text-muted-foreground">
                   Nenhuma organização encontrada.
                 </td>
               </tr>

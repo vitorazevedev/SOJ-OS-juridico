@@ -62,8 +62,10 @@ Deno.serve(async (req) => {
   }
 
   // Monthly plan quota: parsing is the step that actually incurs Claude API cost, so
-  // it's the right place to enforce the per-plan contract limit (Starter: 5/month,
-  // Pro/Enterprise: unlimited) rather than at upload time.
+  // it's the right place to enforce the per-plan contract limit (Freemium/trial:
+  // 1/month, Starter pago: 5/month, Pro/Enterprise: unlimited) rather than at upload time.
+  // Mirrors FREEMIUM_MONTHLY_ANALYSIS_LIMIT em src/lib/pricing.ts.
+  const FREEMIUM_MONTHLY_LIMIT = 1
   const PLAN_MONTHLY_LIMIT: Record<string, number | null> = {
     starter: 5,
     pro: null,
@@ -72,7 +74,7 @@ Deno.serve(async (req) => {
 
   const { data: org } = await serviceClient
     .from('organizations')
-    .select('plan_id, blocked')
+    .select('plan_id, plan_status, blocked')
     .eq('id', contract.org_id)
     .single()
 
@@ -89,7 +91,8 @@ Deno.serve(async (req) => {
     )
   }
 
-  const planLimit = PLAN_MONTHLY_LIMIT[org?.plan_id ?? 'starter'] ?? null
+  const isFreemium = org?.plan_status === 'trial'
+  const planLimit = isFreemium ? FREEMIUM_MONTHLY_LIMIT : PLAN_MONTHLY_LIMIT[org?.plan_id ?? 'starter'] ?? null
   if (planLimit !== null) {
     const startOfMonth = new Date()
     startOfMonth.setUTCDate(1)
@@ -108,7 +111,9 @@ Deno.serve(async (req) => {
         .eq('id', contract_id)
       return jsonResponse(
         {
-          error: `Limite de ${planLimit} contratos/mês do plano atingido. Faça upgrade para o plano Pro para análises ilimitadas.`,
+          error: isFreemium
+            ? `Limite de ${planLimit} análise gratuita por mês atingido. Faça upgrade para o plano Starter para mais análises.`
+            : `Limite de ${planLimit} contratos/mês do plano atingido. Entre em contato com nosso time para aumentar seu limite.`,
         },
         402
       )

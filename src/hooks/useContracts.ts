@@ -2,12 +2,13 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
-// Mirrors PLAN_MONTHLY_LIMIT in supabase/functions/parse-contract/index.ts
+// Mirrors PLAN_MONTHLY_LIMIT / FREEMIUM_MONTHLY_LIMIT in supabase/functions/parse-contract/index.ts
 const PLAN_MONTHLY_LIMIT: Record<string, number | null> = {
   starter: 5,
   pro: null,
   enterprise: null,
 };
+const FREEMIUM_MONTHLY_LIMIT = 1;
 
 export type ParsedData = {
   parties: string[];
@@ -130,11 +131,12 @@ export async function uploadContract(
   // the backend still enforces it independently of this client-side check).
   const { data: org } = await supabase
     .from("organizations")
-    .select("plan_id")
+    .select("plan_id, plan_status")
     .eq("id", orgId)
     .single();
 
-  const planLimit = PLAN_MONTHLY_LIMIT[org?.plan_id ?? "starter"] ?? null;
+  const isFreemium = org?.plan_status === "trial";
+  const planLimit = isFreemium ? FREEMIUM_MONTHLY_LIMIT : PLAN_MONTHLY_LIMIT[org?.plan_id ?? "starter"] ?? null;
   if (planLimit !== null) {
     const startOfMonth = new Date();
     startOfMonth.setUTCDate(1);
@@ -148,7 +150,9 @@ export async function uploadContract(
 
     if ((contractsThisMonth ?? 0) >= planLimit) {
       toast.error(
-        `Limite de ${planLimit} contratos/mês do plano atingido. Faça upgrade para o plano Pro para análises ilimitadas.`
+        isFreemium
+          ? `Limite de ${planLimit} análise gratuita por mês atingido. Faça upgrade para o plano Starter para mais análises.`
+          : `Limite de ${planLimit} contratos/mês do plano atingido. Entre em contato com nosso time para aumentar seu limite.`
       );
       return null;
     }

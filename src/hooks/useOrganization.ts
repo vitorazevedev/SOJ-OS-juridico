@@ -10,6 +10,7 @@ export type Organization = {
   plan_id: string;
   plan_status: string;
   trial_ends_at: string | null;
+  plan_renews_at: string | null;
   created_at: string;
 };
 

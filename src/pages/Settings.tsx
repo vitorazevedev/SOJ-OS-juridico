@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router-dom";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { OrganizationTab } from "@/components/settings/OrganizationTab";
 import { UsersTab } from "@/components/settings/UsersTab";
@@ -6,7 +7,13 @@ import { ProfileTab } from "@/components/settings/ProfileTab";
 import { NotificationsTab } from "@/components/settings/NotificationsTab";
 import { PrivacyTab } from "@/components/settings/PrivacyTab";
 
+const VALID_TABS = ["organization", "users", "plan", "profile", "notifications", "privacy"];
+
 export default function Settings() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const initialTab = tabParam && VALID_TABS.includes(tabParam) ? tabParam : "organization";
+
   return (
     <div className="flex flex-col gap-4 md:gap-6 max-w-[1200px] mx-auto animate-fade-in">
       <div>
@@ -16,7 +23,11 @@ export default function Settings() {
         </p>
       </div>
 
-      <Tabs defaultValue="organization" className="w-full">
+      <Tabs
+        defaultValue={initialTab}
+        onValueChange={(v) => setSearchParams(v === "organization" ? {} : { tab: v })}
+        className="w-full"
+      >
         <TabsList className="w-full md:w-auto justify-start flex-wrap">
           <TabsTrigger value="organization">Organização</TabsTrigger>
           <TabsTrigger value="users">Usuários</TabsTrigger>

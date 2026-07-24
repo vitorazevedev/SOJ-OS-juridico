@@ -88,9 +88,9 @@ export type Database = {
         ]
       }
       organizations: {
-        Row: { blocked: boolean; cnpj: string | null; created_at: string | null; id: string; logo_url: string | null; name: string; plan_id: string; plan_status: string; sector: string | null; stripe_customer_id: string | null; trial_ends_at: string | null }
-        Insert: { blocked?: boolean; cnpj?: string | null; created_at?: string | null; id?: string; logo_url?: string | null; name: string; plan_id?: string; plan_status?: string; sector?: string | null; stripe_customer_id?: string | null; trial_ends_at?: string | null }
-        Update: { blocked?: boolean; cnpj?: string | null; created_at?: string | null; id?: string; logo_url?: string | null; name?: string; plan_id?: string; plan_status?: string; sector?: string | null; stripe_customer_id?: string | null; trial_ends_at?: string | null }
+        Row: { blocked: boolean; cnpj: string | null; created_at: string | null; id: string; logo_url: string | null; name: string; plan_id: string; plan_status: string; plan_renews_at: string | null; sector: string | null; stripe_customer_id: string | null; trial_ends_at: string | null }
+        Insert: { blocked?: boolean; cnpj?: string | null; created_at?: string | null; id?: string; logo_url?: string | null; name: string; plan_id?: string; plan_status?: string; plan_renews_at?: string | null; sector?: string | null; stripe_customer_id?: string | null; trial_ends_at?: string | null }
+        Update: { blocked?: boolean; cnpj?: string | null; created_at?: string | null; id?: string; logo_url?: string | null; name?: string; plan_id?: string; plan_status?: string; plan_renews_at?: string | null; sector?: string | null; stripe_customer_id?: string | null; trial_ends_at?: string | null }
         Relationships: []
       }
       organizations_status_history: {
@@ -135,6 +135,7 @@ export type Database = {
       list_staff_organizations: { Args: { p_search?: string | null; p_page?: number; p_page_size?: number }; Returns: Json }
       staff_set_org_plan_status: { Args: { p_org_id: string; p_status: string }; Returns: undefined }
       staff_set_org_blocked: { Args: { p_org_id: string; p_blocked: boolean }; Returns: undefined }
+      staff_renew_org_subscription: { Args: { p_org_id: string }; Returns: undefined }
       get_executive_dashboard: { Args: Record<PropertyKey, never>; Returns: Json }
     }
     Enums: { [_ in never]: never }
