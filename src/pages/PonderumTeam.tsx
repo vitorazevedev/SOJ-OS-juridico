@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useIsPonderumStaff } from "@/hooks/useIsPonderumStaff";
 import { CreateStarterUserForm } from "@/components/admin/CreateStarterUserForm";
+import { OrganizationsManagementList } from "@/components/admin/OrganizationsManagementList";
 
 export default function PonderumTeam() {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ export default function PonderumTeam() {
       </div>
 
       <CreateStarterUserForm />
+      <OrganizationsManagementList />
     </div>
   );
 }

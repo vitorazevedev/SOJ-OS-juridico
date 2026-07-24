@@ -72,9 +72,22 @@ Deno.serve(async (req) => {
 
   const { data: org } = await serviceClient
     .from('organizations')
-    .select('plan_id')
+    .select('plan_id, blocked')
     .eq('id', contract.org_id)
     .single()
+
+  // Bloqueio aplicado pela Equipe Ponderum (staff_set_org_blocked) — só
+  // impede novas análises, não login nem visualização do que já existe.
+  if (org?.blocked) {
+    await serviceClient
+      .from('contracts')
+      .update({ status: 'aguardando', updated_at: new Date().toISOString() })
+      .eq('id', contract_id)
+    return jsonResponse(
+      { error: 'Sua conta está temporariamente bloqueada. Entre em contato com o suporte da Ponderum.' },
+      403
+    )
+  }
 
   const planLimit = PLAN_MONTHLY_LIMIT[org?.plan_id ?? 'starter'] ?? null
   if (planLimit !== null) {
