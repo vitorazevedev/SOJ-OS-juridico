@@ -157,7 +157,7 @@ export default function OnboardingModal() {
               </p>
               <p className="text-sm text-muted-foreground mt-3">
                 Aqui você organiza seus contratos, recebe uma análise jurídica completa por IA e
-                acompanha prazos e obrigações — tudo em um só lugar. Veja seus KPIs e atividades
+                acompanha prazos e obrigações, tudo em um só lugar. Veja seus KPIs e atividades
                 recentes a qualquer momento no{" "}
                 <button onClick={() => { navigate("/"); close(); }} className="text-primary hover:underline">
                   Dashboard
