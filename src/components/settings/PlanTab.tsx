@@ -4,11 +4,14 @@ import { Check } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useOrganization } from "@/hooks/useOrganization";
 import { supabase } from "@/lib/supabase";
+import { fmtBRL } from "@/lib/adminDashboard";
 import {
   STARTER_MONTHLY_PRICE_BRL,
   FREEMIUM_MONTHLY_ANALYSIS_LIMIT,
   SUBSCRIPTION_RENEWAL_CYCLE_DAYS,
 } from "@/lib/pricing";
+
+type Receipt = { id: string; amount_cents: number; description: string; issued_at: string };
 
 // Mesmo numero de WhatsApp comercial usado na landing page.
 const SALES_WHATSAPP = "5511964889002";
@@ -53,6 +56,17 @@ const PLAN_INFO: Record<string, { name: string; color: string; price: string; fe
 export function PlanTab() {
   const { org } = useOrganization();
   const [monthlyUsed, setMonthlyUsed] = useState<number | null>(null);
+  const [receipts, setReceipts] = useState<Receipt[] | null>(null);
+
+  useEffect(() => {
+    if (!org?.id) return;
+    supabase
+      .from("billing_receipts")
+      .select("id, amount_cents, description, issued_at")
+      .eq("org_id", org.id)
+      .order("issued_at", { ascending: false })
+      .then(({ data }) => setReceipts((data as Receipt[]) ?? []));
+  }, [org?.id]);
 
   const isTrial = org?.plan_status === "trial";
   const paidInfo = PLAN_INFO[org?.plan_id ?? "starter"] ?? PLAN_INFO.starter;
@@ -184,9 +198,27 @@ export function PlanTab() {
           <h3 className="font-medium text-sm md:text-base">Histórico de Faturamento</h3>
           <p className="text-xs text-muted-foreground mt-0.5">Faturas e recibos da sua organização</p>
         </div>
-        <p className="text-sm text-muted-foreground py-6 text-center">
-          Histórico de faturamento estará disponível quando os planos pagos forem lançados.
-        </p>
+        {receipts == null ? null : receipts.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-6 text-center">
+            Nenhum recibo ainda. Recibos aparecem aqui após a confirmação de um pagamento.
+          </p>
+        ) : (
+          <ul className="flex flex-col divide-y divide-border">
+            {receipts.map((r) => (
+              <li key={r.id} className="flex items-center justify-between gap-3 py-3 text-sm">
+                <div>
+                  <p className="font-medium">{r.description}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {new Date(r.issued_at).toLocaleString("pt-BR", {
+                      day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+                <span className="font-semibold tabular-nums shrink-0">{fmtBRL(r.amount_cents / 100)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </SojCard>
     </div>
   );

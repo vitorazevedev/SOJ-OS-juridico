@@ -17,6 +17,14 @@ export type Database = {
           { foreignKeyName: "audit_logs_org_id_fkey"; columns: ["org_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] }
         ]
       }
+      billing_receipts: {
+        Row: { id: string; org_id: string; amount_cents: number; description: string; issued_at: string }
+        Insert: { id?: string; org_id: string; amount_cents: number; description: string; issued_at?: string }
+        Update: { id?: string; org_id?: string; amount_cents?: number; description?: string; issued_at?: string }
+        Relationships: [
+          { foreignKeyName: "billing_receipts_org_id_fkey"; columns: ["org_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] }
+        ]
+      }
       clause_risks: {
         Row: { analysis_id: string; category: string | null; created_at: string | null; exposure_likely: number | null; exposure_max: number | null; exposure_min: number | null; id: string; original_text: string | null; severity: string; sort_order: number | null; suggestion: string | null; title: string }
         Insert: { analysis_id: string; category?: string | null; created_at?: string | null; exposure_likely?: number | null; exposure_max?: number | null; exposure_min?: number | null; id?: string; original_text?: string | null; severity: string; sort_order?: number | null; suggestion?: string | null; title: string }
