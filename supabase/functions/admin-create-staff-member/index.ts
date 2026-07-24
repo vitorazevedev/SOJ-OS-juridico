@@ -104,7 +104,7 @@ Deno.serve(async (req) => {
   }
 
   let body: {
-    name?: string; jobTitle?: string; ddi?: string; phone?: string; email?: string;
+    name?: string; socialName?: string | null; jobTitle?: string; ddi?: string; phone?: string; email?: string;
     cnpj?: string | null;
     canViewDev?: boolean; canViewPonderumTeam?: boolean; fullPlatformAccess?: boolean;
     sendEmail?: boolean;
@@ -116,6 +116,7 @@ Deno.serve(async (req) => {
   }
 
   const name = body.name?.trim()
+  const socialName = body.socialName?.trim() || null
   const jobTitle = body.jobTitle?.trim() ?? ''
   const email = body.email?.trim().toLowerCase()
   const phone = body.phone?.trim() ? `${body.ddi?.trim() ?? ''} ${body.phone.trim()}`.trim() : null
@@ -177,6 +178,7 @@ Deno.serve(async (req) => {
       .from('users')
       .update({
         is_ponderum_staff: true,
+        social_name: socialName,
         staff_job_title: jobTitle,
         can_view_dev: canViewDevPerm,
         can_view_ponderum_team: canViewPonderumTeamPerm,

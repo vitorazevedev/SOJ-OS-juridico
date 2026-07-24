@@ -13,6 +13,7 @@ import { formatDocument, validateDocument } from "@/lib/brazilianDocs";
 type StaffMember = {
   id: string;
   name: string | null;
+  social_name: string | null;
   email: string;
   phone: string | null;
   staff_job_title: string | null;
@@ -23,7 +24,7 @@ type StaffMember = {
 };
 
 const EMPTY_FORM = {
-  name: "", jobTitle: "", ddi: "+55", phone: "", email: "", cnpj: "",
+  name: "", socialName: "", jobTitle: "", ddi: "+55", phone: "", email: "", cnpj: "",
   canViewDev: false, canViewPonderumTeam: false, fullPlatformAccess: false,
 };
 type FieldErrors = Partial<Record<"name" | "jobTitle" | "email" | "cnpj" | "permissions", string>>;
@@ -94,7 +95,7 @@ export function PonderumStaffManagement() {
   const [copied, setCopied] = useState<"link" | "template" | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ jobTitle: "", canViewDev: false, canViewPonderumTeam: false, fullPlatformAccess: false });
+  const [editForm, setEditForm] = useState({ jobTitle: "", socialName: "", canViewDev: false, canViewPonderumTeam: false, fullPlatformAccess: false });
   const [savingEdit, setSavingEdit] = useState(false);
 
   const fetchMembers = async () => {
@@ -143,6 +144,7 @@ export function PonderumStaffManagement() {
     try {
       const { data, error } = await invokeCreateStaff({
         name: form.name.trim(),
+        socialName: form.socialName.trim() || null,
         jobTitle: form.jobTitle.trim(),
         ddi: form.ddi.trim(),
         phone: form.phone.trim(),
@@ -182,6 +184,7 @@ export function PonderumStaffManagement() {
     setEditingId(m.id);
     setEditForm({
       jobTitle: m.staff_job_title ?? "",
+      socialName: m.social_name ?? "",
       canViewDev: m.can_view_dev,
       canViewPonderumTeam: m.can_view_ponderum_team,
       fullPlatformAccess: m.full_platform_access,
@@ -199,6 +202,7 @@ export function PonderumStaffManagement() {
       const { error } = await supabase.rpc("staff_update_member_permissions", {
         p_user_id: editingId,
         p_job_title: editForm.jobTitle.trim(),
+        p_social_name: editForm.socialName.trim() || null,
         p_can_view_dev: editForm.canViewDev,
         p_can_view_ponderum_team: editForm.canViewPonderumTeam,
         p_full_platform_access: editForm.fullPlatformAccess,
@@ -271,14 +275,20 @@ export function PonderumStaffManagement() {
           </div>
         </div>
 
-        <div className="space-y-1">
-          <Label htmlFor="sm-cnpj">CPF ou CNPJ</Label>
-          <Input
-            id="sm-cnpj" value={form.cnpj} placeholder="000.000.000-00 ou 00.000.000/0000-00"
-            onChange={(e) => handleCnpjChange(e.target.value)} maxLength={18}
-            className={cn("md:max-w-xs", fieldErrors.cnpj && "border-destructive/70")}
-          />
-          {fieldErrors.cnpj && <p className="text-[11px] text-destructive">{fieldErrors.cnpj}</p>}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <Label htmlFor="sm-cnpj">CPF ou CNPJ</Label>
+            <Input
+              id="sm-cnpj" value={form.cnpj} placeholder="000.000.000-00 ou 00.000.000/0000-00"
+              onChange={(e) => handleCnpjChange(e.target.value)} maxLength={18}
+              className={cn(fieldErrors.cnpj && "border-destructive/70")}
+            />
+            {fieldErrors.cnpj && <p className="text-[11px] text-destructive">{fieldErrors.cnpj}</p>}
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="sm-social-name">Nome social</Label>
+            <Input id="sm-social-name" value={form.socialName} onChange={(e) => set("socialName", e.target.value)} placeholder="Opcional" />
+          </div>
         </div>
 
         <div className="flex flex-col gap-2">
@@ -347,7 +357,7 @@ export function PonderumStaffManagement() {
             {members.map((m) => (
               <tr key={m.id}>
                 <td className="py-2.5">
-                  <div>{m.name ?? "—"}</div>
+                  <div>{m.social_name || m.name || "—"}</div>
                   <div className="text-xs text-muted-foreground">{m.email}</div>
                 </td>
                 <td className="py-2.5 text-muted-foreground text-xs">{m.staff_job_title ?? "—"}</td>
@@ -380,9 +390,15 @@ export function PonderumStaffManagement() {
       {editingId && (
         <div className="flex flex-col gap-3 rounded-lg border border-border p-4">
           <p className="text-sm font-medium">Editar membro</p>
-          <div className="space-y-1">
-            <Label htmlFor="edit-role">Função</Label>
-            <Input id="edit-role" value={editForm.jobTitle} onChange={(e) => setEditForm((p) => ({ ...p, jobTitle: e.target.value }))} />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label htmlFor="edit-role">Função</Label>
+              <Input id="edit-role" value={editForm.jobTitle} onChange={(e) => setEditForm((p) => ({ ...p, jobTitle: e.target.value }))} />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="edit-social-name">Nome social</Label>
+              <Input id="edit-social-name" value={editForm.socialName} onChange={(e) => setEditForm((p) => ({ ...p, socialName: e.target.value }))} />
+            </div>
           </div>
           <div className="flex flex-col gap-2 rounded-lg border border-border p-3">
             <label className="flex items-center justify-between gap-3">
