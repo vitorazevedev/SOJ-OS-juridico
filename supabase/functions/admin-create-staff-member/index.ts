@@ -105,6 +105,7 @@ Deno.serve(async (req) => {
 
   let body: {
     name?: string; jobTitle?: string; ddi?: string; phone?: string; email?: string;
+    cnpj?: string | null;
     canViewDev?: boolean; canViewPonderumTeam?: boolean; fullPlatformAccess?: boolean;
     sendEmail?: boolean;
   }
@@ -118,6 +119,7 @@ Deno.serve(async (req) => {
   const jobTitle = body.jobTitle?.trim() ?? ''
   const email = body.email?.trim().toLowerCase()
   const phone = body.phone?.trim() ? `${body.ddi?.trim() ?? ''} ${body.phone.trim()}`.trim() : null
+  const cnpj = body.cnpj?.trim() || null
   const canViewDevPerm = body.canViewDev === true
   const canViewPonderumTeamPerm = body.canViewPonderumTeam === true
   const fullPlatformAccessPerm = body.fullPlatformAccess === true
@@ -144,7 +146,7 @@ Deno.serve(async (req) => {
         email,
         email_confirm: true,
         user_metadata: {
-          name, org_name: `Ponderum · ${name}`, phone, terms_accepted: true,
+          name, org_name: `Ponderum · ${name}`, phone, cnpj, terms_accepted: true,
         },
       })
     )
@@ -154,9 +156,15 @@ Deno.serve(async (req) => {
       const msg = rawMsg && rawMsg.trim() && rawMsg.trim() !== '{}'
         ? rawMsg
         : `Erro ao criar usuário (${createErr?.name ?? 'desconhecido'}, status ${createErr?.status ?? '?'}). Tente novamente.`
-      const friendly = msg.toLowerCase().includes('already registered') || msg.toLowerCase().includes('already been registered')
-        ? 'Email já cadastrado'
-        : msg
+      const lower = msg.toLowerCase()
+      const docDigits = cnpj?.replace(/\D/g, '') ?? ''
+      const docLabel = docDigits.length === 11 ? 'CPF' : 'CNPJ'
+      let friendly = msg
+      if (lower.includes('already been registered') || lower.includes('already registered')) {
+        friendly = 'Email já cadastrado'
+      } else if (lower.includes('organizations_cnpj_unique') || lower.includes('cnpj')) {
+        friendly = `${docLabel} já cadastrado`
+      }
       return jsonResponse({ error: friendly, retryable: isRetryable(createErr) }, 400)
     }
     const userId = created.user.id

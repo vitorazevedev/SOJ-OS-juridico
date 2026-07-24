@@ -8,6 +8,7 @@ import { Loader2, Copy, Check, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { formatDocument, validateDocument } from "@/lib/brazilianDocs";
 
 type StaffMember = {
   id: string;
@@ -22,10 +23,10 @@ type StaffMember = {
 };
 
 const EMPTY_FORM = {
-  name: "", jobTitle: "", ddi: "+55", phone: "", email: "",
+  name: "", jobTitle: "", ddi: "+55", phone: "", email: "", cnpj: "",
   canViewDev: false, canViewPonderumTeam: false, fullPlatformAccess: false,
 };
-type FieldErrors = Partial<Record<"name" | "jobTitle" | "email" | "permissions", string>>;
+type FieldErrors = Partial<Record<"name" | "jobTitle" | "email" | "cnpj" | "permissions", string>>;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TRANSIENT_ERROR_RE = /invalid jwt|unable to parse or verify signature|unrecognized jwt kid/i;
@@ -114,6 +115,10 @@ export function PonderumStaffManagement() {
     setFieldErrors((prev) => ({ ...prev, [key]: undefined }));
   };
 
+  const handleCnpjChange = (raw: string) => {
+    set("cnpj", formatDocument(raw));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs: FieldErrors = {};
@@ -121,6 +126,10 @@ export function PonderumStaffManagement() {
     if (!form.jobTitle.trim()) errs.jobTitle = "Informe a função";
     if (!form.email.trim()) errs.email = "Informe o email";
     else if (!EMAIL_RE.test(form.email.trim())) errs.email = "Email inválido";
+    if (form.cnpj.trim()) {
+      const doc = validateDocument(form.cnpj);
+      if (!doc.valid) errs.cnpj = `${doc.type === "cpf" ? "CPF" : "CNPJ"} inválido`;
+    }
     if (!form.canViewDev && !form.canViewPonderumTeam && !form.fullPlatformAccess) {
       errs.permissions = "Selecione ao menos uma permissão";
     }
@@ -138,6 +147,7 @@ export function PonderumStaffManagement() {
         ddi: form.ddi.trim(),
         phone: form.phone.trim(),
         email: form.email.trim(),
+        cnpj: form.cnpj.trim() || null,
         canViewDev: form.canViewDev,
         canViewPonderumTeam: form.canViewPonderumTeam,
         fullPlatformAccess: form.fullPlatformAccess,
@@ -259,6 +269,16 @@ export function PonderumStaffManagement() {
               />
             </div>
           </div>
+        </div>
+
+        <div className="space-y-1">
+          <Label htmlFor="sm-cnpj">CPF ou CNPJ</Label>
+          <Input
+            id="sm-cnpj" value={form.cnpj} placeholder="000.000.000-00 ou 00.000.000/0000-00"
+            onChange={(e) => handleCnpjChange(e.target.value)} maxLength={18}
+            className={cn("md:max-w-xs", fieldErrors.cnpj && "border-destructive/70")}
+          />
+          {fieldErrors.cnpj && <p className="text-[11px] text-destructive">{fieldErrors.cnpj}</p>}
         </div>
 
         <div className="flex flex-col gap-2">
