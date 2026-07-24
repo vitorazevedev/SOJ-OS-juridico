@@ -9,10 +9,13 @@ import { ObligationsEmptyState } from "@/components/obligations/ObligationsEmpty
 import { ObligationsStats } from "@/components/obligations/ObligationsStats";
 import { ObligationsFilters } from "@/components/obligations/ObligationsFilters";
 import { daysUntil, obligationTypeLabel } from "@/lib/obligationsFormat";
+import { useOrganization } from "@/hooks/useOrganization";
+import { PlanFeatureLock } from "@/components/layout/PlanFeatureLock";
 
 type FilterStatus = "todos" | "pendente" | "cumprida" | "atrasada";
 
 export default function Obligations() {
+  const { org, loading: orgLoading } = useOrganization();
   const { obligations, loading } = useObligations();
   const [statusFilter, setStatusFilter] = useState<FilterStatus>("todos");
   const [onlyUrgent, setOnlyUrgent] = useState(false);
@@ -62,6 +65,15 @@ export default function Obligations() {
     });
     return { urgent, pending, done, totalValue };
   }, [obligations]);
+
+  if (!orgLoading && org?.plan_status !== "active") {
+    return (
+      <PlanFeatureLock
+        feature="A Gestão de Obrigações"
+        description="Acompanhe prazos, vencimentos e obrigações contratuais em um só lugar. Disponível para quem tem o plano Starter."
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 md:gap-6 max-w-[1400px] mx-auto animate-fade-in">

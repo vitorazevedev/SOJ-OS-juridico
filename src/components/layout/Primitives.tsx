@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
+import { Lock } from "lucide-react";
 
 export function SojCard({ children, className, padding = true }: { children: ReactNode; className?: string; padding?: boolean }) {
   return (
@@ -49,7 +50,17 @@ export function KPICard({
   );
 }
 
-export function RiskBadge({ score }: { score: number }) {
+// Índice de Desequilíbrio (antigo "Score de risco") — exclusivo do
+// plano Starter pago. Chamadores passam locked=true pro Freemium em vez
+// de renderizar o número.
+export function RiskBadge({ score, locked }: { score: number; locked?: boolean }) {
+  if (locked) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
+        <Lock className="h-3 w-3" /> Starter
+      </span>
+    );
+  }
   const level = score >= 65 ? "critical" : score >= 40 ? "medium" : "low";
   const label = score >= 65 ? "Crítico" : score >= 40 ? "Médio" : "Baixo";
   const cls = {

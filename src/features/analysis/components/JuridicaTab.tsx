@@ -1,8 +1,10 @@
 import { cn } from "@/lib/utils";
+import { Lock } from "lucide-react";
 import { RiskBadge, SojCard } from "@/components/layout/Primitives";
 import { GaugeChart } from "@/components/layout/Charts";
 import { RiskClauseCard } from "@/features/analysis/components/RiskClauseCard";
 import { fmtBRL } from "@/lib/analysisFormat";
+import { useOrganization } from "@/hooks/useOrganization";
 import type { ContractAnalysis, ClauseRisk } from "@/hooks/useContractAnalysis";
 
 export function JuridicaTab({
@@ -16,6 +18,8 @@ export function JuridicaTab({
   expanded: string | null;
   setExpanded: (id: string | null) => void;
 }) {
+  const { org } = useOrganization();
+  const isStarter = org?.plan_status === "active";
   const riskScore = analysis.risk_score ?? 0;
   const sevCount = {
     critico: clauses.filter((c) => c.severity === "critico").length,
@@ -28,13 +32,26 @@ export function JuridicaTab({
     <>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <SojCard className="flex flex-col items-center text-center">
-          <span className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider mb-2">Score de Risco</span>
-          <div className="md:hidden"><GaugeChart score={riskScore} compact /></div>
-          <div className="hidden md:block"><GaugeChart score={riskScore} /></div>
-          <RiskBadge score={riskScore} />
+          <span className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider mb-2">Índice de Desequilíbrio</span>
+          {isStarter ? (
+            <>
+              <div className="md:hidden"><GaugeChart score={riskScore} compact /></div>
+              <div className="hidden md:block"><GaugeChart score={riskScore} /></div>
+              <RiskBadge score={riskScore} />
+            </>
+          ) : (
+            <div className="flex flex-col items-center gap-2 py-6">
+              <div className="h-12 w-12 rounded-full bg-muted flex items-center justify-center">
+                <Lock className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <p className="text-xs text-muted-foreground max-w-[200px]">
+                Disponível no plano Starter
+              </p>
+            </div>
+          )}
           <p className="text-[11px] md:text-xs text-muted-foreground mt-3">{clauses.length} cláusulas identificadas</p>
           <p className="text-[10px] text-muted-foreground/70 mt-2 leading-tight px-1 border-t border-border pt-2">
-            Estimativa gerada por IA — não é avaliação jurídica definitiva. Consulte um advogado.
+            Estimativa gerada por IA, não é avaliação jurídica definitiva. Consulte um advogado.
           </p>
           <div className="grid grid-cols-2 gap-2 mt-4 w-full">
             {([

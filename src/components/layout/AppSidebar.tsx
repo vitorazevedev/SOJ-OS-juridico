@@ -61,6 +61,10 @@ export function AppSidebar() {
   // equipe Ponderum so ve o menu regular (Dashboard/Contratos/...) se
   // tiver full_platform_access -- senao, so os menus internos que tiver.
   const showRegularNav = permsLoading || !isStaff || fullPlatformAccess;
+  // Gerador de Contrato e Gestao de Obrigacoes sao exclusivos do Starter
+  // pago -- Freemium nem ve os itens no menu.
+  const isStarter = org?.plan_status === "active";
+  const visibleItems = isStarter ? items : items.filter((i) => i.url !== "/obligations" && i.url !== "/generator");
 
   const displayName = (user?.user_metadata?.name as string | undefined)?.trim() || user?.email || "Usuário";
   const planLabel = org ? (PLAN_LABELS[org.plan_id] ?? `Plano ${org.plan_id}`) : "—";
@@ -88,7 +92,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {showRegularNav && items.map((item) => (
+              {showRegularNav && visibleItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
                     <NavLink

@@ -1,4 +1,4 @@
-import { Download, FileText } from "lucide-react";
+import { Download, FileText, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SojCard } from "@/components/layout/Primitives";
 import { HighlightedText, SEV_HIGHLIGHT } from "@/features/analysis/components/HighlightedText";
@@ -6,7 +6,11 @@ import { JuridicaTab } from "@/features/analysis/components/JuridicaTab";
 import { FinanceiroTab } from "@/features/analysis/components/FinanceiroTab";
 import { fmtDate, severityColor } from "@/lib/analysisFormat";
 import { useEconomicIndexes } from "@/hooks/useEconomicIndexes";
+import { useOrganization } from "@/hooks/useOrganization";
 import type { FullContract, ContractContent, ContractAnalysis, ClauseRisk } from "@/hooks/useContractAnalysis";
+
+// Mesmo numero de WhatsApp comercial usado nos fluxos de upgrade/renovacao.
+const SALES_WHATSAPP = "5511964889002";
 
 export function AnalisadoView({
   contract,
@@ -31,7 +35,15 @@ export function AnalisadoView({
   indexes: ReturnType<typeof useEconomicIndexes>["indexes"];
   saveContractValue: (v: number) => Promise<void>;
 }) {
+  const { org } = useOrganization();
+  const isStarter = org?.plan_status === "active";
+
   const handleDownloadPdf = async () => {
+    if (!isStarter) {
+      const message = `Olá! Sou da organização "${org?.name ?? ""}" e quero fazer upgrade para o plano Starter da Ponderum para exportar relatórios em PDF.`;
+      window.open(`https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(message)}`, "_blank");
+      return;
+    }
     const { generateAnalysisPdf, downloadBlob } = await import("@/lib/contractDocs");
     const blob = generateAnalysisPdf({ contract, analysis, clauses });
     const slug = (contract.name || "analise").normalize("NFD").replace(/[̀-ͯ]/g, "")
@@ -67,8 +79,9 @@ export function AnalisadoView({
         <button
           onClick={handleDownloadPdf}
           className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors mb-px"
+          title={isStarter ? "Exportar PDF" : "Exportar PDF é exclusivo do plano Starter"}
         >
-          <Download className="h-3.5 w-3.5" /> PDF
+          {isStarter ? <Download className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />} PDF
         </button>
       </div>
 

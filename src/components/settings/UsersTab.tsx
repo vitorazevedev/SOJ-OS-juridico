@@ -22,7 +22,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/features/auth/components/AuthProvider";
-import { useOrgUsers, type OrgUser } from "@/hooks/useOrganization";
+import { useOrgUsers, useOrganization, type OrgUser } from "@/hooks/useOrganization";
+
+// Mesmo numero de WhatsApp comercial usado nos fluxos de upgrade/renovacao.
+const SALES_WHATSAPP = "5511964889002";
 
 const inviteSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -38,6 +41,7 @@ const ROLE_LABELS: Record<string, string> = {
 
 export function UsersTab() {
   const { user } = useAuth();
+  const { org } = useOrganization();
   const { users, updateRole, removeUser, refresh } = useOrgUsers();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<OrgUser | null>(null);
@@ -50,6 +54,15 @@ export function UsersTab() {
   const myUser = users.find((u) => u.id === user?.id);
   const myRole = myUser?.role ?? "member";
   const canManage = myRole === "owner" || myRole === "admin";
+  // Freemium so tem 1 usuario na organizacao; adicionar mais e exclusivo
+  // do Starter pago.
+  const isStarter = org?.plan_status === "active";
+  const reachedFreeUserLimit = !isStarter && users.length >= 1;
+
+  const handleUpgradeForMoreUsers = () => {
+    const message = `Olá! Sou da organização "${org?.name ?? ""}" e quero fazer upgrade para o plano Starter da Ponderum para adicionar mais usuários.`;
+    window.open(`https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(message)}`, "_blank");
+  };
 
   const handleRoleChange = async (u: OrgUser, role: string) => {
     try {
@@ -135,12 +148,22 @@ export function UsersTab() {
             <p className="text-xs text-muted-foreground mt-0.5">{users.length} no total</p>
           </div>
           {canManage && (
-            <button
-              onClick={() => setInviteOpen(true)}
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90"
-            >
-              <UserPlus className="h-3.5 w-3.5" /> Convidar usuário
-            </button>
+            reachedFreeUserLimit ? (
+              <button
+                onClick={handleUpgradeForMoreUsers}
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg border border-primary/30 text-primary text-sm font-medium hover:bg-primary-dim"
+                title="Plano Freemium permite só 1 usuário na organização"
+              >
+                <UserPlus className="h-3.5 w-3.5" /> Fazer upgrade para adicionar mais usuários
+              </button>
+            ) : (
+              <button
+                onClick={() => setInviteOpen(true)}
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90"
+              >
+                <UserPlus className="h-3.5 w-3.5" /> Convidar usuário
+              </button>
+            )
           )}
         </div>
 

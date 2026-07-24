@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { LayoutGrid, FileText, Bell, Sparkles, Settings } from "lucide-react";
 import { useUrgentObligations } from "@/hooks/useUrgentObligations";
+import { useOrganization } from "@/hooks/useOrganization";
 import { cn } from "@/lib/utils";
 
 type Item = { to: string; label: string; icon: typeof LayoutGrid; badge?: boolean; end?: boolean };
@@ -14,6 +15,11 @@ const items: Item[] = [
 
 export default function BottomNav() {
   const { count: urgentCount } = useUrgentObligations();
+  const { org } = useOrganization();
+  // Gerador de Contrato e Gestao de Obrigacoes sao exclusivos do Starter
+  // pago -- Freemium nem ve os itens no menu.
+  const isStarter = org?.plan_status === "active";
+  const visibleItems = isStarter ? items : items.filter((i) => i.to !== "/obligations" && i.to !== "/generator");
 
   return (
     <nav
@@ -25,7 +31,7 @@ export default function BottomNav() {
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >
-      {items.map(({ to, label, icon: Icon, badge, end }) => (
+      {visibleItems.map(({ to, label, icon: Icon, badge, end }) => (
         <NavLink
           key={to}
           to={to}

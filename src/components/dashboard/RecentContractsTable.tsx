@@ -3,9 +3,12 @@ import { SojCard, RiskBadge, StatusBadge } from "@/components/layout/Primitives"
 import { ArrowRight, FileText, Loader2 } from "lucide-react";
 import { fmtDate, statusLabel } from "@/lib/dashboardFormat";
 import type { RecentContract } from "@/hooks/useDashboard";
+import { useOrganization } from "@/hooks/useOrganization";
 
 export function RecentContractsTable({ loading, recentContracts }: { loading: boolean; recentContracts: RecentContract[] }) {
   const navigate = useNavigate();
+  const { org } = useOrganization();
+  const isStarter = org?.plan_status === "active";
 
   return (
     <SojCard padding={false}>
@@ -20,7 +23,7 @@ export function RecentContractsTable({ loading, recentContracts }: { loading: bo
         <span>Contrato</span>
         <span>Tipo</span>
         <span>Status</span>
-        <span>Score</span>
+        <span>Índice</span>
         <span>Data</span>
         <span />
       </div>
@@ -62,7 +65,7 @@ export function RecentContractsTable({ loading, recentContracts }: { loading: bo
                 <StatusBadge status={statusLabel(c.status) as never} />
               </span>
               <span className="hidden md:block">
-                {c.risk_score != null ? <RiskBadge score={c.risk_score} /> : <span className="text-xs text-muted-foreground">—</span>}
+                {c.risk_score != null ? <RiskBadge score={c.risk_score} locked={!isStarter} /> : <span className="text-xs text-muted-foreground">—</span>}
               </span>
               <span className="hidden md:block text-sm text-muted-foreground tabular-nums">{fmtDate(c.created_at)}</span>
               <span className="text-muted-foreground text-xs justify-self-end">›</span>

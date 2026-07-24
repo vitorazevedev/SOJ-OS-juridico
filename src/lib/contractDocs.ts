@@ -390,7 +390,7 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
       { label: "CONTRATO",    value: contract.name },
       { label: "CONTRAPARTE", value: contract.party ?? "—" },
       { label: "TIPO",        value: contract.type ?? "—" },
-      { label: "SCORE",       value: scoreTxt },
+      { label: "ÍNDICE",      value: scoreTxt },
     ],
   });
   // Colore o valor de score com a cor do risco

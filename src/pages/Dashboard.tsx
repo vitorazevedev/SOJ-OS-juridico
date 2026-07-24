@@ -3,6 +3,7 @@ import { SojCard } from "@/components/layout/Primitives";
 import { VolumeExposureChart } from "@/components/layout/Charts";
 import { useDashboard } from "@/hooks/useDashboard";
 import { useAuth } from "@/features/auth/components/AuthProvider";
+import { useOrganization } from "@/hooks/useOrganization";
 import { cn } from "@/lib/utils";
 import { AlertTriangle } from "lucide-react";
 import { WelcomeHero } from "@/components/dashboard/WelcomeHero";
@@ -15,6 +16,8 @@ import { formatBRL, formatToday, greeting } from "@/lib/dashboardFormat";
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { org } = useOrganization();
+  const isStarter = org?.plan_status === "active";
   const { summary, recentContracts, topRisks, upcoming, loading } = useDashboard();
 
   const firstName =
@@ -78,10 +81,10 @@ export default function Dashboard() {
             highlight={summary.total_exposure_cents > 0}
           />
           <KpiCard
-            label="Score médio de risco"
-            value={summary.avg_risk_score > 0 ? String(Math.round(summary.avg_risk_score)) : "—"}
-            hint="Contratos analisados"
-            highlight={summary.avg_risk_score >= 65}
+            label="Índice médio de Desequilíbrio"
+            value={isStarter ? (summary.avg_risk_score > 0 ? String(Math.round(summary.avg_risk_score)) : "—") : "—"}
+            hint={isStarter ? "Contratos analisados" : "Disponível no Starter"}
+            highlight={isStarter && summary.avg_risk_score >= 65}
           />
           <KpiCard
             label="Obrigações pendentes"

@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { saveGeneratedContract } from "@/hooks/useGeneratedContracts";
 import { buildContractSections } from "@/lib/contractSections";
 import { useOrganization } from "@/hooks/useOrganization";
+import { PlanFeatureLock } from "@/components/layout/PlanFeatureLock";
 import {
   STEPS,
   EMPTY_FORM,
@@ -37,7 +38,7 @@ export default function Generator() {
   const [signOpen, setSignOpen] = useState(false);
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"novo" | "historico">("novo");
-  const { logoUrl } = useOrganization();
+  const { org, loading: orgLoading, logoUrl } = useOrganization();
 
   const tpl = useMemo(
     () => TEMPLATES.find((t) => t.id === selected) ?? TEMPLATES[0],
@@ -116,6 +117,15 @@ export default function Generator() {
     await navigator.clipboard.writeText(text);
     toast({ title: "Texto copiado!" });
   };
+
+  if (!orgLoading && org?.plan_status !== "active") {
+    return (
+      <PlanFeatureLock
+        feature="O Gerador de Contrato"
+        description="Crie contratos equilibrados e juridicamente seguros com IA em minutos. Disponível para quem tem o plano Starter."
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 md:gap-6 max-w-[1100px] mx-auto animate-fade-in">

@@ -7,6 +7,7 @@ import { ParsedChips } from "@/components/contracts/ParsedChips";
 import { ContractMenu } from "@/components/contracts/ContractMenu";
 import { formatDate, initialsFor, type SortDir, type SortField } from "@/lib/contractListFormat";
 import type { DbContract } from "@/hooks/useContracts";
+import { useOrganization } from "@/hooks/useOrganization";
 
 function SortIcon({ field, sortField, sortDir }: { field: SortField; sortField: SortField; sortDir: SortDir }) {
   if (field !== sortField) return <ArrowUpDown className="h-3 w-3 opacity-40 ml-1 inline" />;
@@ -39,6 +40,8 @@ export function ContractsList({
   onRename: (c: DbContract) => void;
 }) {
   const navigate = useNavigate();
+  const { org } = useOrganization();
+  const isStarter = org?.plan_status === "active";
 
   if (loading) {
     return (
@@ -103,7 +106,9 @@ export function ContractsList({
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
                 <span className="text-[10px] text-muted-foreground">{formatDate(c.created_at)}</span>
-                {c.status === "analisado" && c.risk_score != null && <RiskBadge score={c.risk_score} />}
+                {c.status === "analisado" && c.risk_score != null && (
+                  <RiskBadge score={c.risk_score} locked={!isStarter} />
+                )}
               </div>
             </button>
             <ContractMenu contract={c} onDelete={onDelete} onRename={onRename} onAnalyze={() => navigate(`/analysis/${c.id}`)} />
@@ -126,7 +131,7 @@ export function ContractsList({
                 <th className="text-left font-normal px-5 py-4">Status</th>
                 <th className="text-left font-normal px-5 py-4">
                   <button onClick={() => toggleSort("risk_score")} className="flex items-center hover:text-foreground transition-colors">
-                    Score de Risco <SortIcon field="risk_score" sortField={sortField} sortDir={sortDir} />
+                    Índice de Desequilíbrio <SortIcon field="risk_score" sortField={sortField} sortDir={sortDir} />
                   </button>
                 </th>
                 <th className="text-left font-normal px-5 py-4">Tamanho</th>
@@ -160,7 +165,7 @@ export function ContractsList({
                         <RefreshCw className="h-3 w-3 animate-spin" /> Processando...
                       </span>
                     ) : c.status === "analisado" && c.risk_score != null ? (
-                      <RiskBadge score={c.risk_score} />
+                      <RiskBadge score={c.risk_score} locked={!isStarter} />
                     ) : c.status === "em_analise" ? (
                       <span className="text-xs text-muted-foreground">Aguardando IA</span>
                     ) : (

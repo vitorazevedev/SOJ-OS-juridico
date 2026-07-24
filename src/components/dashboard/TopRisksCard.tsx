@@ -2,9 +2,12 @@ import { useNavigate } from "react-router-dom";
 import { SojCard, RiskBadge } from "@/components/layout/Primitives";
 import { FileText, TrendingUp } from "lucide-react";
 import type { RecentContract } from "@/hooks/useDashboard";
+import { useOrganization } from "@/hooks/useOrganization";
 
 export function TopRisksCard({ loading, topRisks }: { loading: boolean; topRisks: RecentContract[] }) {
   const navigate = useNavigate();
+  const { org } = useOrganization();
+  const isStarter = org?.plan_status === "active";
 
   return (
     <SojCard>
@@ -41,7 +44,7 @@ export function TopRisksCard({ loading, topRisks }: { loading: boolean; topRisks
                 <p className="text-sm font-medium truncate">{c.name}</p>
                 <p className="text-[11px] text-muted-foreground truncate">{c.type ?? c.party ?? "—"}</p>
               </div>
-              {c.risk_score != null && <RiskBadge score={c.risk_score} />}
+              {c.risk_score != null && <RiskBadge score={c.risk_score} locked={!isStarter} />}
             </button>
           ))}
         </div>
