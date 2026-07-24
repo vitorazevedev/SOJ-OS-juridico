@@ -60,6 +60,7 @@ nav {
 .nav-links a { font-size: 14px; font-weight: 500; color: #3C4A5E; text-decoration: none; transition: color .15s; background: transparent; -webkit-tap-highlight-color: transparent; }
 .nav-links a:hover { color: var(--esmeralda); }
 .btn-cta {
+  display: inline-block; text-decoration: none;
   background: var(--esmeralda); color: #fff; border: none;
   font-family: var(--body); font-weight: 600; font-size: 13.5px;
   padding: 10px 20px; border-radius: 7px; cursor: pointer;
@@ -83,17 +84,6 @@ nav {
 }
 @media (max-width: 920px) { .hero-grid { grid-template-columns: 1fr; } }
 
-.eyebrow {
-  display: inline-flex; align-items: center; gap: 8px;
-  font-family: var(--body); font-weight: 700; font-size: 12px; letter-spacing: 0.06em;
-  text-transform: uppercase; color: var(--esmeralda);
-  background: #E9F5F3; border: 1px solid #CFEAE6;
-  padding: 6px 12px 6px 8px; border-radius: 20px; margin-bottom: 26px;
-}
-.eyebrow-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--esmeralda);
-}
 h1.hero-title {
   font-family: var(--display);
   font-weight: 600;
@@ -108,6 +98,7 @@ h1.hero-title em { font-style: italic; color: var(--esmeralda); }
 }
 .cta-row { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
 .btn-primary {
+  display: inline-block; text-decoration: none;
   background: var(--esmeralda); color: #fff; border: none;
   font-family: var(--body); font-weight: 600; font-size: 15px;
   padding: 14px 26px; border-radius: 8px; cursor: pointer;
@@ -266,13 +257,6 @@ h2 {
   pointer-events: none;
 }
 @media (max-width: 820px) { .access-box { padding: 36px 26px; } }
-.access-intro ul { list-style: none; margin-top: 20px; }
-.access-intro li { display: flex; gap: 10px; margin-bottom: 12px; font-size: 14.5px; color: #D6DEE8; }
-.li-dot {
-  flex: none; margin-top: 8px;
-  width: 7px; height: 7px; border-radius: 2px;
-  background: var(--teal); transform: rotate(45deg);
-}
 .access-intro { max-width: 640px; margin-bottom: 40px; position: relative; z-index: 1; }
 .plans-grid {
   display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
@@ -371,83 +355,6 @@ footer {
   padding: 2px 8px; border-radius: 10px; margin-left: 6px;
 }
 
-/* ── MODAL WAITLIST ── */
-.modal-overlay {
-  display: none; position: fixed; inset: 0; z-index: 100;
-  background: rgba(10,22,40,0.75); backdrop-filter: blur(4px);
-  align-items: center; justify-content: center; padding: 16px;
-}
-.modal-overlay.open { display: flex; }
-.modal-box {
-  background: #fff; border-radius: 16px; padding: 36px 32px;
-  width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; overflow-x: hidden;
-  position: relative;
-  animation: modalin .25s ease-out;
-}
-@keyframes modalin { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-.modal-close {
-  position: absolute; top: 16px; right: 16px;
-  background: none; border: none; cursor: pointer;
-  font-size: 20px; color: #8A9BB0; line-height: 1;
-}
-.modal-close:hover { color: var(--navy); }
-.modal-box h3 { font-family: var(--body); font-size: 21px; font-weight: 700; color: var(--navy); margin-bottom: 6px; }
-.modal-box p.modal-sub { font-size: 14px; color: #5A6A7E; margin-bottom: 24px; }
-.field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 16px; min-width: 0; }
-.field label { font-size: 13px; font-weight: 600; color: var(--navy); }
-.field input:not(.phone-ddi):not(.phone-number), .field select, .field textarea {
-  width: 100%; min-width: 0; box-sizing: border-box;
-  border: 1.5px solid var(--line); border-radius: 8px;
-  padding: 10px 12px; font-family: var(--body); font-size: 14px; color: var(--navy);
-  background: var(--cinza); transition: border-color .15s;
-}
-.field input:focus, .field select:focus, .field textarea:focus {
-  outline: none; border-color: var(--esmeralda);
-}
-/* Campo de telefone com DDI + máscara */
-.phone-wrap {
-  display: flex; min-width: 0;
-  border: 1.5px solid var(--line); border-radius: 8px;
-  background: var(--cinza); overflow: hidden;
-  transition: border-color .15s;
-}
-.phone-wrap:focus-within { border-color: var(--esmeralda); }
-.phone-ddi {
-  flex-shrink: 0; width: 62px; text-align: center;
-  border: none; border-right: 1.5px solid var(--line);
-  background: transparent; padding: 10px 8px;
-  font-family: var(--body); font-size: 14px; color: var(--navy);
-  outline: none;
-}
-.phone-number {
-  flex: 1; min-width: 0; border: none !important; background: transparent !important;
-  padding: 10px 12px; font-family: var(--body); font-size: 14px; color: var(--navy);
-  outline: none !important; border-radius: 0 !important;
-}
-.field textarea { resize: none; }
-.field-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 12px; }
-@media (max-width: 520px) {
-  .field-row { grid-template-columns: 1fr; }
-}
-.modal-submit {
-  width: 100%; background: var(--esmeralda); color: #fff;
-  border: none; border-radius: 8px; padding: 13px;
-  font-family: var(--body); font-weight: 600; font-size: 15px;
-  cursor: pointer; transition: opacity .15s; margin-top: 4px;
-}
-.modal-submit:hover { opacity: 0.9; }
-.modal-submit:disabled { opacity: 0.6; cursor: not-allowed; }
-.modal-success { text-align: center; padding: 20px 0; }
-.modal-success .check {
-  width: 52px; height: 52px; border-radius: 50%;
-  background: #E9F5F3; margin: 0 auto 16px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 24px;
-}
-.modal-success h4 { font-family: var(--display); font-size: 22px; font-weight: 600; color: var(--navy); margin-bottom: 8px; }
-.modal-success p { font-size: 14px; color: #5A6A7E; }
-.modal-error { font-size: 13px; color: #c0392b; margin-top: 8px; text-align: center; }
-
 /* ── ANIMAÇÕES ── */
 .reveal { opacity: 0; transform: translateY(18px); transition: opacity .6s ease, transform .6s ease; }
 .reveal.in { opacity: 1; transform: translateY(0); }
@@ -468,10 +375,10 @@ footer {
       <a href="#como-funciona">Como funciona</a>
       <a href="#recursos">Recursos</a>
       <a href="#para-quem">Para quem é</a>
-      <a href="#acesso">Acesso antecipado</a>
+      <a href="#acesso">Planos</a>
       <a href="#faq">FAQ</a>
     </nav>
-    <button class="btn-cta" onclick="document.getElementById('acesso').scrollIntoView({behavior:'smooth'})">Solicitar acesso</button>
+    <a href="https://app.ponderum.com/login" class="btn-cta">Criar conta grátis</a>
   </div>
 </nav>
 
@@ -479,14 +386,13 @@ footer {
 <header class="hero">
   <div class="wrap hero-grid">
     <div>
-      <span class="eyebrow"><span class="eyebrow-dot"></span>Programa de acesso antecipado</span>
       <h1 class="hero-title">Contratos sob controle.<br>Decisões com <em>clareza</em>.</h1>
       <p class="hero-sub">A Ponderum organiza, prioriza e explica riscos contratuais, para que a decisão continue sendo sua, só que mais rápida e mais bem informada.</p>
       <div class="cta-row">
-        <button class="btn-primary" onclick="document.getElementById('acesso').scrollIntoView({behavior:'smooth'})">Solicitar acesso antecipado</button>
+        <a href="https://app.ponderum.com/login" class="btn-primary">Criar conta grátis</a>
         <button class="btn-ghost" onclick="document.getElementById('como-funciona').scrollIntoView({behavior:'smooth'})">Ver como funciona</button>
       </div>
-      <p class="hero-note">Gratuito durante a fase de testes · Vagas limitadas</p>
+      <p class="hero-note">Comece grátis com o plano Freemium · Sem cartão de crédito</p>
     </div>
 
     <div class="demo-card">
@@ -633,13 +539,9 @@ footer {
   <div class="wrap">
     <div class="access-box reveal">
       <div class="access-intro">
-        <span class="s-label" style="color:var(--teal)">Programa de acesso antecipado</span>
-        <h2 style="color:#fff">Um número limitado de profissionais terá acesso prioritário.</h2>
-        <ul>
-          <li><span class="li-dot"></span>Acesso à análise contratual assim que disponível</li>
-          <li><span class="li-dot"></span>Prioridade de suporte direto com a equipe</li>
-          <li><span class="li-dot"></span>Participação na definição de próximas funcionalidades</li>
-        </ul>
+        <span class="s-label" style="color:var(--teal)">Planos</span>
+        <h2 style="color:#fff">Um plano para cada momento do seu escritório.</h2>
+        <p class="s-sub" style="color:#AEBBCC;">Comece grátis e evolua quando precisar de mais.</p>
       </div>
 
       <div class="plans-grid">
@@ -652,7 +554,7 @@ footer {
             <li>Análise jurídica completa por IA</li>
             <li>Visualização do relatório, sem exportação</li>
           </ul>
-          <button class="btn-primary plan-btn" style="background:transparent;border:1.5px solid #2A3F58;">Começar grátis</button>
+          <a href="https://app.ponderum.com/login" class="btn-primary plan-btn" style="background:transparent;border:1.5px solid #2A3F58;">Começar grátis</a>
         </div>
 
         <div class="plan-card plan-featured">
@@ -698,7 +600,7 @@ footer {
       </details>
       <details>
         <summary>Quanto custa? <span class="faq-plus">+</span></summary>
-        <p>A Ponderum tem um plano Freemium gratuito, para conhecer a plataforma, e o plano Starter, com acesso completo, cujo valor é definido diretamente com nossa equipe. Veja os detalhes na seção <a href="#acesso" style="color:var(--esmeralda);">Acesso antecipado</a>.</p>
+        <p>A Ponderum tem um plano Freemium gratuito, para conhecer a plataforma, e o plano Starter, com acesso completo, cujo valor é definido diretamente com nossa equipe. Veja os detalhes na seção <a href="#acesso" style="color:var(--esmeralda);">Planos</a>.</p>
       </details>
     </div>
   </div>
@@ -709,8 +611,8 @@ footer {
   <div class="wrap">
     <div class="cta-final reveal">
       <div>
-        <h3>Acompanhe o desenvolvimento da Ponderum.</h3>
-        <p>Novidades sobre o programa de acesso antecipado, sem spam.</p>
+        <h3>Acompanhe as novidades da Ponderum.</h3>
+        <p>Atualizações do produto, direto no seu email. Sem spam.</p>
       </div>
       <form class="form-row" onsubmit="submitNewsletter(event)">
         <input type="email" id="newsletter-email" placeholder="seu@email.com" required>
@@ -737,7 +639,7 @@ footer {
         <h4>PRODUTO</h4>
         <a href="#como-funciona">Como funciona</a>
         <a href="#recursos">Recursos</a>
-        <a href="#acesso">Acesso antecipado</a>
+        <a href="#acesso">Planos</a>
       </div>
       <div class="footer-col">
         <h4>EMPRESA</h4>
@@ -753,158 +655,10 @@ footer {
   </div>
 </footer>
 
-<!-- MODAL WAITLIST -->
-<div class="modal-overlay" id="waitlist-modal" onclick="if(event.target===this) closeModal()">
-  <div class="modal-box">
-    <button class="modal-close" onclick="closeModal()" aria-label="Fechar">&times;</button>
-
-    <!-- Formulário -->
-    <div id="modal-form-view">
-      <h3>Solicitar acesso antecipado</h3>
-      <p class="modal-sub">Gratuito durante a fase de testes. Sem cartão de crédito.</p>
-      <form id="waitlist-form" onsubmit="submitWaitlist(event)">
-        <div class="field-row">
-          <div class="field">
-            <label for="wl-name">Nome *</label>
-            <input id="wl-name" type="text" placeholder="Seu nome" required>
-          </div>
-          <div class="field">
-            <label for="wl-email">Email *</label>
-            <input id="wl-email" type="email" placeholder="voce@empresa.com" required>
-          </div>
-        </div>
-        <div class="field">
-          <label for="wl-phone">WhatsApp / Celular</label>
-          <div class="phone-wrap">
-            <input id="wl-ddi" class="phone-ddi" type="text"
-                   value="+55" maxlength="5"
-                   aria-label="DDI" title="Código do país (ex: +55 para Brasil)">
-            <input id="wl-phone" class="phone-number" type="tel"
-                   placeholder="(11) 99999-9999" autocomplete="tel" maxlength="15">
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field">
-            <label for="wl-company">Empresa</label>
-            <input id="wl-company" type="text" placeholder="Nome da empresa">
-          </div>
-          <div class="field">
-            <label for="wl-role">Perfil</label>
-            <select id="wl-role">
-              <option value="">Selecione...</option>
-              <option>Advogado autônomo</option>
-              <option>Departamento jurídico</option>
-              <option>Escritório de advocacia</option>
-              <option>Empresário / Gestor</option>
-              <option>Outro</option>
-            </select>
-          </div>
-        </div>
-        <div class="field">
-          <label for="wl-message">Como podemos te ajudar? <span style="font-weight:400;color:#8A9BB0">(opcional)</span></label>
-          <textarea id="wl-message" rows="3" placeholder="Ex: Preciso analisar contratos de prestação de serviços frequentemente..."></textarea>
-        </div>
-        <p id="modal-error" class="modal-error" style="display:none"></p>
-        <button type="submit" class="modal-submit" id="modal-submit-btn">Solicitar minha vaga</button>
-      </form>
-    </div>
-
-    <!-- Sucesso -->
-    <div id="modal-success-view" style="display:none" class="modal-success">
-      <div class="check">✓</div>
-      <h4>Solicitação recebida!</h4>
-      <p>Entraremos em contato assim que sua vaga estiver disponível.<br>Obrigado pelo interesse na Ponderum.</p>
-    </div>
-  </div>
-</div>
-
 <script>
   // ── Configuração Supabase (anon key — somente insert público) ──
   const SUPABASE_URL = 'https://igolxkyahbavripvfeak.supabase.co';
   const SUPABASE_ANON = 'sb_publishable_oujMak_Co0OnlJ30JeLZaw_Qnl85crO';
-
-  // ── Máscara de telefone ──
-  function maskPhone(v) {
-    const d = v.replace(/\D/g, '').slice(0, 11);
-    if (!d) return '';
-    if (d.length <= 2)  return `(${d}`;
-    if (d.length <= 6)  return `(${d.slice(0,2)}) ${d.slice(2)}`;
-    if (d.length <= 10) return `(${d.slice(0,2)}) ${d.slice(2,6)}-${d.slice(6)}`;
-    return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`;
-  }
-  document.getElementById('wl-phone').addEventListener('input', function(e) {
-    const pos = this.selectionStart;
-    const raw = this.value;
-    this.value = maskPhone(raw);
-    // Reposiciona cursor se o usuário estiver editando no meio do campo
-    const diff = this.value.length - raw.length;
-    this.setSelectionRange(pos + diff, pos + diff);
-  });
-
-  function openModal() {
-    document.getElementById('waitlist-modal').classList.add('open');
-    document.body.style.overflow = 'hidden';
-    setTimeout(() => document.getElementById('wl-name').focus(), 50);
-  }
-  function closeModal() {
-    document.getElementById('waitlist-modal').classList.remove('open');
-    document.body.style.overflow = '';
-  }
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
-
-  // Conectar todos os botões de CTA ao modal
-  document.querySelectorAll('.btn-cta, .btn-primary').forEach(btn => {
-    if (!btn.closest('form')) btn.addEventListener('click', openModal);
-  });
-
-  async function submitWaitlist(e) {
-    e.preventDefault();
-    const btn = document.getElementById('modal-submit-btn');
-    const errEl = document.getElementById('modal-error');
-    btn.disabled = true;
-    btn.textContent = 'Enviando...';
-    errEl.style.display = 'none';
-
-    const payload = {
-      name:    document.getElementById('wl-name').value.trim(),
-      email:   document.getElementById('wl-email').value.trim(),
-      phone:   document.getElementById('wl-phone').value.trim()
-               ? `${document.getElementById('wl-ddi').value} ${document.getElementById('wl-phone').value.trim()}`
-               : null,
-      company: document.getElementById('wl-company').value.trim() || null,
-      role:    document.getElementById('wl-role').value || null,
-      message: document.getElementById('wl-message').value.trim() || null,
-      source:  'landing_page',
-    };
-
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/waitlist`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SUPABASE_ANON,
-          'Authorization': `Bearer ${SUPABASE_ANON}`,
-          'Prefer': 'return=minimal',
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.status === 409) {
-        errEl.textContent = 'Este email já está na lista. Entraremos em contato em breve!';
-        errEl.style.display = 'block';
-        btn.disabled = false; btn.textContent = 'Solicitar minha vaga';
-        return;
-      }
-      if (!res.ok) throw new Error('Erro ao enviar');
-
-      document.getElementById('modal-form-view').style.display = 'none';
-      document.getElementById('modal-success-view').style.display = 'block';
-    } catch {
-      errEl.textContent = 'Algo deu errado. Tente novamente ou entre em contato diretamente.';
-      errEl.style.display = 'block';
-      btn.disabled = false; btn.textContent = 'Solicitar minha vaga';
-    }
-  }
 
   async function submitNewsletter(e) {
     e.preventDefault();
