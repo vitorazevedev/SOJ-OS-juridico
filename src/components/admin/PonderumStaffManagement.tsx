@@ -238,21 +238,20 @@ export function PonderumStaffManagement() {
             {fieldErrors.name && <p className="text-[11px] text-destructive">{fieldErrors.name}</p>}
           </div>
           <div className="space-y-1">
-            <Label htmlFor="sm-role">Função *</Label>
-            <Input id="sm-role" value={form.jobTitle} onChange={(e) => set("jobTitle", e.target.value)} placeholder="Atendente, Suporte, Comercial..."
-              className={cn(fieldErrors.jobTitle && "border-destructive/70")}
-            />
-            {fieldErrors.jobTitle && <p className="text-[11px] text-destructive">{fieldErrors.jobTitle}</p>}
+            <Label htmlFor="sm-social-name">Nome social</Label>
+            <Input id="sm-social-name" value={form.socialName} onChange={(e) => set("socialName", e.target.value)} placeholder="Opcional" />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label htmlFor="sm-email">Email *</Label>
-            <Input id="sm-email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="voce@ponderum.com"
-              className={cn(fieldErrors.email && "border-destructive/70")}
+            <Label htmlFor="sm-cnpj">CPF ou CNPJ</Label>
+            <Input
+              id="sm-cnpj" value={form.cnpj} placeholder="000.000.000-00 ou 00.000.000/0000-00"
+              onChange={(e) => handleCnpjChange(e.target.value)} maxLength={18}
+              className={cn(fieldErrors.cnpj && "border-destructive/70")}
             />
-            {fieldErrors.email && <p className="text-[11px] text-destructive">{fieldErrors.email}</p>}
+            {fieldErrors.cnpj && <p className="text-[11px] text-destructive">{fieldErrors.cnpj}</p>}
           </div>
           <div className="space-y-1">
             <Label htmlFor="sm-phone">WhatsApp / Celular</Label>
@@ -277,17 +276,18 @@ export function PonderumStaffManagement() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label htmlFor="sm-cnpj">CPF ou CNPJ</Label>
-            <Input
-              id="sm-cnpj" value={form.cnpj} placeholder="000.000.000-00 ou 00.000.000/0000-00"
-              onChange={(e) => handleCnpjChange(e.target.value)} maxLength={18}
-              className={cn(fieldErrors.cnpj && "border-destructive/70")}
+            <Label htmlFor="sm-email">Email *</Label>
+            <Input id="sm-email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="voce@ponderum.com"
+              className={cn(fieldErrors.email && "border-destructive/70")}
             />
-            {fieldErrors.cnpj && <p className="text-[11px] text-destructive">{fieldErrors.cnpj}</p>}
+            {fieldErrors.email && <p className="text-[11px] text-destructive">{fieldErrors.email}</p>}
           </div>
           <div className="space-y-1">
-            <Label htmlFor="sm-social-name">Nome social</Label>
-            <Input id="sm-social-name" value={form.socialName} onChange={(e) => set("socialName", e.target.value)} placeholder="Opcional" />
+            <Label htmlFor="sm-role">Função *</Label>
+            <Input id="sm-role" value={form.jobTitle} onChange={(e) => set("jobTitle", e.target.value)} placeholder="Atendente, Suporte, Comercial..."
+              className={cn(fieldErrors.jobTitle && "border-destructive/70")}
+            />
+            {fieldErrors.jobTitle && <p className="text-[11px] text-destructive">{fieldErrors.jobTitle}</p>}
           </div>
         </div>
 
