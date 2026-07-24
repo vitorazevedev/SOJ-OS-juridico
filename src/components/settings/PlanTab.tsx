@@ -32,7 +32,15 @@ const PLAN_INFO: Record<string, { name: string; color: string; price: string; fe
     name: "Starter",
     color: "#3a8dff",
     price: `R$ ${STARTER_MONTHLY_PRICE_BRL}/mês`,
-    feats: ["5 contratos/mês", "Análise jurídica IA", "Score de risco", "Export PDF"],
+    feats: [
+      "Até 10 contratos analisados por mês",
+      "Análise jurídica completa por IA",
+      "Relatório completo, com exportação",
+      "Índice de Desequilíbrio",
+      "Geração de contratos",
+      "Gestão de obrigações",
+      "1 administrador + 2 membros na equipe",
+    ],
   },
   pro: {
     name: "Pro",

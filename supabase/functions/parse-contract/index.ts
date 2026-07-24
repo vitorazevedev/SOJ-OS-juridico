@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
   // Mirrors FREEMIUM_MONTHLY_ANALYSIS_LIMIT em src/lib/pricing.ts.
   const FREEMIUM_MONTHLY_LIMIT = 1
   const PLAN_MONTHLY_LIMIT: Record<string, number | null> = {
-    starter: 5,
+    starter: 10,
     pro: null,
     enterprise: null,
   }

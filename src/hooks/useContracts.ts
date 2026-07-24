@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 // Mirrors PLAN_MONTHLY_LIMIT / FREEMIUM_MONTHLY_LIMIT in supabase/functions/parse-contract/index.ts
 const PLAN_MONTHLY_LIMIT: Record<string, number | null> = {
-  starter: 5,
+  starter: 10,
   pro: null,
   enterprise: null,
 };
