@@ -13,6 +13,7 @@ import { RecentActivityFeed } from "@/components/admin/RecentActivityFeed";
 import { OrganizationsTable } from "@/components/admin/OrganizationsTable";
 import { FeedbacksList } from "@/components/admin/FeedbacksList";
 import { PonderumStaffManagement } from "@/components/admin/PonderumStaffManagement";
+import { SupportChannelCard } from "@/components/admin/SupportChannelCard";
 import type {
   Stats, WaitlistEntry, Feedback, Org, DayCount, Contract, CronJob,
 } from "@/lib/adminDashboard";
@@ -104,16 +105,7 @@ export default function Admin() {
 
       <RecentActivityFeed recentContracts={recentContracts} />
 
-      {/* Canal de suporte — botão flutuante "Suporte" no app abre este WhatsApp */}
-      <SojCard className="flex items-center justify-between gap-4 p-5">
-        <div>
-          <p className="text-sm font-medium">Canal de suporte</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            Botão flutuante "Suporte" no app abre o WhatsApp (55) 11 96488-9002 com uma mensagem pronta.
-          </p>
-        </div>
-        <span className="text-[10px] font-mono text-primary px-3 py-1.5 border border-primary/30 bg-primary-dim rounded-lg">Ativo</span>
-      </SojCard>
+      <SupportChannelCard />
 
       <OrganizationsTable orgs={orgs} />
 

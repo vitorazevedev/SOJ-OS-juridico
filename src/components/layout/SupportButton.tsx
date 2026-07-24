@@ -1,17 +1,36 @@
+import { useEffect, useState } from "react";
 import { MessageCircle } from "lucide-react";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { useOrganization } from "@/hooks/useOrganization";
+import { supabase } from "@/lib/supabase";
 
-// Mesmo numero de WhatsApp comercial usado nos fluxos de upgrade/renovacao.
-const SUPPORT_WHATSAPP = "5511964889002";
+// Usado só até o número configurável (app_settings) carregar.
+const FALLBACK_WHATSAPP = "5511964889002";
 
 export function SupportButton() {
   const { user } = useAuth();
   const { org } = useOrganization();
+  const [whatsapp, setWhatsapp] = useState(FALLBACK_WHATSAPP);
+
+  useEffect(() => {
+    supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "support_whatsapp")
+      .maybeSingle()
+      .then(({ data }) => { if (data?.value) setWhatsapp(data.value); });
+  }, []);
 
   const handleClick = () => {
     const message = `Olá! Sou da organização "${org?.name ?? ""}" (${user?.email ?? ""}) e preciso de suporte com a plataforma Ponderum.`;
-    window.open(`https://wa.me/${SUPPORT_WHATSAPP}?text=${encodeURIComponent(message)}`, "_blank");
+    window.open(`https://wa.me/${whatsapp}?text=${encodeURIComponent(message)}`, "_blank");
+
+    // Só um contador de volume pro painel Dev — não guarda o conteúdo da
+    // conversa, que continua só no WhatsApp.
+    supabase.from("support_clicks").insert({
+      user_id: user?.id ?? null,
+      org_id: org?.id ?? null,
+    });
   };
 
   return (

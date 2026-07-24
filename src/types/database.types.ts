@@ -9,6 +9,18 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      app_settings: {
+        Row: { key: string; value: string; updated_at: string }
+        Insert: { key: string; value: string; updated_at?: string }
+        Update: { key?: string; value?: string; updated_at?: string }
+        Relationships: []
+      }
+      support_clicks: {
+        Row: { id: string; user_id: string | null; org_id: string | null; clicked_at: string }
+        Insert: { id?: string; user_id?: string | null; org_id?: string | null; clicked_at?: string }
+        Update: { id?: string; user_id?: string | null; org_id?: string | null; clicked_at?: string }
+        Relationships: []
+      }
       audit_logs: {
         Row: { action: string; created_at: string | null; entity_id: string | null; entity_type: string | null; id: string; metadata: Json | null; org_id: string | null; user_id: string | null }
         Insert: { action: string; created_at?: string | null; entity_id?: string | null; entity_type?: string | null; id?: string; metadata?: Json | null; org_id?: string | null; user_id?: string | null }
@@ -147,6 +159,8 @@ export type Database = {
       list_ponderum_staff: { Args: Record<PropertyKey, never>; Returns: Json }
       staff_update_member_permissions: { Args: { p_user_id: string; p_job_title: string; p_can_view_dev: boolean; p_can_view_ponderum_team: boolean; p_full_platform_access: boolean; p_social_name?: string | null }; Returns: undefined }
       get_executive_dashboard: { Args: Record<PropertyKey, never>; Returns: Json }
+      staff_set_support_whatsapp: { Args: { p_number: string }; Returns: undefined }
+      get_support_stats: { Args: Record<PropertyKey, never>; Returns: Json }
     }
     Enums: { [_ in never]: never }
     CompositeTypes: { [_ in never]: never }
