@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
   }
 
   let body: {
-    name?: string; orgName?: string; ddi?: string; phone?: string;
+    name?: string; socialName?: string | null; orgName?: string; ddi?: string; phone?: string;
     cnpj?: string; email?: string; sendEmail?: boolean;
   }
   try {
@@ -116,6 +116,7 @@ Deno.serve(async (req) => {
   }
 
   const name = body.name?.trim()
+  const socialName = body.socialName?.trim() || null
   const orgName = body.orgName?.trim()
   const email = body.email?.trim().toLowerCase()
   const phone = `${body.ddi?.trim() ?? ''} ${body.phone?.trim() ?? ''}`.trim()
@@ -139,7 +140,7 @@ Deno.serve(async (req) => {
       serviceClient.auth.admin.createUser({
         email,
         email_confirm: true,
-        user_metadata: { name, org_name: orgName, phone, cnpj },
+        user_metadata: { name, social_name: socialName, org_name: orgName, phone, cnpj },
       })
     )
     if (createErr || !created.user) {

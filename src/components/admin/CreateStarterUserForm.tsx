@@ -21,7 +21,7 @@ function maskPhone(v: string, ddi: string): string {
   return `(${dd.slice(0, 2)}) ${dd.slice(2, 7)}-${dd.slice(7)}`;
 }
 
-const EMPTY = { name: "", orgName: "", ddi: "+55", phone: "", cnpj: "", email: "" };
+const EMPTY = { name: "", socialName: "", orgName: "", ddi: "+55", phone: "", cnpj: "", email: "" };
 type FieldErrors = Partial<Record<"name" | "orgName" | "phone" | "cnpj" | "email", string>>;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -103,6 +103,7 @@ export function CreateStarterUserForm() {
     try {
       const { data, error } = await invokeCreateUser({
         name: form.name.trim(),
+        socialName: form.socialName.trim() || null,
         orgName: form.orgName.trim(),
         ddi: form.ddi.trim(),
         phone: form.phone.trim(),
@@ -153,15 +154,19 @@ export function CreateStarterUserForm() {
             {fieldErrors.name && <p className="text-[11px] text-destructive">{fieldErrors.name}</p>}
           </div>
           <div className="space-y-1">
+            <Label htmlFor="cu-social-name">Nome social</Label>
+            <Input id="cu-social-name" value={form.socialName} onChange={(e) => set("socialName", e.target.value)} placeholder="Opcional" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="space-y-1">
             <Label htmlFor="cu-org">Nome da organização *</Label>
             <Input id="cu-org" value={form.orgName} onChange={(e) => set("orgName", e.target.value)} placeholder="Acme Advocacia"
               className={cn(fieldErrors.orgName && "border-destructive/70")}
             />
             {fieldErrors.orgName && <p className="text-[11px] text-destructive">{fieldErrors.orgName}</p>}
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label htmlFor="cu-phone">WhatsApp / Celular *</Label>
             <div className="flex gap-2">
@@ -182,6 +187,9 @@ export function CreateStarterUserForm() {
             </div>
             {fieldErrors.phone && <p className="text-[11px] text-destructive">{fieldErrors.phone}</p>}
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div className="space-y-1">
             <Label htmlFor="cu-cnpj">CPF ou CNPJ *</Label>
             <Input
@@ -191,14 +199,13 @@ export function CreateStarterUserForm() {
             />
             {fieldErrors.cnpj && <p className="text-[11px] text-destructive">{fieldErrors.cnpj}</p>}
           </div>
-        </div>
-
-        <div className="space-y-1">
-          <Label htmlFor="cu-email">Email *</Label>
-          <Input id="cu-email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="voce@empresa.com"
-            className={cn(fieldErrors.email && "border-destructive/70")}
-          />
-          {fieldErrors.email && <p className="text-[11px] text-destructive">{fieldErrors.email}</p>}
+          <div className="space-y-1">
+            <Label htmlFor="cu-email">Email *</Label>
+            <Input id="cu-email" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="voce@empresa.com"
+              className={cn(fieldErrors.email && "border-destructive/70")}
+            />
+            {fieldErrors.email && <p className="text-[11px] text-destructive">{fieldErrors.email}</p>}
+          </div>
         </div>
 
         <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5">
