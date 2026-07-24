@@ -18,6 +18,8 @@ export type OrgUser = {
   id: string;
   email: string;
   name: string | null;
+  social_name: string | null;
+  phone: string | null;
   role: string;
   org_id: string;
   created_at: string;
