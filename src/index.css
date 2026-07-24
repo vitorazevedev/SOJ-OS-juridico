@@ -109,3 +109,43 @@
 @media (min-width: 768px) {
   .clauses-redline-grid { grid-template-columns: 1fr 1fr; }
 }
+
+/* driver.js (tour guiado) — sobrescreve o tema claro padrão pra combinar
+   com o dark UI da plataforma. */
+.driver-popover {
+  background: hsl(var(--card));
+  color: hsl(var(--card-foreground));
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.driver-popover-title {
+  color: hsl(var(--card-foreground));
+}
+.driver-popover-description {
+  color: hsl(var(--muted-foreground));
+}
+.driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-bottom-color: hsl(var(--card));
+}
+.driver-popover-arrow-side-top.driver-popover-arrow {
+  border-top-color: hsl(var(--card));
+}
+.driver-popover-arrow-side-left.driver-popover-arrow {
+  border-left-color: hsl(var(--card));
+}
+.driver-popover-arrow-side-right.driver-popover-arrow {
+  border-right-color: hsl(var(--card));
+}
+.driver-popover-close-btn {
+  color: hsl(var(--muted-foreground));
+}
+.driver-popover-navigation-btns button {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: none;
+  text-shadow: none;
+}
+.driver-popover-navigation-btns button:hover {
+  background: hsl(var(--primary));
+  opacity: 0.9;
+}

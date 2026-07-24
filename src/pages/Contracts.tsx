@@ -1,5 +1,8 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 import { useContracts, uploadContract, deleteContract, type DbContract } from "@/hooks/useContracts";
+import { useAuth } from "@/features/auth/components/AuthProvider";
 import { Upload, Search, SlidersHorizontal, Plus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -7,6 +10,8 @@ import { ACCEPT, maxBytesFor, maxLabelFor, validateMagicBytes } from "@/lib/file
 import { applySort, type SortDir, type SortField } from "@/lib/contractListFormat";
 import { RenameDialog } from "@/components/contracts/RenameDialog";
 import { ContractsList } from "@/components/contracts/ContractsList";
+
+const UPLOAD_TOUR_SEEN_KEY = "soj_upload_tour_seen";
 
 type FilterId = "todos" | "analisado" | "em_analise" | "aguardando";
 
@@ -18,6 +23,7 @@ const FILTERS: { id: FilterId; label: string }[] = [
 ];
 
 export default function Contracts() {
+  const { user } = useAuth();
   const { contracts, loading, processingIds, markProcessing, refetch } = useContracts();
 
   const [filter, setFilter] = useState<FilterId>("todos");
@@ -54,6 +60,35 @@ export default function Contracts() {
       setSortDir("desc");
     }
   };
+
+  // Tour guiado, só na primeira vez que o usuário chega aqui sem nenhum
+  // contrato ainda — aponta pra área de upload. Não repete depois disso.
+  useEffect(() => {
+    if (loading || uploading || contracts.length > 0 || !user) return;
+    const key = `${UPLOAD_TOUR_SEEN_KEY}_${user.id}`;
+    if (window.localStorage.getItem(key) === "1") return;
+
+    const tour = driver({
+      showProgress: false,
+      allowClose: true,
+      onDestroyed: () => {
+        window.localStorage.setItem(key, "1");
+      },
+      steps: [
+        {
+          element: "#contract-dropzone",
+          popover: {
+            title: "Envie seu primeiro contrato",
+            description: "Arraste um arquivo aqui ou clique para escolher um PDF, DOCX ou imagem. A Ponderum analisa o risco automaticamente.",
+            side: "bottom",
+            align: "center",
+          },
+        },
+      ],
+    });
+    tour.drive();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, contracts.length, user]);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -126,6 +161,7 @@ export default function Contracts() {
 
       {/* Drop zone */}
       <button
+        id="contract-dropzone"
         onClick={openPicker}
         disabled={uploading}
         onDragOver={(e) => e.preventDefault()}

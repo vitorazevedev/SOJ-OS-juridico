@@ -5,31 +5,19 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Check, ListChecks, Trophy } from "lucide-react";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { useAuth } from "@/features/auth/components/AuthProvider";
 import { cn } from "@/lib/utils";
 
 interface StepDef {
-  key: keyof ReturnType<typeof useOnboarding>["steps"];
+  key: "organization" | "contractUpload" | "contractGenerated";
   emoji: string;
   title: string;
   description: string;
   cta: string;
-  route?: string;
-  onClick?: (ctx: { markDashboardDone: () => void; close: () => void }) => void;
+  route: string;
 }
 
-const STEPS: StepDef[] = [
-  {
-    key: "dashboard",
-    emoji: "✅",
-    title: "Conheça o Dashboard",
-    description: "Veja seus KPIs, contratos e obrigações em tempo real",
-    cta: "Ver Dashboard",
-    route: "/",
-    onClick: ({ markDashboardDone, close }) => {
-      markDashboardDone();
-      close();
-    },
-  },
+const BASE_STEPS: StepDef[] = [
   {
     key: "organization",
     emoji: "🏢",
@@ -46,23 +34,40 @@ const STEPS: StepDef[] = [
     cta: "Ir para Contratos",
     route: "/contracts",
   },
-  {
-    key: "contractGenerated",
-    emoji: "⚡",
-    title: "Gere seu primeiro contrato",
-    description: "Use nossos templates prontos: NDA, Serviços, SaaS e mais",
-    cta: "Gerar Contrato",
-    route: "/generator",
-  },
 ];
 
+const GENERATE_STEP: StepDef = {
+  key: "contractGenerated",
+  emoji: "⚡",
+  title: "Gere seu primeiro contrato",
+  description: "Use nossos templates prontos: NDA, Serviços, SaaS e mais",
+  cta: "Gerar Contrato",
+  route: "/generator",
+};
+
+const DISMISSED_KEY = "soj_onboarding_dismissed";
+
 export default function OnboardingModal() {
-  const { loading, completed, steps, markDashboardDone, completeOnboarding, refresh } =
-    useOnboarding();
+  const { user } = useAuth();
+  const { loading, completed, planStatus, steps, completeOnboarding, refresh } = useOnboarding();
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissedState] = useState(false);
+
+  // "Fechar" some até o usuário reabrir pelo botão flutuante — mesmo depois
+  // de dar refresh na página, pra não ficar reaparecendo sozinho toda hora.
+  useEffect(() => {
+    if (!user) return;
+    setDismissedState(window.localStorage.getItem(`${DISMISSED_KEY}_${user.id}`) === "1");
+  }, [user]);
+
+  const setDismissed = (v: boolean) => {
+    setDismissedState(v);
+    if (!user) return;
+    if (v) window.localStorage.setItem(`${DISMISSED_KEY}_${user.id}`, "1");
+    else window.localStorage.removeItem(`${DISMISSED_KEY}_${user.id}`);
+  };
 
   useEffect(() => {
     if (!loading && !completed && !dismissed) {
@@ -71,14 +76,23 @@ export default function OnboardingModal() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
+  // "Gerar contrato" só existe pro plano Starter pago — Freemium não vê
+  // esse passo, pra não anunciar uma função que ele não tem acesso.
+  const STEPS = planStatus === "active" ? [...BASE_STEPS, GENERATE_STEP] : BASE_STEPS;
+  const doneCount = STEPS.filter((s) => steps[s.key]).length;
+  const total = STEPS.length;
+  const allDone = doneCount === total;
+
   useEffect(() => {
     if (loading) return;
     if (completed) {
       setOpen(false);
       return;
     }
-    if (!dismissed) setOpen(true);
-  }, [loading, completed, dismissed]);
+    // Sempre volta a aparecer quando os passos são concluídos, mesmo que
+    // tenha sido fechado antes — pra mostrar a tela de conclusão.
+    if (allDone || !dismissed) setOpen(true);
+  }, [loading, completed, dismissed, allDone]);
 
   if (loading || completed) return null;
 
@@ -87,25 +101,14 @@ export default function OnboardingModal() {
     setOpen(true);
   };
 
-  const doneCount = Object.values(steps).filter(Boolean).length;
-  const total = STEPS.length;
-  const allDone = doneCount === total;
-
   const close = () => {
     setOpen(false);
     setDismissed(true);
   };
 
   const handleStepClick = (step: StepDef) => {
-    if (step.onClick) {
-      step.onClick({ markDashboardDone, close });
-      if (step.route) navigate(step.route);
-      return;
-    }
-    if (step.route) {
-      navigate(step.route);
-      close();
-    }
+    navigate(step.route);
+    close();
   };
 
   const handleFinish = async () => {
@@ -128,7 +131,7 @@ export default function OnboardingModal() {
         <span className="text-xs font-medium">{doneCount}/{total} passos</span>
       </button>
     )}
-    <Dialog open={open} onOpenChange={(v) => { if (!v) setDismissed(true); setOpen(v); }}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) close(); else setOpen(v); }}>
       <DialogContent className="max-w-2xl p-0 overflow-hidden gap-0">
         {allDone ? (
           <div className="p-8 text-center space-y-5">
@@ -151,6 +154,14 @@ export default function OnboardingModal() {
               <h2 className="text-xl font-semibold">Bem-vindo ao Ponderum!</h2>
               <p className="text-sm text-muted-foreground mt-1">
                 Siga os passos abaixo para configurar seu ambiente jurídico
+              </p>
+              <p className="text-sm text-muted-foreground mt-3">
+                Aqui você organiza seus contratos, recebe uma análise jurídica completa por IA e
+                acompanha prazos e obrigações — tudo em um só lugar. Veja seus KPIs e atividades
+                recentes a qualquer momento no{" "}
+                <button onClick={() => { navigate("/"); close(); }} className="text-primary hover:underline">
+                  Dashboard
+                </button>.
               </p>
               <div className="mt-4 flex items-center gap-3">
                 <Progress value={(doneCount / total) * 100} className="flex-1" />
