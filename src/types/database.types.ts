@@ -123,9 +123,9 @@ export type Database = {
         ]
       }
       users: {
-        Row: { created_at: string | null; email: string; id: string; is_ponderum_staff: boolean; name: string | null; onboarding_completed: boolean; org_id: string; phone: string | null; role: string; terms_accepted_at: string | null }
-        Insert: { created_at?: string | null; email: string; id: string; is_ponderum_staff?: boolean; name?: string | null; onboarding_completed?: boolean; org_id: string; phone?: string | null; role?: string; terms_accepted_at?: string | null }
-        Update: { created_at?: string | null; email?: string; id?: string; is_ponderum_staff?: boolean; name?: string | null; onboarding_completed?: boolean; org_id?: string; phone?: string | null; role?: string; terms_accepted_at?: string | null }
+        Row: { created_at: string | null; email: string; id: string; is_ponderum_staff: boolean; staff_job_title: string | null; can_view_dev: boolean; can_view_ponderum_team: boolean; full_platform_access: boolean; name: string | null; onboarding_completed: boolean; org_id: string; phone: string | null; role: string; terms_accepted_at: string | null }
+        Insert: { created_at?: string | null; email: string; id: string; is_ponderum_staff?: boolean; staff_job_title?: string | null; can_view_dev?: boolean; can_view_ponderum_team?: boolean; full_platform_access?: boolean; name?: string | null; onboarding_completed?: boolean; org_id: string; phone?: string | null; role?: string; terms_accepted_at?: string | null }
+        Update: { created_at?: string | null; email?: string; id?: string; is_ponderum_staff?: boolean; staff_job_title?: string | null; can_view_dev?: boolean; can_view_ponderum_team?: boolean; full_platform_access?: boolean; name?: string | null; onboarding_completed?: boolean; org_id?: string; phone?: string | null; role?: string; terms_accepted_at?: string | null }
         Relationships: [
           { foreignKeyName: "users_org_id_fkey"; columns: ["org_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] }
         ]
@@ -144,6 +144,8 @@ export type Database = {
       staff_set_org_plan_status: { Args: { p_org_id: string; p_status: string }; Returns: undefined }
       staff_set_org_blocked: { Args: { p_org_id: string; p_blocked: boolean }; Returns: undefined }
       staff_renew_org_subscription: { Args: { p_org_id: string }; Returns: undefined }
+      list_ponderum_staff: { Args: Record<PropertyKey, never>; Returns: Json }
+      staff_update_member_permissions: { Args: { p_user_id: string; p_job_title: string; p_can_view_dev: boolean; p_can_view_ponderum_team: boolean; p_full_platform_access: boolean }; Returns: undefined }
       get_executive_dashboard: { Args: Record<PropertyKey, never>; Returns: Json }
     }
     Enums: { [_ in never]: never }

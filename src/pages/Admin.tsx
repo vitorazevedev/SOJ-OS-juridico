@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { useIsPonderumStaff } from "@/hooks/useIsPonderumStaff";
+import { usePonderumPermissions } from "@/hooks/usePonderumPermissions";
 import { SojCard } from "@/components/layout/Primitives";
 import { Loader2, AlertTriangle, ExternalLink } from "lucide-react";
 import { env } from "@/config/env";
@@ -12,13 +12,14 @@ import { WaitlistTable } from "@/components/admin/WaitlistTable";
 import { RecentActivityFeed } from "@/components/admin/RecentActivityFeed";
 import { OrganizationsTable } from "@/components/admin/OrganizationsTable";
 import { FeedbacksList } from "@/components/admin/FeedbacksList";
+import { PonderumStaffManagement } from "@/components/admin/PonderumStaffManagement";
 import type {
   Stats, WaitlistEntry, Feedback, Org, DayCount, Contract, CronJob,
 } from "@/lib/adminDashboard";
 
 export default function Admin() {
   const navigate  = useNavigate();
-  const isPonderumStaff   = useIsPonderumStaff();
+  const { canViewDev } = usePonderumPermissions();
   const [loading, setLoading]   = useState(true);
   const [stats, setStats]       = useState<Stats | null>(null);
   const [feedbacks, setFeedbacks]         = useState<Feedback[]>([]);
@@ -29,7 +30,7 @@ export default function Admin() {
   const [waitlist, setWaitlist]             = useState<WaitlistEntry[]>([]);
 
   useEffect(() => {
-    if (isPonderumStaff === false) return;
+    if (canViewDev === false) return;
     supabase.rpc("get_admin_dashboard").then(({ data, error }) => {
       if (error || !data) { setLoading(false); return; }
       const d = data as {
@@ -46,9 +47,9 @@ export default function Admin() {
       setCronHealth(d.cron_health ?? []);
       setLoading(false);
     });
-  }, [isPonderumStaff]);
+  }, [canViewDev]);
 
-  if (!isPonderumStaff && !loading) return (
+  if (!canViewDev && !loading) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
       <p className="text-sm text-muted-foreground">Acesso restrito.</p>
       <button onClick={() => navigate("/")} className="text-xs text-primary underline">Voltar</button>
@@ -113,6 +114,8 @@ export default function Admin() {
       </SojCard>
 
       <OrganizationsTable orgs={orgs} />
+
+      <PonderumStaffManagement />
 
       <FeedbacksList feedbacks={feedbacks} />
 

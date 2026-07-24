@@ -23,7 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { useOrganization } from "@/hooks/useOrganization";
-import { useIsPonderumStaff } from "@/hooks/useIsPonderumStaff";
+import { usePonderumPermissions } from "@/hooks/usePonderumPermissions";
 import { TerminalSquare, Users } from "lucide-react";
 
 const items = [
@@ -56,7 +56,11 @@ export function AppSidebar() {
   const isActive = (url: string) => (url === "/" ? pathname === "/" : pathname.startsWith(url));
   const { user, signOut } = useAuth();
   const { org } = useOrganization();
-  const isPonderumStaff = useIsPonderumStaff();
+  const { isStaff, canViewDev, canViewPonderumTeam, fullPlatformAccess, loading: permsLoading } = usePonderumPermissions();
+  // Cliente normal (nunca e staff) sempre ve o menu regular. Membro da
+  // equipe Ponderum so ve o menu regular (Dashboard/Contratos/...) se
+  // tiver full_platform_access -- senao, so os menus internos que tiver.
+  const showRegularNav = permsLoading || !isStaff || fullPlatformAccess;
 
   const displayName = (user?.user_metadata?.name as string | undefined)?.trim() || user?.email || "Usuário";
   const planLabel = org ? (PLAN_LABELS[org.plan_id] ?? `Plano ${org.plan_id}`) : "—";
@@ -84,7 +88,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {showRegularNav && items.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
                     <NavLink
@@ -103,7 +107,7 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              {isPonderumStaff && (
+              {canViewDev && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/admin")} tooltip="Dev">
                     <NavLink
@@ -121,7 +125,7 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-              {isPonderumStaff && (
+              {canViewPonderumTeam && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/equipe-ponderum")} tooltip="Equipe Ponderum">
                     <NavLink
