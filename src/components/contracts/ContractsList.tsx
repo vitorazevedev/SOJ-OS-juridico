@@ -177,7 +177,7 @@ export function ContractsList({
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => navigate(`/analysis/${c.id}`)}
-                        className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary-dim px-2.5 py-1.5 rounded-md hover:bg-primary/20 transition-colors"
                       >
                         Analisar <ArrowUpRight className="h-3 w-3" />
                       </button>
