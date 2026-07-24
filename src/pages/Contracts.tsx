@@ -71,6 +71,8 @@ export default function Contracts() {
     const tour = driver({
       showProgress: false,
       allowClose: true,
+      showButtons: ["next"],
+      doneBtnText: "Entendi",
       onDestroyed: () => {
         window.localStorage.setItem(key, "1");
       },
