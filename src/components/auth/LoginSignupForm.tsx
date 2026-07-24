@@ -44,6 +44,8 @@ export function LoginSignupForm({
   mode,
   name,
   setName,
+  socialName,
+  setSocialName,
   orgName,
   setOrgName,
   ddi,
@@ -70,6 +72,8 @@ export function LoginSignupForm({
   mode: Extract<Mode, "login" | "signup">;
   name: string;
   setName: (v: string) => void;
+  socialName: string;
+  setSocialName: (v: string) => void;
   orgName: string;
   setOrgName: (v: string) => void;
   ddi: string;
@@ -105,6 +109,12 @@ export function LoginSignupForm({
                 className={fieldErrors.name ? "border-destructive/70" : ""}
               />
               {fieldErrors.name && <p className="text-[11px] text-destructive">{fieldErrors.name}</p>}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="socialName">Nome social</Label>
+              <Input id="socialName" type="text" placeholder="Opcional" value={socialName}
+                onChange={(e) => setSocialName(e.target.value)} autoComplete="off"
+              />
             </div>
             <div className="space-y-1">
               <Label htmlFor="orgName">Nome da organização</Label>

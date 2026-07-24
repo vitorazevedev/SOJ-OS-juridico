@@ -22,6 +22,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
+  const [socialName, setSocialName] = useState("");
   const [orgName, setOrgName] = useState("");
   const [ddi, setDdi] = useState("+55");
   const [phone, setPhone] = useState("");
@@ -82,7 +83,7 @@ export default function Login() {
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
-          data: { name: name.trim(), org_name: orgName.trim(), phone: `${ddi.trim()} ${phone.trim()}`, cnpj: cnpj.trim() || null, terms_accepted: true },
+          data: { name: name.trim(), social_name: socialName.trim() || null, org_name: orgName.trim(), phone: `${ddi.trim()} ${phone.trim()}`, cnpj: cnpj.trim() || null, terms_accepted: true },
         },
       });
       if (error) {
@@ -225,6 +226,8 @@ export default function Login() {
               mode={mode}
               name={name}
               setName={setName}
+              socialName={socialName}
+              setSocialName={setSocialName}
               orgName={orgName}
               setOrgName={setOrgName}
               ddi={ddi}
