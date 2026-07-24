@@ -1,18 +1,13 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { SojCard } from "@/components/layout/Primitives";
 import { cn } from "@/lib/utils";
 import { Check } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { useOrganization } from "@/hooks/useOrganization";
 import { STARTER_MONTHLY_PRICE_BRL } from "@/lib/pricing";
+
+// Mesmo numero de WhatsApp comercial usado na landing page.
+const SALES_WHATSAPP = "5511964889002";
 
 const PLAN_INFO: Record<string, { name: string; color: string; price: string; feats: string[] }> = {
   starter: {
@@ -43,7 +38,6 @@ const PLAN_INFO: Record<string, { name: string; color: string; price: string; fe
 
 export function PlanTab() {
   const { org } = useOrganization();
-  const [upgradeOpen, setUpgradeOpen] = useState(false);
 
   const trialDaysLeft = useMemo(() => {
     if (!org?.trial_ends_at) return null;
@@ -54,6 +48,11 @@ export function PlanTab() {
 
   const planInfo = PLAN_INFO[org?.plan_id ?? "starter"] ?? PLAN_INFO.starter;
   const isTrial = org?.plan_status === "trial";
+
+  const handleUpgradeClick = () => {
+    const message = `Olá! Sou da organização "${org?.name ?? ""}" e quero fazer upgrade para o plano Starter da Ponderum.`;
+    window.open(`https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(message)}`, "_blank");
+  };
 
   return (
     <div className="flex flex-col gap-4 mt-4">
@@ -81,7 +80,7 @@ export function PlanTab() {
             <p className="text-sm text-muted-foreground mt-1">{planInfo.price}</p>
           </div>
           <button
-            onClick={() => setUpgradeOpen(true)}
+            onClick={handleUpgradeClick}
             className="inline-flex items-center gap-2 h-10 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90"
           >
             Fazer upgrade
@@ -130,25 +129,6 @@ export function PlanTab() {
           Histórico de faturamento estará disponível quando os planos pagos forem lançados.
         </p>
       </SojCard>
-
-      <Dialog open={upgradeOpen} onOpenChange={setUpgradeOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Fazer upgrade</DialogTitle>
-            <DialogDescription>
-              Entre em contato com nossa equipe para fazer upgrade:{" "}
-              <a href="mailto:contato@soj.com.br" className="text-primary font-medium">
-                contato@soj.com.br
-              </a>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <button onClick={() => setUpgradeOpen(false)} className="h-10 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90">
-              Entendi
-            </button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
