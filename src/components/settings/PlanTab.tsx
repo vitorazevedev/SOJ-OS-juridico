@@ -12,12 +12,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useOrganization } from "@/hooks/useOrganization";
+import { STARTER_MONTHLY_PRICE_BRL } from "@/lib/pricing";
 
 const PLAN_INFO: Record<string, { name: string; color: string; price: string; feats: string[] }> = {
   starter: {
     name: "Starter",
     color: "#3a8dff",
-    price: "R$ 147/mês",
+    price: `R$ ${STARTER_MONTHLY_PRICE_BRL}/mês`,
     feats: ["5 contratos/mês", "Análise jurídica IA", "Score de risco", "Export PDF"],
   },
   pro: {
