@@ -104,13 +104,15 @@ export default function Admin() {
 
       <RecentActivityFeed recentContracts={recentContracts} />
 
-      {/* Canal de suporte (placeholder — email e WhatsApp a definir) */}
-      <SojCard className="flex items-center justify-between gap-4 p-5 opacity-50">
+      {/* Canal de suporte — botão flutuante "Suporte" no app abre este WhatsApp */}
+      <SojCard className="flex items-center justify-between gap-4 p-5">
         <div>
           <p className="text-sm font-medium">Canal de suporte</p>
-          <p className="text-xs text-muted-foreground mt-0.5">E-mail e WhatsApp a configurar.</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Botão flutuante "Suporte" no app abre o WhatsApp (55) 11 96488-9002 com uma mensagem pronta.
+          </p>
         </div>
-        <span className="text-[10px] font-mono text-muted-foreground px-3 py-1.5 border border-dashed border-border rounded-lg">Em breve</span>
+        <span className="text-[10px] font-mono text-primary px-3 py-1.5 border border-primary/30 bg-primary-dim rounded-lg">Ativo</span>
       </SojCard>
 
       <OrganizationsTable orgs={orgs} />
