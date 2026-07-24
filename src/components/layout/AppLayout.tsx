@@ -4,11 +4,13 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import BottomNav from "./BottomNav";
 import OnboardingModal from "./OnboardingModal";
+import { OnboardingHeaderButton } from "./OnboardingHeaderButton";
 import { FeedbackButton } from "./FeedbackButton";
 import { SupportButton } from "./SupportButton";
 import { SearchPanel } from "./SearchPanel";
 import { Bell, CalendarClock, CreditCard, Search, X } from "lucide-react";
 import { UrgentObligationsContext, useUrgentObligationsProvider } from "@/hooks/useUrgentObligations";
+import { OnboardingUIProvider } from "@/hooks/useOnboardingUI";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
 import { useOrganization } from "@/hooks/useOrganization";
 import { SUBSCRIPTION_RENEWAL_WARNING_DAYS } from "@/lib/pricing";
@@ -188,6 +190,7 @@ export default function AppLayout() {
 
   return (
     <UrgentObligationsContext.Provider value={urgentCtx}>
+    <OnboardingUIProvider>
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <div className="hidden md:flex">
@@ -237,6 +240,7 @@ export default function AppLayout() {
                   >
                     <Search className="h-4 w-4" />
                   </button>
+                  <OnboardingHeaderButton />
                   <div className="relative" ref={mobilePanelRef}>
                     <button
                       onClick={() => setPanelOpen((v) => !v)}
@@ -281,6 +285,8 @@ export default function AppLayout() {
                 />
               )}
             </div>
+
+            <OnboardingHeaderButton />
 
             <div className="relative" ref={panelRef}>
               <button
@@ -361,6 +367,7 @@ export default function AppLayout() {
         <SupportButton />
       </div>
     </SidebarProvider>
+    </OnboardingUIProvider>
     </UrgentObligationsContext.Provider>
   );
 }
