@@ -109,9 +109,9 @@ export type Database = {
         ]
       }
       users: {
-        Row: { created_at: string | null; email: string; id: string; name: string | null; onboarding_completed: boolean; org_id: string; role: string }
-        Insert: { created_at?: string | null; email: string; id: string; name?: string | null; onboarding_completed?: boolean; org_id: string; role?: string }
-        Update: { created_at?: string | null; email?: string; id?: string; name?: string | null; onboarding_completed?: boolean; org_id?: string; role?: string }
+        Row: { created_at: string | null; email: string; id: string; is_ponderum_staff: boolean; name: string | null; onboarding_completed: boolean; org_id: string; phone: string | null; role: string; terms_accepted_at: string | null }
+        Insert: { created_at?: string | null; email: string; id: string; is_ponderum_staff?: boolean; name?: string | null; onboarding_completed?: boolean; org_id: string; phone?: string | null; role?: string; terms_accepted_at?: string | null }
+        Update: { created_at?: string | null; email?: string; id?: string; is_ponderum_staff?: boolean; name?: string | null; onboarding_completed?: boolean; org_id?: string; phone?: string | null; role?: string; terms_accepted_at?: string | null }
         Relationships: [
           { foreignKeyName: "users_org_id_fkey"; columns: ["org_id"]; isOneToOne: false; referencedRelation: "organizations"; referencedColumns: ["id"] }
         ]

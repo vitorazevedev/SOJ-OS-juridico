@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validateDocument } from "@/lib/brazilianDocs";
 
 export type Mode = "login" | "signup" | "forgot" | "check_email" | "recovery_code";
 
@@ -10,6 +11,12 @@ export const loginSchema = z.object({
 export const signupSchema = loginSchema.extend({
   name:    z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres"),
   orgName: z.string().trim().min(2, "Nome da empresa deve ter pelo menos 2 caracteres"),
+  phone:   z.string().trim().refine(
+    (v) => v.replace(/\D/g, "").length >= 8, "Informe um WhatsApp/celular válido, com DDD"
+  ),
+  cnpj:    z.string().trim().min(1, "Informe seu CPF ou CNPJ").refine(
+    (v) => validateDocument(v).valid, "CPF/CNPJ inválido"
+  ),
 });
 
 export const forgotSchema = z.object({
@@ -20,7 +27,7 @@ export const recoveryCodeSchema = z.object({
   code: z.string().regex(/^\d{8}$/, "Código deve ter 8 dígitos"),
 });
 
-export type FormErrors = Partial<Record<"email" | "password" | "name" | "orgName", string>>;
+export type FormErrors = Partial<Record<"email" | "password" | "name" | "orgName" | "phone" | "cnpj", string>>;
 
 export const translateAuthError = (msg: string): string => {
   const m = msg.toLowerCase();

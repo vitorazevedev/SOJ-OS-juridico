@@ -1,28 +1,76 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Loader2, ShieldCheck } from "lucide-react";
+import { Loader2, ShieldCheck, AlertCircle } from "lucide-react";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
   const [ready, setReady] = useState(false);
+  const [linkInvalid, setLinkInvalid] = useState(false);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
+  const [needsTermsCheckbox, setNeedsTermsCheckbox] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
-  // Supabase processes the recovery token from the URL hash and fires PASSWORD_RECOVERY
+  // Links de recuperação/onboarding são de uso único. Se o usuário clicar de
+  // novo num link já usado (ou o link tiver expirado), o Supabase redireciona
+  // com #error=...&error_code=... em vez de autenticar — sem isso, a tela
+  // ficava girando o spinner pra sempre.
   useEffect(() => {
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    if (hash.get("error")) {
+      setLinkInvalid(true);
+      return;
+    }
+
+    // Só tratamos como "veio de um link de recuperação válido" se a URL
+    // atual realmente trouxer os parâmetros de recovery. Sem isso, um
+    // usuário que já tenha uma sessão ativa por qualquer outro motivo (ex:
+    // reabriu um link antigo já usado, estando logado) conseguia reabrir
+    // este formulário e trocar a senha de novo, mesmo sem uma concessão de
+    // recuperação nova — checar só "existe sessão" não bastava.
+    const hasRecoveryHash = hash.get("type") === "recovery" && !!hash.get("access_token");
+    if (!hasRecoveryHash) {
+      setLinkInvalid(true);
+      return;
+    }
+
+    // Usuários cadastrados manualmente pelo atendente (Equipe Ponderum) nunca
+    // passaram pela tela pública de cadastro, então nunca aceitaram os Termos
+    // de Uso/Política de Privacidade — cobramos esse aceite junto da criação
+    // de senha. Quem já aceitou (cadastro público) não vê o checkbox.
+    const checkTermsAcceptance = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: userRow } = await supabase
+        .from("users")
+        .select("terms_accepted_at")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (!userRow?.terms_accepted_at) setNeedsTermsCheckbox(true);
+    };
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === "PASSWORD_RECOVERY") setReady(true);
+      if (event === "PASSWORD_RECOVERY") {
+        setReady(true);
+        checkTermsAcceptance();
+      }
     });
-    // Also check if there's already an active recovery session
+    // Fallback: alguns navegadores já processam o hash antes deste listener
+    // ser registrado, disparando o evento antes que possamos ouvi-lo. Só
+    // confiamos nesse fallback porque já confirmamos acima que a URL atual
+    // trazia os parâmetros de recovery.
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) setReady(true);
+      if (session) {
+        setReady(true);
+        checkTermsAcceptance();
+      }
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -37,12 +85,22 @@ export default function ResetPassword() {
       toast.error("As senhas não coincidem");
       return;
     }
+    if (needsTermsCheckbox && !acceptedTerms) {
+      toast.error("É necessário aceitar os Termos de Uso e a Política de Privacidade");
+      return;
+    }
     setLoading(true);
     try {
       const { error } = await supabase.auth.updateUser({ password });
       if (error) {
         toast.error("Erro ao redefinir senha. O link pode ter expirado.");
         return;
+      }
+      if (needsTermsCheckbox) {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          await supabase.from("users").update({ terms_accepted_at: new Date().toISOString() }).eq("id", user.id);
+        }
       }
       toast.success("Senha redefinida com sucesso!");
       navigate("/", { replace: true });
@@ -61,7 +119,18 @@ export default function ResetPassword() {
         </div>
 
         <Card className="p-6">
-          {!ready ? (
+          {linkInvalid ? (
+            <div className="flex flex-col items-center gap-3 py-6 text-center">
+              <AlertCircle className="h-8 w-8 text-muted-foreground" />
+              <p className="text-sm font-medium">Senha já cadastrada</p>
+              <p className="text-xs text-muted-foreground">
+                Este link já foi usado ou expirou. Se você já criou sua senha, entre normalmente.
+              </p>
+              <Button className="w-full mt-2" onClick={() => navigate("/login", { replace: true })}>
+                Ir para o login
+              </Button>
+            </div>
+          ) : !ready ? (
             <div className="flex flex-col items-center gap-3 py-6 text-center">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               <p className="text-sm text-muted-foreground">Verificando link de recuperação…</p>
@@ -99,7 +168,27 @@ export default function ResetPassword() {
                   autoComplete="new-password"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              {needsTermsCheckbox && (
+                <label className="flex items-start gap-2 text-xs text-muted-foreground cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={acceptedTerms}
+                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                    className="mt-0.5 h-3.5 w-3.5 shrink-0 accent-primary"
+                  />
+                  <span>
+                    Li e aceito os{" "}
+                    <Link to="/termos" target="_blank" className="text-primary hover:underline">
+                      Termos de Uso
+                    </Link>{" "}
+                    e a{" "}
+                    <Link to="/privacidade" target="_blank" className="text-primary hover:underline">
+                      Política de Privacidade
+                    </Link>
+                  </span>
+                </label>
+              )}
+              <Button type="submit" className="w-full" disabled={loading || (needsTermsCheckbox && !acceptedTerms)}>
                 {loading && <Loader2 className="h-4 w-4 animate-spin" />}
                 Salvar nova senha
               </Button>

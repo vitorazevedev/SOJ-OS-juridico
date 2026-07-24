@@ -23,8 +23,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { useOrganization } from "@/hooks/useOrganization";
-import { useIsAdmin } from "@/hooks/useIsAdmin";
-import { TerminalSquare } from "lucide-react";
+import { useIsPonderumStaff } from "@/hooks/useIsPonderumStaff";
+import { TerminalSquare, Users } from "lucide-react";
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -56,7 +56,7 @@ export function AppSidebar() {
   const isActive = (url: string) => (url === "/" ? pathname === "/" : pathname.startsWith(url));
   const { user, signOut } = useAuth();
   const { org } = useOrganization();
-  const isAdmin = useIsAdmin();
+  const isPonderumStaff = useIsPonderumStaff();
 
   const displayName = (user?.user_metadata?.name as string | undefined)?.trim() || user?.email || "Usuário";
   const planLabel = org ? (PLAN_LABELS[org.plan_id] ?? `Plano ${org.plan_id}`) : "—";
@@ -103,7 +103,7 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              {isAdmin && (
+              {isPonderumStaff && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/admin")} tooltip="Dev">
                     <NavLink
@@ -117,6 +117,24 @@ export function AppSidebar() {
                     >
                       <TerminalSquare className="h-4 w-4 shrink-0" />
                       {!collapsed && <span>Dev</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              {isPonderumStaff && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/equipe-ponderum")} tooltip="Equipe Ponderum">
+                    <NavLink
+                      to="/equipe-ponderum"
+                      className={cn(
+                        "flex items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors",
+                        isActive("/equipe-ponderum")
+                          ? "bg-primary-dim text-primary font-medium"
+                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                      )}
+                    >
+                      <Users className="h-4 w-4 shrink-0" />
+                      {!collapsed && <span>Equipe Ponderum</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

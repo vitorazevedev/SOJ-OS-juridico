@@ -4,6 +4,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import type { FormErrors, Mode } from "@/lib/authForm";
+import { formatDocument } from "@/lib/brazilianDocs";
+
+// Agrupa dígitos em blocos de 3 (ex: "447 911 123 456") — não é o formato
+// oficial de nenhum país específico, só uma leitura genérica mais limpa
+// que um bloco corrido de números.
+function maskGeneric(d: string): string {
+  const parts: string[] = [];
+  for (let i = 0; i < d.length; i += 3) parts.push(d.slice(i, i + 3));
+  return parts.join(" ");
+}
+
+// Máscara (XX) XXXXX-XXXX só faz sentido para números brasileiros. Para
+// qualquer outro DDI, agrupamos os dígitos de forma genérica, sem inventar
+// um formato que não é o real do país escolhido.
+function maskPhone(v: string, ddi: string): string {
+  const d = v.replace(/\D/g, "");
+  if (ddi.trim() !== "+55") return maskGeneric(d.slice(0, 15));
+  const dd = d.slice(0, 11);
+  if (!dd) return "";
+  if (dd.length <= 2) return `(${dd}`;
+  if (dd.length <= 6) return `(${dd.slice(0, 2)}) ${dd.slice(2)}`;
+  if (dd.length <= 10) return `(${dd.slice(0, 2)}) ${dd.slice(2, 6)}-${dd.slice(6)}`;
+  return `(${dd.slice(0, 2)}) ${dd.slice(2, 7)}-${dd.slice(7)}`;
+}
 
 function GoogleIcon() {
   return (
@@ -22,6 +46,12 @@ export function LoginSignupForm({
   setName,
   orgName,
   setOrgName,
+  ddi,
+  setDdi,
+  phone,
+  setPhone,
+  cnpj,
+  setCnpj,
   email,
   setEmail,
   password,
@@ -42,6 +72,12 @@ export function LoginSignupForm({
   setName: (v: string) => void;
   orgName: string;
   setOrgName: (v: string) => void;
+  ddi: string;
+  setDdi: (v: string) => void;
+  phone: string;
+  setPhone: (v: string) => void;
+  cnpj: string;
+  setCnpj: (v: string) => void;
   email: string;
   setEmail: (v: string) => void;
   password: string;
@@ -77,6 +113,32 @@ export function LoginSignupForm({
                 className={fieldErrors.orgName ? "border-destructive/70" : ""}
               />
               {fieldErrors.orgName && <p className="text-[11px] text-destructive">{fieldErrors.orgName}</p>}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="phone">WhatsApp / Celular</Label>
+              <div className="flex gap-2">
+                <Input id="ddi" type="text" value={ddi} aria-label="DDI (código do país)"
+                  onChange={(e) => {
+                    const newDdi = `+${e.target.value.replace(/\D/g, "").slice(0, 4)}`;
+                    setDdi(newDdi);
+                    setPhone(maskPhone(phone, newDdi));
+                  }}
+                  maxLength={5} className="w-16 shrink-0 text-center px-1"
+                />
+                <Input id="phone" type="tel" placeholder="(11) 99999-9999" value={phone}
+                  onChange={(e) => setPhone(maskPhone(e.target.value, ddi))} autoComplete="tel" maxLength={15}
+                  className={fieldErrors.phone ? "border-destructive/70 flex-1" : "flex-1"}
+                />
+              </div>
+              {fieldErrors.phone && <p className="text-[11px] text-destructive">{fieldErrors.phone}</p>}
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="cnpj">CPF ou CNPJ</Label>
+              <Input id="cnpj" type="text" placeholder="000.000.000-00 ou 00.000.000/0000-00" value={cnpj}
+                onChange={(e) => setCnpj(formatDocument(e.target.value))} autoComplete="off" maxLength={18}
+                className={fieldErrors.cnpj ? "border-destructive/70" : ""}
+              />
+              {fieldErrors.cnpj && <p className="text-[11px] text-destructive">{fieldErrors.cnpj}</p>}
             </div>
           </>
         )}

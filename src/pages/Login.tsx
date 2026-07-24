@@ -23,6 +23,9 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [name, setName] = useState("");
   const [orgName, setOrgName] = useState("");
+  const [ddi, setDdi] = useState("+55");
+  const [phone, setPhone] = useState("");
+  const [cnpj, setCnpj] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState("");
 
@@ -60,7 +63,7 @@ export default function Login() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = signupSchema.safeParse({ email, password, name, orgName });
+    const result = signupSchema.safeParse({ email, password, name, orgName, phone, cnpj });
     if (!result.success) {
       const errs: FormErrors = {};
       result.error.issues.forEach((i) => { const f = i.path[0] as keyof FormErrors; if (!errs[f]) errs[f] = i.message; });
@@ -79,7 +82,7 @@ export default function Login() {
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
-          data: { name: name.trim(), org_name: orgName.trim() },
+          data: { name: name.trim(), org_name: orgName.trim(), phone: `${ddi.trim()} ${phone.trim()}`, cnpj: cnpj.trim() || null, terms_accepted: true },
         },
       });
       if (error) {
@@ -224,6 +227,12 @@ export default function Login() {
               setName={setName}
               orgName={orgName}
               setOrgName={setOrgName}
+              ddi={ddi}
+              setDdi={setDdi}
+              phone={phone}
+              setPhone={setPhone}
+              cnpj={cnpj}
+              setCnpj={setCnpj}
               email={email}
               setEmail={setEmail}
               password={password}

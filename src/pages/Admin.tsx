@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { useIsPonderumStaff } from "@/hooks/useIsPonderumStaff";
 import { SojCard } from "@/components/layout/Primitives";
 import { Loader2, AlertTriangle, ExternalLink } from "lucide-react";
 import { env } from "@/config/env";
@@ -18,7 +18,7 @@ import type {
 
 export default function Admin() {
   const navigate  = useNavigate();
-  const isAdmin   = useIsAdmin();
+  const isPonderumStaff   = useIsPonderumStaff();
   const [loading, setLoading]   = useState(true);
   const [stats, setStats]       = useState<Stats | null>(null);
   const [feedbacks, setFeedbacks]         = useState<Feedback[]>([]);
@@ -29,7 +29,7 @@ export default function Admin() {
   const [waitlist, setWaitlist]             = useState<WaitlistEntry[]>([]);
 
   useEffect(() => {
-    if (isAdmin === false) return;
+    if (isPonderumStaff === false) return;
     supabase.rpc("get_admin_dashboard").then(({ data, error }) => {
       if (error || !data) { setLoading(false); return; }
       const d = data as {
@@ -46,9 +46,9 @@ export default function Admin() {
       setCronHealth(d.cron_health ?? []);
       setLoading(false);
     });
-  }, [isAdmin]);
+  }, [isPonderumStaff]);
 
-  if (!isAdmin && !loading) return (
+  if (!isPonderumStaff && !loading) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
       <p className="text-sm text-muted-foreground">Acesso restrito.</p>
       <button onClick={() => navigate("/")} className="text-xs text-primary underline">Voltar</button>
@@ -66,7 +66,7 @@ export default function Admin() {
 
       {/* Cabeçalho */}
       <div>
-        <h1 className="font-cormorant text-2xl font-light tracking-wide">Painel do Desenvolvedor</h1>
+        <h1 className="text-lg md:text-2xl font-semibold tracking-tight">Painel do Desenvolvedor</h1>
         <p className="text-xs text-muted-foreground mt-0.5 font-mono">Ponderum · Visão interna</p>
       </div>
 
