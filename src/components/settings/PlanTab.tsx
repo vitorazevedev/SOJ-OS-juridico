@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { SojCard } from "@/components/layout/Primitives";
-import { Check } from "lucide-react";
+import { Check, Download } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useOrganization } from "@/hooks/useOrganization";
 import { supabase } from "@/lib/supabase";
 import { fmtBRL } from "@/lib/adminDashboard";
+import { generateReceiptPdf, downloadBlob } from "@/lib/contractDocs";
 import {
   STARTER_MONTHLY_PRICE_BRL,
   FREEMIUM_MONTHLY_ANALYSIS_LIMIT,
@@ -115,6 +116,18 @@ export function PlanTab() {
   const freemiumExhausted = isTrial && monthlyUsed != null && monthlyUsed >= FREEMIUM_MONTHLY_ANALYSIS_LIMIT;
   const freemiumRemaining = isTrial && monthlyUsed != null ? Math.max(0, FREEMIUM_MONTHLY_ANALYSIS_LIMIT - monthlyUsed) : null;
 
+  const handleDownloadReceipt = (r: Receipt) => {
+    const blob = generateReceiptPdf({
+      id: r.id,
+      amount_cents: r.amount_cents,
+      description: r.description,
+      issued_at: r.issued_at,
+      org_name: org?.name ?? "—",
+      org_cnpj: org?.cnpj ?? null,
+    });
+    downloadBlob(blob, `recibo-ponderum-${r.id.slice(0, 8)}.pdf`);
+  };
+
   return (
     <div className="flex flex-col gap-4 mt-4">
       <SojCard className="flex flex-col gap-4">
@@ -214,7 +227,15 @@ export function PlanTab() {
                     })}
                   </p>
                 </div>
-                <span className="font-semibold tabular-nums shrink-0">{fmtBRL(r.amount_cents / 100)}</span>
+                <div className="flex items-center gap-3 shrink-0">
+                  <span className="font-semibold tabular-nums">{fmtBRL(r.amount_cents / 100)}</span>
+                  <button
+                    onClick={() => handleDownloadReceipt(r)}
+                    className="flex items-center gap-1 h-8 px-3 rounded-lg border border-border text-xs hover:bg-muted/40 transition-colors"
+                  >
+                    <Download className="h-3.5 w-3.5" /> PDF
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

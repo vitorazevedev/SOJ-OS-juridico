@@ -624,6 +624,72 @@ export function generateDataSummaryPdf(data: DataSummaryPdfInput): Blob {
   return new Blob([pdf.output("arraybuffer")], { type: PDF_MIME });
 }
 
+export type ReceiptPdfData = {
+  id: string;
+  amount_cents: number;
+  description: string;
+  issued_at: string;
+  org_name: string;
+  org_cnpj: string | null;
+};
+
+export function generateReceiptPdf(data: ReceiptPdfData): Blob {
+  const pdf = new jsPDF({ unit: "mm", format: "a4" });
+
+  const issuedDate = new Date(data.issued_at);
+  const dateLabel = issuedDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
+  const dateTimeLabel = issuedDate.toLocaleString("pt-BR", {
+    day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+  });
+
+  const { y, ml, cw } = drawReportHeader(pdf, {
+    title: "Recibo de Pagamento",
+    subtitle: "Ponderum · Inteligência contratual",
+    date: dateLabel,
+    fields: [
+      { label: "ORGANIZAÇÃO", value: data.org_name },
+      { label: "CNPJ/CPF", value: data.org_cnpj ?? "—" },
+      { label: "VALOR PAGO", value: fmtBRLPdf(data.amount_cents) },
+    ],
+  });
+
+  let cy = y + 4;
+  pdf.setFont("helvetica", "bold"); pdf.setFontSize(11); pdf.setTextColor(...PC.navy);
+  pdf.text(data.description, ml, cy);
+  cy += 10;
+
+  const rows: [string, string][] = [
+    ["Recibo Nº", data.id.slice(0, 8).toUpperCase()],
+    ["Data e hora do pagamento", dateTimeLabel],
+    ["Organização", data.org_name],
+    ["CNPJ/CPF", data.org_cnpj ?? "—"],
+    ["Valor pago", fmtBRLPdf(data.amount_cents)],
+  ];
+  rows.forEach(([label, value]) => {
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor(...PC.mid);
+    pdf.text(label.toUpperCase(), ml, cy);
+    cy += 5;
+    pdf.setFont("helvetica", "normal"); pdf.setFontSize(10.5); pdf.setTextColor(...PC.navy);
+    pdf.text(value, ml, cy);
+    cy += 8;
+  });
+
+  cy += 4;
+  pdf.setDrawColor(...PC.border); pdf.setLineWidth(0.3);
+  pdf.line(ml, cy, ml + cw, cy);
+  cy += 6;
+
+  pdf.setFont("helvetica", "normal"); pdf.setFontSize(8.5); pdf.setTextColor(...PC.mid);
+  const note = pdf.splitTextToSize(
+    "Este recibo confirma o pagamento referente à assinatura da plataforma Ponderum, processado manualmente pela equipe comercial (sem gateway de pagamento automatizado no momento da emissão).",
+    cw
+  ) as string[];
+  pdf.text(note, ml, cy);
+
+  drawReportFooters(pdf, "Ponderum · Recibo de pagamento");
+  return new Blob([pdf.output("arraybuffer")], { type: PDF_MIME });
+}
+
 export function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
