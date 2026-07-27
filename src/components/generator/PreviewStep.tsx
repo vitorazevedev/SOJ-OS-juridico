@@ -1,27 +1,41 @@
+import { useState } from "react";
 import { SojCard } from "@/components/layout/Primitives";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Copy, Download, Loader2 } from "lucide-react";
-import { buildContractText, type FormState } from "@/lib/generatorForm";
-import type { Template } from "@/data/soj";
+import { DocxPreview } from "@/components/generator/DocxPreview";
+import type { ContractTemplate } from "@/data/contractTemplatesCatalog";
+
+const SCOPE_WARNING =
+  "Confirmo que esta é uma operação empresarial privada sob direito brasileiro, e não se enquadra em relações de consumo, trabalho, administração pública, imóveis com forma especial, valores mobiliários, instituições financeiras reguladas ou setores sujeitos a autorização específica — casos que exigem revisão jurídica adicional antes do uso deste modelo.";
 
 export function PreviewStep({
   tpl,
-  form,
-  logoUrl,
+  docxBlob,
+  previewError,
   saving,
+  scopeConfirmed,
+  setScopeConfirmed,
   onBack,
   onCopy,
-  onDownloadPdf,
   onGenerate,
 }: {
-  tpl: Template;
-  form: FormState;
-  logoUrl: string | null;
+  tpl: ContractTemplate;
+  docxBlob: Blob | null;
+  previewError: string | null;
   saving: boolean;
+  scopeConfirmed: boolean;
+  setScopeConfirmed: (v: boolean) => void;
   onBack: () => void;
   onCopy: () => void;
-  onDownloadPdf: () => void;
   onGenerate: () => void;
 }) {
+  const [copying, setCopying] = useState(false);
+
+  const handleCopy = async () => {
+    setCopying(true);
+    try { await onCopy(); } finally { setCopying(false); }
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <SojCard>
@@ -31,21 +45,28 @@ export function PreviewStep({
           </div>
           <div className="flex-1 min-w-0">
             <p className="font-medium text-sm md:text-base">Pré-visualização do contrato</p>
-            <p className="text-[11px] md:text-xs text-muted-foreground">Revise o conteúdo antes de baixar</p>
+            <p className="text-[11px] md:text-xs text-muted-foreground">{tpl.titulo} — revise o conteúdo antes de baixar</p>
           </div>
         </div>
-        <div
-          className="rounded-lg bg-muted/40 border border-border p-4 md:p-5 space-y-3 text-foreground/90 overflow-y-auto whitespace-pre-wrap"
-          style={{ fontFamily: "Georgia, serif", fontSize: 12, lineHeight: 1.7, maxHeight: 360 }}
-        >
-          {logoUrl && (
-            <div className="flex justify-center pb-3 mb-2 border-b border-border/60">
-              <img src={logoUrl} alt="Logo" className="max-h-16 object-contain" />
-            </div>
-          )}
-          {buildContractText(tpl.title, form, tpl.id)}
-        </div>
+        {previewError ? (
+          <p className="text-sm text-destructive text-center py-10">{previewError}</p>
+        ) : (
+          <DocxPreview blob={docxBlob} />
+        )}
       </SojCard>
+
+      <SojCard className="flex items-start gap-3">
+        <Checkbox
+          id="scope-confirm"
+          checked={scopeConfirmed}
+          onCheckedChange={(v) => setScopeConfirmed(v === true)}
+          className="mt-0.5 shrink-0"
+        />
+        <label htmlFor="scope-confirm" className="text-[11px] md:text-xs text-muted-foreground leading-relaxed cursor-pointer">
+          {SCOPE_WARNING}
+        </label>
+      </SojCard>
+
       <div className="flex flex-wrap gap-2">
         <button
           onClick={onBack}
@@ -55,21 +76,14 @@ export function PreviewStep({
           ← Editar
         </button>
         <button
-          disabled={saving}
-          onClick={onCopy}
+          disabled={saving || copying || !docxBlob}
+          onClick={handleCopy}
           className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 h-11 md:h-10 px-5 rounded-lg border border-border text-sm hover:bg-muted/40 active:opacity-70 transition-colors disabled:opacity-50"
         >
-          <Copy className="h-3.5 w-3.5" /> Copiar
+          {copying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Copy className="h-3.5 w-3.5" />} Copiar texto
         </button>
         <button
-          disabled={saving}
-          onClick={onDownloadPdf}
-          className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 h-11 md:h-10 px-5 rounded-lg border border-border text-sm hover:bg-muted/40 active:opacity-70 transition-colors disabled:opacity-50"
-        >
-          <Download className="h-3.5 w-3.5" /> PDF
-        </button>
-        <button
-          disabled={saving}
+          disabled={saving || !scopeConfirmed || !docxBlob}
           onClick={onGenerate}
           className="flex-1 md:flex-none inline-flex items-center justify-center gap-2 h-11 md:h-10 px-5 md:px-6 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 active:opacity-80 transition-opacity disabled:opacity-50"
         >

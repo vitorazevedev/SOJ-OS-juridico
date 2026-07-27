@@ -1,34 +1,33 @@
-import { useMemo, useState } from "react";
-import { TEMPLATES } from "@/data/soj";
+import { useEffect, useMemo, useState } from "react";
 import { Check, History } from "lucide-react";
 import { HistoryTab } from "@/components/generator/HistoryTab";
 import { TemplateStep } from "@/components/generator/TemplateStep";
-import { ContractFormStep } from "@/components/generator/ContractFormStep";
+import { DynamicFieldsStep } from "@/components/generator/DynamicFieldsStep";
 import { PreviewStep } from "@/components/generator/PreviewStep";
 import { SuccessStep } from "@/components/generator/SuccessStep";
 import { SendForSignatureDialog } from "@/components/generator/SendForSignatureDialog";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { saveGeneratedContract } from "@/hooks/useGeneratedContracts";
-import { buildContractSections } from "@/lib/contractSections";
 import { useOrganization } from "@/hooks/useOrganization";
 import { PlanFeatureLock } from "@/components/layout/PlanFeatureLock";
-import {
-  STEPS,
-  EMPTY_FORM,
-  buildContractText,
-  parseValueToCents,
-  slugifyName,
-  validateForm,
-  type FormState,
-  type FormErrors,
-} from "@/lib/generatorForm";
+import { CONTRACT_TEMPLATES_CATALOG, findContractTemplate } from "@/data/contractTemplatesCatalog";
+import { CONTRACT_TEMPLATE_FIELDS } from "@/data/contractTemplateFields";
+import { renderContractDocx, extractPlainTextFromDocx } from "@/lib/contractTemplateEngine";
+import { emptyFieldValues } from "@/lib/dynamicContractForm";
+import { slugifyName, parseValueToCents } from "@/lib/generatorForm";
+
+const STEPS = ["Tipo de Contrato", "Informações", "Revisar", "Concluído"];
 
 export default function Generator() {
   const [step, setStep] = useState(1);
   const [selected, setSelected] = useState<string | null>(null);
-  const [form, setForm] = useState<FormState>(EMPTY_FORM);
-  const [errors, setErrors] = useState<FormErrors>({});
+  const [contractName, setContractName] = useState("");
+  const [values, setValues] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [scopeConfirmed, setScopeConfirmed] = useState(false);
+  const [previewBlob, setPreviewBlob] = useState<Blob | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [savedRecord, setSavedRecord] = useState<{
     id: string;
@@ -38,82 +37,80 @@ export default function Generator() {
   const [signOpen, setSignOpen] = useState(false);
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<"novo" | "historico">("novo");
-  const { org, loading: orgLoading, logoUrl } = useOrganization();
+  const { org, loading: orgLoading } = useOrganization();
 
   const tpl = useMemo(
-    () => TEMPLATES.find((t) => t.id === selected) ?? TEMPLATES[0],
+    () => findContractTemplate(selected ?? "") ?? CONTRACT_TEMPLATES_CATALOG[0],
     [selected],
   );
+  const fields = useMemo(() => CONTRACT_TEMPLATE_FIELDS[tpl.id] ?? [], [tpl.id]);
 
   const reset = () => {
     setStep(1);
     setSelected(null);
-    setForm(EMPTY_FORM);
-    setSavedRecord(null);
+    setContractName("");
+    setValues({});
     setErrors({});
+    setScopeConfirmed(false);
+    setPreviewBlob(null);
+    setPreviewError(null);
+    setSavedRecord(null);
+  };
+
+  // Renderiza o DOCX real (com as tabelas dos Anexos) ao entrar na etapa de
+  // revisão — os valores não mudam mais depois disso, então só roda uma vez
+  // por entrada nessa etapa.
+  useEffect(() => {
+    if (step !== 3) return;
+    let cancelled = false;
+    setPreviewBlob(null);
+    setPreviewError(null);
+    renderContractDocx(tpl.templateUrl, values)
+      .then((blob) => { if (!cancelled) setPreviewBlob(blob); })
+      .catch(() => { if (!cancelled) setPreviewError("Não foi possível gerar o documento. Tente novamente."); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, tpl.id]);
+
+  const handleSelectTemplate = (id: string) => {
+    setSelected(id);
+    setValues(emptyFieldValues(CONTRACT_TEMPLATE_FIELDS[id] ?? []));
   };
 
   const handleGenerate = async () => {
-    const validationErrors = validateForm(form);
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      toast({ title: "Corrija os campos inválidos antes de gerar o contrato", variant: "destructive" });
-      return;
-    }
+    if (!previewBlob) return;
     setSaving(true);
     try {
-      // Carregado sob demanda: docx/jsPDF só precisam entrar no bundle quando o
-      // usuário realmente gera um contrato, não no carregamento inicial da página.
-      const { generateContractDocxBlob, downloadBlob, fetchLogoData } = await import("@/lib/contractDocs");
-      const sections = buildContractSections(tpl.title, form, tpl.id);
-      const logo = await fetchLogoData(logoUrl);
-      const docxBlob = await generateContractDocxBlob(sections, logo);
-      const contentText = buildContractText(tpl.title, form, tpl.id);
-      const valueCents = parseValueToCents(form.value);
-      const termDays = form.term ? parseInt(form.term.replace(/\D/g, ""), 10) || null : null;
-      const slug = slugifyName(form.name);
+      const contentText = await extractPlainTextFromDocx(previewBlob);
+      const valueCents = parseValueToCents(values.VALOR ?? "");
+      const slug = slugifyName(contractName);
       const result = await saveGeneratedContract({
         templateId: tpl.id,
-        name: form.name.trim(),
-        partyA: form.partyA,
-        partyB: form.partyB,
+        name: contractName.trim(),
+        partyA: values.PARTE_A_RAZAO_SOCIAL ?? "",
+        partyB: values.PARTE_B_RAZAO_SOCIAL ?? "",
         valueCents,
-        termDays,
-        sector: form.sector,
-        docxBlob,
+        termDays: null,
+        sector: "",
+        docxBlob: previewBlob,
         contentText,
         preRiskScore: 18,
       });
-      downloadBlob(docxBlob, `${slug}.docx`);
+      const { downloadBlob } = await import("@/lib/contractDocs");
+      downloadBlob(previewBlob, `${slug}.docx`);
       setSavedRecord(result);
       setStep(4);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Tente novamente.";
-      toast({
-        title: "Erro ao salvar contrato",
-        description: msg,
-        variant: "destructive",
-      });
+      toast({ title: "Erro ao salvar contrato", description: msg, variant: "destructive" });
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDownloadPdf = async () => {
-    try {
-      const { generateContractPdfBlob, downloadBlob, fetchLogoData } = await import("@/lib/contractDocs");
-      const sections = buildContractSections(tpl.title, form, tpl.id);
-      const logo = await fetchLogoData(logoUrl);
-      const pdfBlob = generateContractPdfBlob(sections, logo);
-      downloadBlob(pdfBlob, `${slugifyName(form.name || tpl.id)}.pdf`);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : undefined;
-      toast({ title: "Erro ao gerar PDF", description: msg, variant: "destructive" });
-    }
-  };
-
   const handleCopyText = async () => {
-    const text = buildContractText(tpl.title, form, tpl.id);
+    if (!previewBlob) return;
+    const text = await extractPlainTextFromDocx(previewBlob);
     await navigator.clipboard.writeText(text);
     toast({ title: "Texto copiado!" });
   };
@@ -122,7 +119,7 @@ export default function Generator() {
     return (
       <PlanFeatureLock
         feature="O Gerador de Contrato"
-        description="Crie contratos equilibrados e juridicamente seguros com IA em minutos. Disponível para quem tem o plano Starter."
+        description="Crie contratos equilibrados e juridicamente seguros com os modelos da biblioteca jurídica Ponderum. Disponível para quem tem o plano Starter."
       />
     );
   }
@@ -133,7 +130,7 @@ export default function Generator() {
         <div>
           <h1 className="text-lg md:text-2xl font-semibold tracking-tight">Gerar Contrato</h1>
           <p className="hidden md:block text-sm text-muted-foreground mt-1">
-            Crie contratos equilibrados e juridicamente seguros com IA em minutos
+            Gere contratos a partir da biblioteca jurídica Ponderum, com revisão de escopo antes de baixar
           </p>
         </div>
         <div className="flex rounded-lg border border-border overflow-hidden shrink-0">
@@ -197,16 +194,19 @@ export default function Generator() {
       </div>
 
       {step === 1 && (
-        <TemplateStep selected={selected} onSelect={setSelected} onNext={() => setStep(2)} />
+        <TemplateStep selected={selected} onSelect={handleSelectTemplate} onNext={() => setStep(2)} />
       )}
 
       {step === 2 && (
-        <ContractFormStep
-          form={form}
-          setForm={setForm}
+        <DynamicFieldsStep
+          tpl={tpl}
+          fields={fields}
+          contractName={contractName}
+          setContractName={setContractName}
+          values={values}
+          setValues={setValues}
           errors={errors}
           setErrors={setErrors}
-          tpl={tpl}
           onBack={() => setStep(1)}
           onNext={() => setStep(3)}
         />
@@ -215,12 +215,13 @@ export default function Generator() {
       {step === 3 && (
         <PreviewStep
           tpl={tpl}
-          form={form}
-          logoUrl={logoUrl}
+          docxBlob={previewBlob}
+          previewError={previewError}
           saving={saving}
+          scopeConfirmed={scopeConfirmed}
+          setScopeConfirmed={setScopeConfirmed}
           onBack={() => setStep(2)}
           onCopy={handleCopyText}
-          onDownloadPdf={handleDownloadPdf}
           onGenerate={handleGenerate}
         />
       )}

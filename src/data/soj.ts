@@ -31,13 +31,6 @@ export type Obligation = {
   status: "urgente" | "proximo" | "normal";
 };
 
-export type Template = {
-  id: string;
-  icon: string;
-  title: string;
-  desc: string;
-};
-
 export const CONTRACTS: Contract[] = [
   { id: "c1", name: "Prestação de Serviços #4821", party: "Acme Tecnologia LTDA", type: "Serviços", status: "Analisado", risk: 78, exposure: 595000, date: "24/04/2026" },
   { id: "c2", name: "NDA Estratégico #4820", party: "Beta Innovations SA", type: "Confidencialidade", status: "Analisado", risk: 32, exposure: 0, date: "23/04/2026" },
@@ -65,15 +58,6 @@ export const OBLIGATIONS: Obligation[] = [
   { id: "o4", desc: "Reunião de governança", contract: "Parceria Comercial #4817", party: "Echo Ventures", due: "10/05/2026", value: "-", status: "proximo" },
   { id: "o5", desc: "Auditoria de segurança", contract: "Fornecimento Cloud #4819", party: "Cloud Provider Inc", due: "22/05/2026", value: "-", status: "normal" },
   { id: "o6", desc: "Pagamento parcela #2", contract: "Prestação de Serviços #4821", party: "Acme Tecnologia LTDA", due: "28/05/2026", value: "R$ 49.500", status: "normal" },
-];
-
-export const TEMPLATES: Template[] = [
-  { id: "servicos", icon: "📋", title: "Prestação de Serviços", desc: "Contrato padrão para serviços B2B com SLA e cláusulas equilibradas." },
-  { id: "nda", icon: "🔒", title: "NDA / Confidencialidade", desc: "Acordo de não-divulgação mútuo com prazo e exceções padronizadas." },
-  { id: "fornecimento", icon: "📦", title: "Fornecimento", desc: "Contrato de fornecimento com cláusulas de qualidade e logística." },
-  { id: "licenca", icon: "💻", title: "Licenciamento SaaS", desc: "Licença de uso de software com termos de propriedade intelectual." },
-  { id: "parceria", icon: "🤝", title: "Parceria Comercial", desc: "Acordo de parceria estratégica com divisão de receita." },
-  { id: "consultoria", icon: "🎯", title: "Consultoria", desc: "Contrato de consultoria com entregáveis e milestones definidos." },
 ];
 
 export const CHART_DATA = [

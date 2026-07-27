@@ -1,27 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { validateForm, slugifyName, parseValueToCents, EMPTY_FORM } from "./generatorForm";
-
-describe("validateForm", () => {
-  it("exige o nome do contrato", () => {
-    const errors = validateForm({ ...EMPTY_FORM, name: "" });
-    expect(errors.name).toBeDefined();
-  });
-
-  it("aceita um formulário mínimo válido (só com nome)", () => {
-    const errors = validateForm({ ...EMPTY_FORM, name: "NDA com Fornecedor XYZ" });
-    expect(errors).toEqual({});
-  });
-
-  it("rejeita CNPJ/CPF inválido quando preenchido", () => {
-    const errors = validateForm({ ...EMPTY_FORM, name: "Contrato Teste", cnpjA: "11.111.111/1111-11" });
-    expect(errors.cnpjA).toBeDefined();
-  });
-
-  it("aceita CNPJ válido quando preenchido", () => {
-    const errors = validateForm({ ...EMPTY_FORM, name: "Contrato Teste", cnpjA: "11.222.333/0001-81" });
-    expect(errors.cnpjA).toBeUndefined();
-  });
-});
+import { slugifyName, parseValueToCents } from "./generatorForm";
+import { validateDynamicFields } from "./dynamicContractForm";
 
 describe("slugifyName", () => {
   it("remove acentos e caracteres especiais", () => {
@@ -44,5 +23,31 @@ describe("parseValueToCents", () => {
 
   it("retorna null para texto não numérico", () => {
     expect(parseValueToCents("abc")).toBeNull();
+  });
+});
+
+describe("validateDynamicFields", () => {
+  const fields = ["OBJETO_RESUMIDO", "PARTE_A_CNPJ"];
+
+  it("exige todos os campos do modelo preenchidos", () => {
+    const errors = validateDynamicFields(fields, { OBJETO_RESUMIDO: "", PARTE_A_CNPJ: "" });
+    expect(errors.OBJETO_RESUMIDO).toBeDefined();
+    expect(errors.PARTE_A_CNPJ).toBeDefined();
+  });
+
+  it("aceita quando todos os campos estão preenchidos e o CNPJ é válido", () => {
+    const errors = validateDynamicFields(fields, {
+      OBJETO_RESUMIDO: "Prestação de serviços de consultoria",
+      PARTE_A_CNPJ: "11.222.333/0001-81",
+    });
+    expect(errors).toEqual({});
+  });
+
+  it("rejeita CNPJ/CPF inválido no campo de documento", () => {
+    const errors = validateDynamicFields(fields, {
+      OBJETO_RESUMIDO: "Prestação de serviços",
+      PARTE_A_CNPJ: "11.111.111/1111-11",
+    });
+    expect(errors.PARTE_A_CNPJ).toBeDefined();
   });
 });

@@ -12,11 +12,13 @@ import { useGeneratedContracts, deleteGeneratedContract, type GeneratedContract 
 import { getCurrentOrgLogoSignedUrl } from "@/hooks/useOrganization";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { TEMPLATES } from "@/data/soj";
+import { findContractTemplate } from "@/data/contractTemplatesCatalog";
 import { cn } from "@/lib/utils";
 
+// Cobre também generated_contracts antigos, criados pelo gerador mock anterior
+// (template_id como "servicos", "nda" etc.) — cai no id cru em vez de quebrar.
 function templateLabel(id: string) {
-  return TEMPLATES.find((t) => t.id === id)?.title ?? id;
+  return findContractTemplate(id)?.titulo ?? id;
 }
 
 function formatBRL(cents: number | null) {
