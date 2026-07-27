@@ -13,6 +13,7 @@ import { UrgentObligationsContext, useUrgentObligationsProvider } from "@/hooks/
 import { OnboardingUIProvider } from "@/hooks/useOnboardingUI";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
 import { useOrganization } from "@/hooks/useOrganization";
+import { useTheme } from "@/hooks/useTheme";
 import { SUBSCRIPTION_RENEWAL_WARNING_DAYS } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
@@ -112,6 +113,7 @@ export default function AppLayout() {
   const navigate = useNavigate();
   const urgentCtx = useUrgentObligationsProvider();
   const { org } = useOrganization();
+  const { theme } = useTheme();
   const [panelOpen, setPanelOpen] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [renewalBannerDismissed, setRenewalBannerDismissed] = useState(false);
@@ -229,7 +231,11 @@ export default function AppLayout() {
             ) : (
               <>
                 <div className="flex items-center gap-2">
-                  <img src="/ponderum-icon-white.png" alt="Ponderum" className="h-5 w-5 object-contain" />
+                  <img
+                    src={theme === "light" ? "/ponderum-icon-dark.png" : "/ponderum-icon-white.png"}
+                    alt="Ponderum"
+                    className="h-5 w-5 object-contain"
+                  />
                   <span className="text-sm font-semibold">{mobileTitle}</span>
                 </div>
                 <div className="flex items-center gap-1">

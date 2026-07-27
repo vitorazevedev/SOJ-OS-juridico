@@ -156,8 +156,8 @@ export default function Contracts() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Buscar contratos..."
-          className="w-full pl-10 pr-3 rounded-[10px] border text-sm focus:outline-none transition-colors"
-          style={{ background: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.08)", padding: "9px 12px 9px 36px", minHeight: 44 }}
+          className="w-full pl-10 pr-3 rounded-[10px] border border-border bg-muted/40 text-sm focus:outline-none transition-colors"
+          style={{ padding: "9px 12px 9px 36px", minHeight: 44 }}
         />
       </div>
 
@@ -191,19 +191,15 @@ export default function Contracts() {
                 onClick={() => setFilter(f.id)}
                 className={cn(
                   "shrink-0 rounded-full text-[11px] md:text-xs border transition-all active:opacity-70 flex items-center gap-1.5",
-                  active ? "font-medium" : "text-muted-foreground hover:text-foreground",
+                  active
+                    ? "font-medium border-primary/50 text-primary bg-primary-dim"
+                    : "border-border text-muted-foreground hover:text-foreground",
                 )}
-                style={{
-                  padding: "6px 12px",
-                  minHeight: 32,
-                  ...(active
-                    ? { borderColor: "rgba(0,229,160,0.5)", color: "#00e5a0", background: "rgba(0,229,160,0.08)" }
-                    : { borderColor: "hsl(var(--border))" }),
-                }}
+                style={{ padding: "6px 12px", minHeight: 32 }}
               >
                 {f.label}
                 {count > 0 && (
-                  <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] tabular-nums", active ? "bg-[rgba(0,229,160,0.15)]" : "bg-muted/60")}>
+                  <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] tabular-nums", active ? "bg-primary/15" : "bg-muted/60")}>
                     {count}
                   </span>
                 )}
@@ -239,8 +235,8 @@ export default function Contracts() {
       <button
         onClick={openPicker}
         disabled={uploading}
-        className="md:hidden fixed right-4 h-12 w-12 rounded-full flex items-center justify-center shadow-lg active:opacity-80 transition-opacity z-40 disabled:opacity-60"
-        style={{ bottom: "calc(84px + env(safe-area-inset-bottom))", background: "#00e5a0", color: "#000" }}
+        className="md:hidden fixed right-4 h-12 w-12 rounded-full flex items-center justify-center shadow-lg active:opacity-80 transition-opacity z-40 disabled:opacity-60 bg-primary text-primary-foreground"
+        style={{ bottom: "calc(84px + env(safe-area-inset-bottom))" }}
         aria-label="Upload de contrato"
       >
         {uploading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Plus className="h-5 w-5" />}

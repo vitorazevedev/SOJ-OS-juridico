@@ -71,7 +71,7 @@ export function AnalisadoView({
                 "shrink-0 px-3 py-2 text-[11px] rounded-full border mr-1 transition-colors",
                 "md:rounded-none md:border-0 md:border-b-2 md:bg-transparent md:px-5 md:py-3 md:text-sm md:-mb-px md:mr-0",
                 tab === id
-                  ? "border-[rgba(0,229,160,0.5)] text-[#00e5a0] bg-[rgba(0,229,160,0.08)] font-medium md:border-primary md:bg-transparent md:text-primary"
+                  ? "border-primary/50 text-primary bg-primary-dim font-medium md:border-primary md:bg-transparent md:text-primary"
                   : "border-border text-muted-foreground md:border-transparent md:hover:text-foreground"
               )}
               style={{ minHeight: 32 }}

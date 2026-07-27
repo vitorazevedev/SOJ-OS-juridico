@@ -164,12 +164,12 @@ export default function Generator() {
             <div key={s} className="flex items-center gap-2 flex-1 last:flex-none">
               <div className="flex items-center gap-2">
                 <span
-                  className="h-6 w-6 md:h-7 md:w-7 rounded-full flex items-center justify-center text-[11px] md:text-xs font-bold transition-all"
-                  style={
+                  className={cn(
+                    "h-6 w-6 md:h-7 md:w-7 rounded-full flex items-center justify-center text-[11px] md:text-xs font-bold transition-all",
                     done || active
-                      ? { background: "#00e5a0", color: "#000" }
-                      : { background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.3)" }
-                  }
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground/50",
+                  )}
                 >
                   {done ? <Check className="h-3.5 w-3.5" /> : idx}
                 </span>
@@ -183,10 +183,7 @@ export default function Generator() {
                 </span>
               </div>
               {i < STEPS.length - 1 && (
-                <div
-                  className="flex-1 h-px"
-                  style={{ background: done ? "#00e5a0" : "rgba(255,255,255,0.08)" }}
-                />
+                <div className={cn("flex-1 h-px", done ? "bg-primary" : "bg-muted")} />
               )}
             </div>
           );

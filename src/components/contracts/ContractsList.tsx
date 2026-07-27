@@ -87,8 +87,7 @@ export function ContractsList({
         {filtered.map((c, i) => (
           <div
             key={c.id}
-            className={cn("flex items-center gap-3 px-4 py-3 transition-colors", i > 0 && "border-t")}
-            style={{ borderColor: "rgba(255,255,255,0.05)" }}
+            className={cn("flex items-center gap-3 px-4 py-3 transition-colors", i > 0 && "border-t border-border")}
           >
             <button
               onClick={() => navigate(`/analysis/${c.id}`)}

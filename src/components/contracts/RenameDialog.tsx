@@ -54,8 +54,8 @@ export function RenameDialog({
           onChange={(e) => { setName(e.target.value); setError(null); }}
           onKeyDown={(e) => { if (e.key === "Enter") handleSave(); if (e.key === "Escape") onClose(); }}
           className={cn(
-            "w-full rounded-[10px] border bg-[rgba(255,255,255,0.05)] text-foreground focus:outline-none transition-colors",
-            error ? "border-destructive/70" : "border-[rgba(255,255,255,0.1)] focus:border-[rgba(0,229,160,0.6)]",
+            "w-full rounded-[10px] border bg-muted/40 text-foreground focus:outline-none transition-colors",
+            error ? "border-destructive/70" : "border-border focus:border-primary/60",
           )}
           style={{ padding: "11px 12px", minHeight: 44 }}
         />

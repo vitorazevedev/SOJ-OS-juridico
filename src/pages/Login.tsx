@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/features/auth/components/AuthProvider";
+import { useTheme } from "@/hooks/useTheme";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { CheckEmailView } from "@/components/auth/CheckEmailView";
@@ -14,6 +15,7 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
   const { session, loading: authLoading } = useAuth();
+  const { theme } = useTheme();
   const [mode, setMode] = useState<Mode>("login");
   const [loading, setLoading] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FormErrors>({});
@@ -183,7 +185,11 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <img src="/ponderum-icon-white.png" alt="Ponderum" className="h-12 w-12 mb-3 object-contain" />
+          <img
+            src={theme === "light" ? "/ponderum-icon-dark.png" : "/ponderum-icon-white.png"}
+            alt="Ponderum"
+            className="h-12 w-12 mb-3 object-contain"
+          />
           <h1 className="font-cormorant text-3xl font-light tracking-wider">Ponderum</h1>
           <p className="text-xs text-muted-foreground tracking-wide mt-0.5">Inteligência contratual</p>
           <p className="text-sm text-muted-foreground mt-2">{subtitle[mode]}</p>

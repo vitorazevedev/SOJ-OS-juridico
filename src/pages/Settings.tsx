@@ -6,8 +6,9 @@ import { PlanTab } from "@/components/settings/PlanTab";
 import { ProfileTab } from "@/components/settings/ProfileTab";
 import { NotificationsTab } from "@/components/settings/NotificationsTab";
 import { PrivacyTab } from "@/components/settings/PrivacyTab";
+import { PersonalizeTab } from "@/components/settings/PersonalizeTab";
 
-const VALID_TABS = ["organization", "users", "plan", "profile", "notifications", "privacy"];
+const VALID_TABS = ["organization", "users", "plan", "profile", "notifications", "personalize", "privacy"];
 
 export default function Settings() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -34,6 +35,7 @@ export default function Settings() {
           <TabsTrigger value="plan">Plano</TabsTrigger>
           <TabsTrigger value="profile">Meu Perfil</TabsTrigger>
           <TabsTrigger value="notifications">Notificações</TabsTrigger>
+          <TabsTrigger value="personalize">Personalizar</TabsTrigger>
           <TabsTrigger value="privacy">Privacidade e Dados</TabsTrigger>
         </TabsList>
 
@@ -55,6 +57,10 @@ export default function Settings() {
 
         <TabsContent value="notifications">
           <NotificationsTab />
+        </TabsContent>
+
+        <TabsContent value="personalize">
+          <PersonalizeTab />
         </TabsContent>
 
         <TabsContent value="privacy">

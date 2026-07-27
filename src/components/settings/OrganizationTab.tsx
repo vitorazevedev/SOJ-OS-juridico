@@ -18,7 +18,7 @@ const orgSchema = z.object({
 type OrgErrors = Partial<Record<"name" | "cnpj" | "sector", string>>;
 
 const inputCls =
-  "w-full rounded-[10px] border bg-[rgba(255,255,255,0.05)] border-[rgba(255,255,255,0.1)] text-foreground focus:outline-none focus:border-[rgba(0,229,160,0.6)] transition-colors";
+  "w-full rounded-[10px] border bg-muted/40 border-border text-foreground focus:outline-none focus:border-primary/60 transition-colors";
 
 export function OrganizationTab() {
   const { org, loading, logoUrl, updateOrg, uploadLogo, removeLogo } = useOrganization();

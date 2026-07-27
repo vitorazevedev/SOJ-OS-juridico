@@ -94,12 +94,10 @@ export function TemplateStep({
             <button
               key={t.id}
               onClick={() => onSelect(t.id)}
-              className="text-left rounded-xl border transition-all active:opacity-80 p-4 md:p-5"
-              style={
-                active
-                  ? { borderColor: "rgba(0,229,160,0.35)", background: "rgba(0,229,160,0.08)" }
-                  : { borderColor: "hsl(var(--border))", background: "hsl(var(--card))" }
-              }
+              className={cn(
+                "text-left rounded-xl border transition-all active:opacity-80 p-4 md:p-5",
+                active ? "border-primary/35 bg-primary-dim" : "border-border bg-card",
+              )}
             >
               <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider mb-1">{t.id}</p>
               <p className="font-medium text-[13px] md:text-sm mb-1">{t.titulo}</p>

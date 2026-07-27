@@ -7,9 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Loader2, ShieldCheck, AlertCircle } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const [ready, setReady] = useState(false);
   const [linkInvalid, setLinkInvalid] = useState(false);
   const [password, setPassword] = useState("");
@@ -113,7 +115,11 @@ export default function ResetPassword() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-md">
         <div className="flex flex-col items-center mb-8">
-          <img src="/ponderum-icon-white.png" alt="Ponderum" className="h-12 w-12 mb-3 object-contain" />
+          <img
+            src={theme === "light" ? "/ponderum-icon-dark.png" : "/ponderum-icon-white.png"}
+            alt="Ponderum"
+            className="h-12 w-12 mb-3 object-contain"
+          />
           <h1 className="text-2xl font-semibold tracking-tight">Redefinir senha</h1>
           <p className="text-xs text-muted-foreground tracking-wide mt-1">Ponderum · Inteligência contratual</p>
         </div>

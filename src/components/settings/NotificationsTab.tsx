@@ -2,6 +2,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { SojCard } from "@/components/layout/Primitives";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { Bell } from "lucide-react";
 
@@ -22,33 +23,6 @@ const DEFAULT_PREFS: NotifPrefs = {
   alert_0: true,
   contracts_summary: false,
 };
-
-function Toggle({
-  checked,
-  onChange,
-  disabled,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      disabled={disabled}
-      onClick={() => onChange(!checked)}
-      className="relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors disabled:cursor-not-allowed disabled:opacity-40"
-      style={{ background: checked ? "#00e5a0" : "rgba(255,255,255,0.1)" }}
-    >
-      <span
-        className="pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg transition-transform"
-        style={{ transform: checked ? "translateX(20px)" : "translateX(0)" }}
-      />
-    </button>
-  );
-}
 
 function Row({
   label,
@@ -71,7 +45,7 @@ function Row({
           <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
         )}
       </div>
-      <Toggle checked={checked} onChange={onChange} disabled={disabled} />
+      <Switch checked={checked} onCheckedChange={onChange} disabled={disabled} />
     </div>
   );
 }

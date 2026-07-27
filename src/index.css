@@ -61,6 +61,28 @@
     --sidebar-border: 216 40% 17%;
     --sidebar-ring: 172 61% 47%;
   }
+
+  /* Modo claro — mesma paleta Ponderum, sidebar permanece escura nos dois temas
+     (elemento fixo de identidade visual). primary, teal, risk-*, destructive,
+     info e sidebar-* não são redeclarados aqui: mantêm o mesmo valor nos dois temas. */
+  :root.light {
+    --background: 216 20% 96%;
+    --foreground: 216 60% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 216 60% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 216 60% 10%;
+    --secondary: 216 20% 93%;
+    --secondary-foreground: 216 60% 15%;
+    --muted: 216 20% 93%;
+    --accent: 216 20% 91%;
+    --accent-foreground: 216 60% 10%;
+    --border: 216 20% 88%;
+    --input: 216 20% 88%;
+    --text-1: 216 60% 10%;
+    --text-2: 216 20% 35%;
+    --text-3: 216 15% 50%;
+  }
 }
 
 @layer base {

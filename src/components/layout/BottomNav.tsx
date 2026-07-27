@@ -23,10 +23,8 @@ export default function BottomNav() {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-stretch"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-stretch bg-sidebar-background border-t border-sidebar-border"
       style={{
-        background: "#0a0d1a",
-        borderTop: "1px solid rgba(255,255,255,0.07)",
         height: "calc(72px + env(safe-area-inset-bottom))",
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
@@ -42,28 +40,24 @@ export default function BottomNav() {
           {({ isActive }) => (
             <>
               {isActive && (
-                <span
-                  className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full"
-                  style={{ background: "#00e5a0" }}
-                />
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 h-0.5 w-8 rounded-full bg-sidebar-primary" />
               )}
               <div className="relative">
                 <Icon
-                  className="h-5 w-5"
-                  style={{ color: isActive ? "#00e5a0" : "rgba(255,255,255,0.35)" }}
+                  className={cn("h-5 w-5", isActive ? "text-sidebar-primary" : "text-sidebar-foreground/50")}
                 />
                 {badge && urgentCount > 0 && (
-                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-[#ff3b30] text-white text-[9px] font-bold flex items-center justify-center leading-none">
+                  <span className="absolute -top-1.5 -right-2 min-w-[16px] h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center leading-none">
                     {urgentCount}
                   </span>
                 )}
               </div>
               <span
-                className={cn("uppercase font-semibold tracking-wide leading-none")}
-                style={{
-                  fontSize: 9,
-                  color: isActive ? "#00e5a0" : "rgba(255,255,255,0.35)",
-                }}
+                className={cn(
+                  "uppercase font-semibold tracking-wide leading-none",
+                  isActive ? "text-sidebar-primary" : "text-sidebar-foreground/50",
+                )}
+                style={{ fontSize: 9 }}
               >
                 {label}
               </span>

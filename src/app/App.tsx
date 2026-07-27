@@ -10,6 +10,7 @@ import { AuthProvider } from "@/features/auth/components/AuthProvider";
 import ProtectedRoute from "@/features/auth/components/ProtectedRoute";
 import AppLayout from "@/components/layout/AppLayout";
 import { queryClient } from "@/lib/query-client";
+import { ThemeProvider } from "@/hooks/useTheme";
 
 const Login = lazy(() => import("@/pages/Login"));
 const Termos = lazy(() => import("@/pages/Termos"));
@@ -40,6 +41,7 @@ export default function App() {
         <Sonner />
         <BrowserRouter>
           <AuthProvider>
+           <ThemeProvider>
             <Suspense fallback={<PageLoader />}>
               <Routes>
                 <Route path="/login" element={<Login />} />
@@ -66,6 +68,7 @@ export default function App() {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
+           </ThemeProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>
