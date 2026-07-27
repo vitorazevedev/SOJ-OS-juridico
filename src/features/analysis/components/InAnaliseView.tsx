@@ -1,9 +1,19 @@
+import { useState } from "react";
 import { CheckCircle2, FileText, Info, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SojCard } from "@/components/layout/Primitives";
 import { ParsedDataSummary } from "@/features/contracts/components/ParsedDataSummary";
 import { fmtBytes, fmtDate } from "@/lib/analysisFormat";
 import type { FullContract, ContractContent } from "@/hooks/useContractAnalysis";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 export function InAnaliseView({
   contract,
@@ -17,9 +27,29 @@ export function InAnaliseView({
   content: ContractContent | null;
   tab: "info" | "texto";
   setTab: (t: "info" | "texto") => void;
-  onAnalyze: () => void;
+  onAnalyze: (parteRepresentada?: string) => void;
   analyzing: boolean;
 }) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedParty, setSelectedParty] = useState("");
+
+  const parties = Array.from(
+    new Set((contract.parsed_data?.parties ?? []).map((p) => p.trim()).filter(Boolean))
+  );
+
+  const handleAnalyzeClick = () => {
+    if (parties.length > 0) {
+      setDialogOpen(true);
+    } else {
+      onAnalyze();
+    }
+  };
+
+  const handleConfirmParty = () => {
+    onAnalyze(selectedParty || undefined);
+    setDialogOpen(false);
+  };
+
   return (
     <>
       <div className="rounded-lg border border-primary/30 bg-primary-dim px-4 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3">
@@ -42,7 +72,7 @@ export function InAnaliseView({
           </div>
         </div>
         <button
-          onClick={onAnalyze}
+          onClick={handleAnalyzeClick}
           disabled={analyzing}
           className="shrink-0 inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-60 transition-opacity"
         >
@@ -50,6 +80,45 @@ export function InAnaliseView({
           {analyzing ? "Analisando..." : "Analisar Contrato"}
         </button>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Qual parte você representa?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground -mt-2">
+            Isso ajuda a IA a avaliar o desequilíbrio das cláusulas a partir do seu lado do contrato.
+          </p>
+          <RadioGroup value={selectedParty} onValueChange={setSelectedParty} className="gap-3 py-2">
+            {parties.map((party) => (
+              <div key={party} className="flex items-center gap-2">
+                <RadioGroupItem value={party} id={`party-${party}`} />
+                <Label htmlFor={`party-${party}`} className="font-normal cursor-pointer">{party}</Label>
+              </div>
+            ))}
+            <div className="flex items-center gap-2">
+              <RadioGroupItem value="" id="party-none" />
+              <Label htmlFor="party-none" className="font-normal cursor-pointer text-muted-foreground">
+                Prefiro não informar agora
+              </Label>
+            </div>
+          </RadioGroup>
+          <DialogFooter>
+            <button
+              onClick={() => setDialogOpen(false)}
+              className="h-9 px-4 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleConfirmParty}
+              className="h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
+            >
+              Confirmar e Analisar
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className="flex gap-1 border-b border-border -mx-0 md:gap-0">
         {([["info", "Informações"], ["texto", "Texto Completo"]] as const).map(([id, label]) => (

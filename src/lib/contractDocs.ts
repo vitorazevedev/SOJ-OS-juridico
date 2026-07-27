@@ -12,6 +12,7 @@ import {
 } from "docx";
 import { jsPDF } from "jspdf";
 import type { ContractSections } from "@/lib/contractSections";
+import { resolvedIndex, gravidadeFaixa, POLARIDADE_CALIBRADA } from "@/lib/analysisFormat";
 
 export type LogoData = {
   bytes: Uint8Array;
@@ -261,8 +262,17 @@ export function generatePdfFromText(text: string, logo?: LogoData | null): Blob 
 
 export type AnalysisPdfData = {
   contract: { name: string; party: string | null; type: string | null; created_at: string };
-  analysis: { risk_score: number | null; summary: string | null; financial_total: number | null; analyzed_at: string | null };
-  clauses: { title: string; severity: string; category: string | null; original_text: string | null; suggestion: string | null; exposure_likely: number | null }[];
+  analysis: { risk_score: number | null; indice_desequilibrio: number | null; parte_representada: string | null; summary: string | null; financial_total: number | null; analyzed_at: string | null };
+  clauses: {
+    title: string; severity: string; category: string | null; original_text: string | null;
+    suggestion: string | null; exposure_likely: number | null;
+    gravidade: number | null;
+    ancoras: { gravidade_referencia: number | null; titulo: string | null } | null;
+    polaridade_parte_representada: number | null;
+    score_simetria: number | null; score_valor_exposto: number | null;
+    score_prazo_reversibilidade: number | null; score_foro_execucao: number | null;
+    conclusao: string | null; impacto_identificado: string[] | null; mitigacao: string | null;
+  }[];
 };
 
 // ── Paleta para PDFs de relatório (tema claro — otimizado para impressão) ──
@@ -375,7 +385,8 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
   const ph  = pdf.internal.pageSize.getHeight();
 
-  const score   = analysis.risk_score ?? 0;
+  const { value: resolvedScore, legacy: isLegacyIndex } = resolvedIndex(analysis);
+  const score   = resolvedScore ?? 0;
   const sevRgb: [number,number,number] = score >= 70 ? [220, 38, 38] : score >= 40 ? [234, 88, 12] : score >= 20 ? [202, 138, 4] : [6, 113, 115];
   const sevLabel = score >= 70 ? "CRÍTICO" : score >= 40 ? "ALTO" : score >= 20 ? "MÉDIO" : "BAIXO";
 
@@ -447,7 +458,14 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
     sectionHeader(`Cláusulas Identificadas  (${clauses.length})`);
 
     clauses.forEach((cl, idx) => {
-      const sev = SEV_RGB[cl.severity] ?? ([100, 100, 100] as [number,number,number]);
+      const zona = cl.gravidade != null ? gravidadeFaixa(cl.gravidade) : null;
+      const zonaRgb: [number, number, number] = zona
+        ? (zona.zone === "critico" ? [220, 38, 38] : zona.zone === "atencao" ? [202, 138, 4] : [22, 163, 74])
+        : (SEV_RGB[cl.severity] ?? [100, 100, 100]);
+      const zonaLabel = zona
+        ? (zona.zone === "critico" ? "CRÍTICO" : zona.zone === "atencao" ? "ATENÇÃO" : "EQUILIBRADO")
+        : (SEV_LABEL[cl.severity] ?? cl.severity.toUpperCase());
+      const sev = zonaRgb;
       const hasExp = cl.exposure_likely != null;
       const titleW = cw - 35 - (hasExp ? 32 : 5);
       const titleLines = (pdf.splitTextToSize(cl.title, titleW) as string[]).slice(0, 2);
@@ -463,7 +481,7 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
       pdf.setFillColor(...sev);
       pdf.rect(ml, y, 3, hdrH, "F");
       pdf.setFont("helvetica", "bold"); pdf.setFontSize(8.5); pdf.setTextColor(...sev);
-      pdf.text(`${idx + 1}. ${SEV_LABEL[cl.severity] ?? cl.severity.toUpperCase()}`, ml + 6, y + 6.5);
+      pdf.text(`${idx + 1}. ${zonaLabel}`, ml + 6, y + 6.5);
       pdf.setFont("helvetica", "normal"); pdf.setTextColor(...PC.navy);
       titleLines.forEach((l, i) => pdf.text(l, ml + 34, y + 6.5 + i * 5));
       if (hasExp) {
@@ -471,6 +489,37 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
         pdf.text(fmtBRLPdf(cl.exposure_likely), ml + cw - 3, y + 6.5, { align: "right" });
       }
       y += hdrH + 7;
+
+      // Índice / seu padrão / desvio
+      if (cl.gravidade != null && cl.ancoras?.gravidade_referencia != null) {
+        check(6);
+        const desvio = cl.gravidade - cl.ancoras.gravidade_referencia;
+        pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor(...PC.mid);
+        pdf.text(
+          `Índice: ${cl.gravidade.toFixed(0)}  ·  Seu padrão: ${cl.ancoras.gravidade_referencia.toFixed(0)}  ·  Desvio: ${desvio >= 0 ? "+" : ""}${desvio.toFixed(0)}`,
+          ml + 6, y
+        );
+        y += 5;
+      }
+
+      // Polaridade
+      if (cl.polaridade_parte_representada != null) {
+        check(6);
+        const voce = cl.polaridade_parte_representada;
+        const contraparte = 100 - voce;
+        pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor(...PC.navy);
+        const txt = `A cláusula pende ${voce.toFixed(0)}% para você e ${contraparte.toFixed(0)}% para a contraparte.`
+          + (!POLARIDADE_CALIBRADA ? "  (Pré-calibração)" : "");
+        pdf.text(txt, ml + 6, y);
+        y += 5;
+      }
+
+      // Conclusão
+      if (cl.conclusao) {
+        check(8);
+        writeTxt(cl.conclusao, 8.5, true, PC.navy, cw - 10);
+        y += 2;
+      }
 
       // Original
       if (cl.original_text) {
@@ -484,6 +533,28 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
         y += 12; // 7mm faixa + 5mm de respiro antes do texto
         writeTxt(cl.original_text, 8.5, false, [60, 60, 60], cw - 10);
         y += 4;
+      }
+
+      // Impacto identificado
+      if (cl.impacto_identificado && cl.impacto_identificado.length > 0) {
+        check(8);
+        pdf.setFont("helvetica", "bold"); pdf.setFontSize(7.5); pdf.setTextColor(...PC.mid);
+        pdf.text("IMPACTO IDENTIFICADO", ml + 6, y);
+        y += 4.5;
+        cl.impacto_identificado.forEach((item) => {
+          writeTxt(`•  ${item}`, 8.5, false, [60, 60, 60], cw - 12);
+        });
+        y += 2;
+      }
+
+      // Mitigação
+      if (cl.mitigacao) {
+        check(8);
+        pdf.setFont("helvetica", "bold"); pdf.setFontSize(7.5); pdf.setTextColor(...PC.mid);
+        pdf.text("POSSÍVEL MITIGAÇÃO", ml + 6, y);
+        y += 4.5;
+        writeTxt(cl.mitigacao, 8.5, false, [60, 60, 60], cw - 10);
+        y += 2;
       }
 
       // Sugestão
@@ -502,7 +573,12 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
     });
   }
 
-  drawReportFooters(pdf, "Ponderum · Relatório de Análise Contratual");
+  drawReportFooters(
+    pdf,
+    isLegacyIndex
+      ? "Ponderum · Relatório de Análise Contratual · cálculo legado"
+      : "Ponderum · Relatório de Análise Contratual",
+  );
   return new Blob([pdf.output("arraybuffer")], { type: PDF_MIME });
 }
 

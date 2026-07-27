@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { SojCard, RiskBadge } from "@/components/layout/Primitives";
+import { resolvedIndex } from "@/lib/analysisFormat";
 import { ContractParseStatus, contractStatusLabel } from "@/features/contracts/components/ContractParseStatus";
 import { ArrowUp, ArrowUpDown, ArrowUpRight, ArrowDown, FileText, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -106,8 +107,8 @@ export function ContractsList({
               </div>
               <div className="flex flex-col items-end gap-1 shrink-0">
                 <span className="text-[10px] text-muted-foreground">{formatDate(c.created_at)}</span>
-                {c.status === "analisado" && c.risk_score != null && (
-                  <RiskBadge score={c.risk_score} locked={!isStarter} />
+                {c.status === "analisado" && resolvedIndex(c).value != null && (
+                  <RiskBadge score={resolvedIndex(c).value!} locked={!isStarter} />
                 )}
               </div>
             </button>
@@ -164,8 +165,8 @@ export function ContractsList({
                       <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
                         <RefreshCw className="h-3 w-3 animate-spin" /> Processando...
                       </span>
-                    ) : c.status === "analisado" && c.risk_score != null ? (
-                      <RiskBadge score={c.risk_score} locked={!isStarter} />
+                    ) : c.status === "analisado" && resolvedIndex(c).value != null ? (
+                      <RiskBadge score={resolvedIndex(c).value!} locked={!isStarter} />
                     ) : c.status === "em_analise" ? (
                       <span className="text-xs text-muted-foreground">Aguardando IA</span>
                     ) : (

@@ -58,7 +58,7 @@ export function OrganizationsManagementList() {
     setLoading(true);
     try {
       const { data, error } = await supabase.rpc("list_staff_organizations", {
-        p_search: s.trim() || null,
+        p_search: s.trim() || undefined,
         p_page: p,
         p_page_size: PAGE_SIZE,
       });

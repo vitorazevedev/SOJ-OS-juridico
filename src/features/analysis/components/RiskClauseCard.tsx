@@ -1,13 +1,16 @@
-import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
-import { SeverityDot } from "@/components/layout/Primitives";
+import { useState } from "react";
+import { AlertTriangle, CheckCircle2, Copy, ExternalLink, Pencil } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import type { ClauseRisk } from "@/hooks/useContractAnalysis";
+import { gravidadeFaixa, POLARIDADE_CALIBRADA } from "@/lib/analysisFormat";
+import type { ClauseRisk, ReviewStatus } from "@/hooks/useContractAnalysis";
 
-const severityDimColor: Record<string, string> = {
-  critico: "bg-risk-critical-dim text-risk-critical",
-  alto: "bg-risk-high-dim text-risk-high",
-  medio: "bg-risk-medium-dim text-risk-medium",
-  baixo: "bg-risk-low-dim text-risk-low",
+const REVIEW_LABELS: Record<ReviewStatus, string> = {
+  revisado: "Revisado",
+  ajustado: "Ajustado",
+  descartado: "Descartado",
+  mantido_pelo_usuario: "Mantido pelo usuário",
 };
 
 function fmtBRL(cents: number | null) {
@@ -24,61 +27,324 @@ function fmtExposureRange(min: number | null, max: number | null, likely: number
   return fmtBRL(likely ?? max ?? min);
 }
 
-export function RiskClauseCard({
+// Linha compacta na lista de achados — clicar seleciona a cláusula pro painel
+// de detalhe ao lado (layout master-detail, Fase 5).
+export function ClauseListItem({
   clause,
-  open,
-  onToggle,
+  selected,
+  onSelect,
 }: {
   clause: ClauseRisk;
-  open: boolean;
-  onToggle: () => void;
+  selected: boolean;
+  onSelect: () => void;
 }) {
-  const dimCls = severityDimColor[clause.severity] ?? "bg-muted text-foreground";
+  const faixa = clause.gravidade != null ? gravidadeFaixa(clause.gravidade) : null;
 
   return (
-    <div>
-      <button
-        onClick={onToggle}
-        className="w-full flex items-center gap-3 px-4 md:px-5 py-3.5 md:py-4 hover:bg-muted/30 active:bg-muted/30 transition-colors text-left"
-        style={{ minHeight: 44 }}
-      >
-        <SeverityDot severity={clause.severity} />
-        <div className="flex-1 min-w-0">
-          <p className="text-[13px] md:text-sm">{clause.title}</p>
-          {clause.category && (
-            <p className="text-[10px] text-muted-foreground mt-0.5">{clause.category}</p>
-          )}
-        </div>
-        {clause.exposure_likely != null && clause.exposure_likely > 0 && (
-          <span
-            className={cn("text-[10px] md:text-xs px-2 py-1 rounded-md font-medium tabular-nums shrink-0", dimCls)}
-            title="Faixa estimada pela IA com base na cláusula identificada — não é um cálculo financeiro determinístico."
-          >
-            {fmtExposureRange(clause.exposure_min, clause.exposure_max, clause.exposure_likely)}
-          </span>
+    <button
+      onClick={onSelect}
+      className={cn(
+        "w-full flex items-start gap-3 px-4 py-3 text-left border-l-2 transition-colors",
+        selected ? "border-l-primary bg-primary-dim" : "border-l-transparent hover:bg-muted/30"
+      )}
+      style={{ minHeight: 44 }}
+    >
+      <div className="text-center shrink-0 w-10">
+        <p className={cn("text-xl font-semibold tabular-nums leading-none", faixa?.text ?? "text-foreground")}>
+          {clause.gravidade != null ? Math.round(clause.gravidade) : "—"}
+        </p>
+        <p className="text-[11px] text-muted-foreground mt-0.5">de 100</p>
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[13px] leading-snug">{clause.title}</p>
+        {clause.category && (
+          <p className="text-[11px] text-muted-foreground mt-0.5">{clause.category}</p>
         )}
-        {open ? <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />}
-      </button>
-      {open && (
-        <div className="px-4 md:px-5 pb-5 grid gap-3 animate-fade-in">
-          {clause.original_text && (
-            <div className="rounded-lg border border-risk-critical/20 bg-risk-critical-dim p-3 md:p-4">
-              <p className="text-[11px] md:text-xs font-medium text-risk-critical flex items-center gap-1.5 mb-2">
-                <AlertTriangle className="h-3.5 w-3.5" /> Original (Risco)
-              </p>
-              <p className="text-[12px] md:text-sm leading-relaxed text-foreground/90">{clause.original_text}</p>
-            </div>
+        <div className="flex items-center gap-1.5 mt-1">
+          {faixa && (
+            <span className={cn("inline-flex items-center gap-1 text-[11px] font-medium", faixa.text)}>
+              {faixa.label}
+            </span>
           )}
-          {clause.suggestion && (
-            <div className="rounded-lg border border-primary/20 bg-primary-dim p-3 md:p-4">
-              <p className="text-[11px] md:text-xs font-medium text-primary flex items-center gap-1.5 mb-2">
-                <CheckCircle2 className="h-3.5 w-3.5" /> Sugestão
-              </p>
-              <p className="text-[12px] md:text-sm leading-relaxed text-foreground/90">{clause.suggestion}</p>
-            </div>
+          <span className="text-[11px] text-muted-foreground">
+            · {clause.review_status ? REVIEW_LABELS[clause.review_status] : "Não revisado"}
+          </span>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// Painel de detalhe fixo pra cláusula selecionada — sem toggle, sempre visível
+// (coluna direita do layout master-detail, Fase 5).
+export function ClauseDetailPanel({
+  clause,
+  onViewInContract,
+  updateClauseReview,
+  updateClauseSuggestion,
+}: {
+  clause: ClauseRisk;
+  onViewInContract: () => void;
+  updateClauseReview: (clauseId: string, status: ReviewStatus) => Promise<void>;
+  updateClauseSuggestion: (clauseId: string, suggestion: string) => Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draftSuggestion, setDraftSuggestion] = useState(clause.suggestion ?? "");
+  const [copied, setCopied] = useState(false);
+
+  const gravidade = clause.gravidade;
+  const faixa = gravidade != null ? gravidadeFaixa(gravidade) : null;
+  const padrao = clause.ancoras?.gravidade_referencia ?? null;
+  const desvio = gravidade != null && padrao != null ? Math.round((gravidade - padrao) * 10) / 10 : null;
+
+  const handleCopy = async () => {
+    if (!clause.suggestion) return;
+    await navigator.clipboard.writeText(clause.suggestion);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  const handleSaveSuggestion = async () => {
+    await updateClauseSuggestion(clause.id, draftSuggestion);
+    setEditing(false);
+  };
+
+  return (
+    <div className="grid gap-3 p-4 md:p-5">
+      <div>
+        <p className="text-[12px] text-muted-foreground uppercase tracking-wider">
+          {clause.category ?? "Cláusula"}
+        </p>
+        <h3 className="text-lg md:text-xl font-medium mt-0.5">{clause.title}</h3>
+      </div>
+
+      {faixa && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[13px] font-medium", faixa.bg, faixa.text)}>
+            {faixa.label}
+          </span>
+          <span className="text-[13px] text-muted-foreground">Índice {Math.round(gravidade!)} de 100</span>
+          {desvio != null && (
+            <span className="text-[13px] text-muted-foreground">
+              {desvio >= 0 ? "+" : ""}{desvio} pontos vs seu padrão
+            </span>
           )}
+          <span className="text-[11px] text-muted-foreground">
+            {clause.review_status ? REVIEW_LABELS[clause.review_status] : "Ainda não revisado"}
+          </span>
         </div>
       )}
+
+      {gravidade != null && (
+        <div className="rounded-lg border border-border p-3 md:p-4">
+          <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Índice de Desequilíbrio</p>
+          <div className="grid grid-cols-3 gap-2 text-center mb-2">
+            <div>
+              <p className="text-[11px] text-muted-foreground">Leitura desta cláusula</p>
+              <p className="text-xl font-semibold tabular-nums">{Math.round(gravidade)}</p>
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground">Seu padrão para esta cláusula</p>
+              <p className="text-xl font-semibold tabular-nums">{padrao != null ? Math.round(padrao) : "—"}</p>
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground">Desvio</p>
+              <p className="text-xl font-semibold tabular-nums">{desvio != null ? `${desvio >= 0 ? "+" : ""}${desvio}` : "—"}</p>
+            </div>
+          </div>
+          {padrao == null && (
+            <p className="text-[11px] text-muted-foreground/70 mb-2">Sem padrão de referência para esta cláusula.</p>
+          )}
+          {clause.polaridade_parte_representada != null && (() => {
+            const voce = clause.polaridade_parte_representada!;
+            const contraparte = 100 - voce;
+            const zonaCor = gravidadeFaixa(Math.max(voce, contraparte)).dot;
+            return (
+              <div>
+                <p className="text-[12px] md:text-[13px] text-foreground/90">
+                  A cláusula pende <span className="font-semibold">{Math.round(voce)}%</span> para você e{" "}
+                  <span className="font-semibold">{Math.round(contraparte)}%</span> para a contraparte.
+                  {!POLARIDADE_CALIBRADA && (
+                    <span className="ml-1.5 text-[11px] text-muted-foreground/70">(Pré-calibração)</span>
+                  )}
+                </p>
+
+                <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-2.5 mb-1.5">
+                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-risk-low shrink-0" /> Equilibrado · 0 a 34</span>
+                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-risk-medium shrink-0" /> Atenção · 35 a 64</span>
+                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-risk-critical shrink-0" /> Crítico · 65 a 100</span>
+                </div>
+
+                <div className="flex items-center gap-1.5">
+                  <div className="flex-1 h-2 rounded-l-full bg-muted flex justify-end overflow-hidden">
+                    <div className={cn("h-full", zonaCor)} style={{ width: `${voce}%` }} />
+                  </div>
+                  <div className="flex-1 h-2 rounded-r-full bg-muted overflow-hidden">
+                    <div className={cn("h-full", zonaCor)} style={{ width: `${contraparte}%` }} />
+                  </div>
+                </div>
+                <div className="flex text-[11px] text-muted-foreground/70 mt-1 tabular-nums">
+                  <div className="flex-1 flex justify-between">
+                    {[100, 75, 50, 25, 0].map((t) => <span key={`v${t}`}>{t}</span>)}
+                  </div>
+                  <div className="w-1.5" />
+                  <div className="flex-1 flex justify-between">
+                    {[0, 25, 50, 75, 100].map((t) => <span key={`c${t}`}>{t}</span>)}
+                  </div>
+                </div>
+                <div className="flex justify-between text-[11px] font-medium text-muted-foreground mt-0.5">
+                  <span>VOCÊ</span>
+                  <span>CONTRAPARTE</span>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {clause.conclusao && (
+        <div className="rounded-lg bg-muted/40 p-3 md:p-4">
+          <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Conclusão</p>
+          <p className="text-[13px] md:text-sm leading-relaxed text-foreground/90">{clause.conclusao}</p>
+        </div>
+      )}
+
+      {clause.original_text && (
+        <div className="rounded-lg border border-risk-critical/20 bg-risk-critical-dim p-3 md:p-4">
+          <p className="text-[12px] md:text-[13px] font-medium text-risk-critical flex items-center gap-1.5 mb-2">
+            <AlertTriangle className="h-3.5 w-3.5" /> Original (Risco)
+          </p>
+          <p className="text-[13px] md:text-sm leading-relaxed text-foreground/90">{clause.original_text}</p>
+        </div>
+      )}
+
+      {clause.impacto_identificado && clause.impacto_identificado.length > 0 && (
+        <div className="rounded-lg bg-muted/40 p-3 md:p-4">
+          <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Impacto identificado</p>
+          <ul className="list-disc list-inside space-y-1">
+            {clause.impacto_identificado.map((item, i) => (
+              <li key={i} className="text-[13px] md:text-sm text-foreground/90">{item}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {clause.exposure_likely != null && clause.exposure_likely > 0 && (
+        <div className="rounded-lg bg-muted/40 p-3 md:p-4">
+          <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Exposição estimada</p>
+          <p className="text-xl font-semibold tabular-nums">
+            {fmtExposureRange(clause.exposure_min, clause.exposure_max, clause.exposure_likely)}
+          </p>
+        </div>
+      )}
+
+      {clause.mitigacao && (
+        <div className="rounded-lg bg-muted/40 p-3 md:p-4">
+          <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Possível mitigação</p>
+          <p className="text-[13px] md:text-sm text-foreground/90">{clause.mitigacao}</p>
+        </div>
+      )}
+
+      {editing ? (
+        <div className="rounded-lg border border-primary/20 bg-primary-dim p-3 md:p-4 grid gap-2">
+          <p className="text-[12px] md:text-[13px] font-medium text-primary flex items-center gap-1.5">
+            <CheckCircle2 className="h-3.5 w-3.5" /> Sugestão de redação
+          </p>
+          <Textarea
+            value={draftSuggestion}
+            onChange={(e) => setDraftSuggestion(e.target.value)}
+            className="text-[13px] md:text-sm bg-background"
+            rows={4}
+          />
+          <div className="flex gap-2 justify-end">
+            <button
+              onClick={() => { setDraftSuggestion(clause.suggestion ?? ""); setEditing(false); }}
+              className="h-8 px-3 rounded-lg text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSaveSuggestion}
+              className="h-8 px-3 rounded-lg bg-primary text-primary-foreground text-[13px] font-medium hover:opacity-90 transition-opacity"
+            >
+              Salvar
+            </button>
+          </div>
+        </div>
+      ) : (
+        clause.suggestion && (
+          <div className="rounded-lg border border-primary/20 bg-primary-dim p-3 md:p-4">
+            <p className="text-[12px] md:text-[13px] font-medium text-primary flex items-center gap-1.5 mb-2">
+              <CheckCircle2 className="h-3.5 w-3.5" /> Sugestão de redação
+            </p>
+            <p className="text-[13px] md:text-sm leading-relaxed text-foreground/90">{clause.suggestion}</p>
+          </div>
+        )
+      )}
+
+      {gravidade != null && (clause.score_simetria != null || clause.score_valor_exposto != null) && (
+        <details className="rounded-lg border border-border p-3 md:p-4">
+          <summary className="text-[12px] md:text-[13px] font-medium cursor-pointer text-foreground/90">
+            Entenda como o índice foi calculado
+          </summary>
+          <div className="grid gap-2.5 mt-3">
+            {([
+              ["Simetria entre as partes", clause.score_simetria, 40],
+              ["Valor exposto", clause.score_valor_exposto, 30],
+              ["Prazo e reversibilidade", clause.score_prazo_reversibilidade, 20],
+              ["Foro e execução", clause.score_foro_execucao, 10],
+            ] as const).map(([label, value, max]) => (
+              <div key={label}>
+                <div className="flex justify-between text-[12px] mb-1">
+                  <span className="text-muted-foreground">{label}</span>
+                  <span className="tabular-nums font-medium">{value != null ? Math.round(value) : 0}/{max}</span>
+                </div>
+                <Progress value={value != null ? (value / max) * 100 : 0} className="h-1.5" />
+              </div>
+            ))}
+          </div>
+        </details>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2 pt-1">
+        {clause.suggestion && !editing && (
+          <button
+            onClick={handleCopy}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border text-[13px] text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+          >
+            <Copy className="h-3.5 w-3.5" /> {copied ? "Copiado!" : "Copiar sugestão"}
+          </button>
+        )}
+        {!editing && (
+          <button
+            onClick={() => setEditing(true)}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border text-[13px] text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+          >
+            <Pencil className="h-3.5 w-3.5" /> Editar redação
+          </button>
+        )}
+        <button
+          onClick={onViewInContract}
+          className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border text-[13px] text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+        >
+          <ExternalLink className="h-3.5 w-3.5" /> Ver no contrato
+        </button>
+        <div className="flex-1" />
+        {(["revisado", "ajustado", "descartado", "mantido_pelo_usuario"] as const).map((status) => (
+          <button
+            key={status}
+            onClick={() => updateClauseReview(clause.id, status)}
+            className={cn(
+              "h-8 px-3 rounded-lg text-[13px] font-medium transition-colors",
+              clause.review_status === status
+                ? "bg-primary text-primary-foreground"
+                : "border border-border text-muted-foreground hover:text-foreground hover:bg-muted/40"
+            )}
+          >
+            {REVIEW_LABELS[status]}
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import type { DbContract } from "@/hooks/useContracts";
+import { resolvedIndex } from "@/lib/analysisFormat";
 
 export type SortField = "name" | "created_at" | "risk_score";
 export type SortDir = "asc" | "desc";
@@ -31,7 +32,7 @@ export function applySort(list: DbContract[], field: SortField, dir: SortDir): D
     } else if (field === "created_at") {
       cmp = a.created_at.localeCompare(b.created_at);
     } else if (field === "risk_score") {
-      cmp = (a.risk_score ?? -1) - (b.risk_score ?? -1);
+      cmp = (resolvedIndex(a).value ?? -1) - (resolvedIndex(b).value ?? -1);
     }
     return dir === "asc" ? cmp : -cmp;
   });

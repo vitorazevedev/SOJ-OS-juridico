@@ -49,7 +49,7 @@ export default function Analysis() {
 
 function AnalysisView({ id }: { id: string }) {
   const navigate = useNavigate();
-  const { contract, content, analysis, clauses, loading, notFound, refetch, triggerAnalysis, saveContractValue } = useContractAnalysis(id);
+  const { contract, content, analysis, clauses, loading, notFound, refetch, triggerAnalysis, saveContractValue, updateClauseReview, updateClauseSuggestion } = useContractAnalysis(id);
   const { indexes } = useEconomicIndexes();
 
   const [inAnaliseTab, setInAnaliseTab] = useState<"info" | "texto">("info");
@@ -57,9 +57,9 @@ function AnalysisView({ id }: { id: string }) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
 
-  const handleAnalyze = async () => {
+  const handleAnalyze = async (parteRepresentada?: string) => {
     setAnalyzing(true);
-    const { error } = await triggerAnalysis();
+    const { error } = await triggerAnalysis(parteRepresentada);
     setAnalyzing(false);
     if (error) {
       const { toast } = await import("sonner");
@@ -169,6 +169,8 @@ function AnalysisView({ id }: { id: string }) {
           setExpanded={setExpanded}
           indexes={indexes}
           saveContractValue={saveContractValue}
+          updateClauseReview={updateClauseReview}
+          updateClauseSuggestion={updateClauseSuggestion}
         />
       )}
 

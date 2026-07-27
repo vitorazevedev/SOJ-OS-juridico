@@ -43,7 +43,11 @@ export type ContractAnalysis = {
   summary: string | null;
   financial_total: number | null;
   analyzed_at: string | null;
+  indice_desequilibrio: number | null;
+  parte_representada: string | null;
 };
+
+export type ReviewStatus = "revisado" | "ajustado" | "descartado" | "mantido_pelo_usuario";
 
 export type ClauseRisk = {
   id: string;
@@ -56,6 +60,22 @@ export type ClauseRisk = {
   exposure_min: number | null;
   exposure_max: number | null;
   sort_order: number;
+  gravidade: number | null;
+  ancora_id: string | null;
+  onera_parte_representada: boolean | null;
+  justificativa_gravidade: string | null;
+  confianca: string | null;
+  polaridade_parte_representada: number | null;
+  score_simetria: number | null;
+  score_valor_exposto: number | null;
+  score_prazo_reversibilidade: number | null;
+  score_foro_execucao: number | null;
+  conclusao: string | null;
+  impacto_identificado: string[] | null;
+  mitigacao: string | null;
+  review_status: ReviewStatus | null;
+  reviewed_at: string | null;
+  ancoras: { gravidade_referencia: number | null; titulo: string | null } | null;
 };
 
 export function useContractAnalysis(contractId: string | undefined) {
@@ -81,8 +101,8 @@ export function useContractAnalysis(contractId: string | undefined) {
         .eq("contract_id", contractId)
         .maybeSingle(),
       supabase
-        .from("contract_analyses")
-        .select("id,risk_score,status,summary,financial_total,analyzed_at")
+        .from("contract_analyses_gated")
+        .select("id,risk_score,status,summary,financial_total,analyzed_at,indice_desequilibrio,parte_representada")
         .eq("contract_id", contractId)
         .maybeSingle(),
     ]);
@@ -96,7 +116,7 @@ export function useContractAnalysis(contractId: string | undefined) {
     if (anal?.id) {
       const { data: clauseData } = await supabase
         .from("clause_risks")
-        .select("id,title,severity,category,original_text,suggestion,exposure_likely,exposure_min,exposure_max,sort_order")
+        .select("id,title,severity,category,original_text,suggestion,exposure_likely,exposure_min,exposure_max,sort_order,gravidade,ancora_id,onera_parte_representada,justificativa_gravidade,confianca,polaridade_parte_representada,score_simetria,score_valor_exposto,score_prazo_reversibilidade,score_foro_execucao,conclusao,impacto_identificado,mitigacao,review_status,reviewed_at,ancoras(gravidade_referencia,titulo)")
         .eq("analysis_id", anal.id)
         .order("sort_order", { ascending: true });
       setClauses((clauseData ?? []) as ClauseRisk[]);
@@ -116,10 +136,10 @@ export function useContractAnalysis(contractId: string | undefined) {
     return () => { supabase.removeChannel(ch); };
   }, [contractId, fetchAll]);
 
-  const triggerAnalysis = useCallback(async (): Promise<{ error?: string }> => {
+  const triggerAnalysis = useCallback(async (parteRepresentada?: string): Promise<{ error?: string }> => {
     if (!contractId) return { error: 'No contract ID' };
     const { error } = await supabase.functions.invoke('analyze-contract', {
-      body: { contract_id: contractId },
+      body: { contract_id: contractId, ...(parteRepresentada ? { parte_representada: parteRepresentada } : {}) },
     });
     if (error) {
       // FunctionsHttpError.message is a generic "non-2xx status code" string —
@@ -140,6 +160,22 @@ export function useContractAnalysis(contractId: string | undefined) {
     return {};
   }, [contractId, fetchAll]);
 
+  const updateClauseReview = useCallback(async (clauseId: string, status: ReviewStatus): Promise<void> => {
+    await supabase
+      .from("clause_risks")
+      .update({ review_status: status, reviewed_at: new Date().toISOString() })
+      .eq("id", clauseId);
+    await fetchAll();
+  }, [fetchAll]);
+
+  const updateClauseSuggestion = useCallback(async (clauseId: string, suggestion: string): Promise<void> => {
+    await supabase
+      .from("clause_risks")
+      .update({ suggestion })
+      .eq("id", clauseId);
+    await fetchAll();
+  }, [fetchAll]);
+
   const saveContractValue = useCallback(async (valueBRL: number): Promise<void> => {
     if (!contractId) return;
     await supabase
@@ -149,5 +185,5 @@ export function useContractAnalysis(contractId: string | undefined) {
     await fetchAll();
   }, [contractId, fetchAll]);
 
-  return { contract, content, analysis, clauses, loading, notFound, refetch: fetchAll, triggerAnalysis, saveContractValue };
+  return { contract, content, analysis, clauses, loading, notFound, refetch: fetchAll, triggerAnalysis, saveContractValue, updateClauseReview, updateClauseSuggestion };
 }

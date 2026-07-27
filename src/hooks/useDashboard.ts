@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
+import { resolvedIndex } from "@/lib/analysisFormat";
 
 export type DashboardSummary = {
   total_contracts: number;
@@ -17,6 +18,7 @@ export type RecentContract = {
   status: string;
   created_at: string;
   risk_score: number | null;
+  indice_desequilibrio: number | null;
   financial_total: number | null;
 };
 
@@ -53,11 +55,7 @@ export function useDashboard() {
 
     const [sumRes, contractsRes, allContractsRes, obligationsRes] = await Promise.all([
       supabase.from("dashboard_summary").select("*").maybeSingle(),
-      supabase
-        .from("contracts")
-        .select("id,name,party,type,status,created_at,contract_analyses(risk_score,financial_total)")
-        .order("created_at", { ascending: false })
-        .limit(20),
+      supabase.rpc("list_recent_contracts", { p_limit: 20 }),
       supabase.from("contracts").select("status,type"),
       supabase
         .from("contract_obligations")
@@ -71,21 +69,7 @@ export function useDashboard() {
 
     setSummary((sumRes.data as DashboardSummary | null) ?? EMPTY);
 
-    type RawContract = {
-      id: string; name: string; party: string | null; type: string | null;
-      status: string; created_at: string;
-      contract_analyses: { risk_score: number | null; financial_total: number | null }[] | null;
-    };
-    const rows: RecentContract[] = ((contractsRes.data ?? []) as RawContract[]).map((c) => ({
-      id: c.id,
-      name: c.name,
-      party: c.party,
-      type: c.type,
-      status: c.status,
-      created_at: c.created_at,
-      risk_score: c.contract_analyses?.[0]?.risk_score ?? null,
-      financial_total: c.contract_analyses?.[0]?.financial_total ?? null,
-    }));
+    const rows: RecentContract[] = (contractsRes.data ?? []) as RecentContract[];
 
     // byStatus and byType for charts (all contracts, no limit)
     const statusMap = new Map<string, number>();
@@ -102,8 +86,8 @@ export function useDashboard() {
     setRecentContracts(rows.slice(0, 6));
     setTopRisks(
       [...rows]
-        .filter((c) => c.risk_score != null)
-        .sort((a, b) => (b.risk_score ?? 0) - (a.risk_score ?? 0))
+        .filter((c) => resolvedIndex(c).value != null)
+        .sort((a, b) => (resolvedIndex(b).value ?? 0) - (resolvedIndex(a).value ?? 0))
         .slice(0, 5),
     );
 

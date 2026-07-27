@@ -1,7 +1,10 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import type { ClauseRisk } from "@/hooks/useContractAnalysis";
+import { gravidadeFaixa, GRAVIDADE_HIGHLIGHT } from "@/lib/analysisFormat";
 
+// Destaque legado por severity (4 categorias) — mantido só como fallback
+// para cláusulas antigas sem gravidade calculada (Fase 6, Parte 5).
 export const SEV_HIGHLIGHT: Record<string, string> = {
   critico: "bg-risk-critical/25 border-b-2 border-risk-critical",
   alto:    "bg-risk-high/25 border-b-2 border-risk-high",
@@ -64,17 +67,48 @@ function findInText(
   return { start, end };
 }
 
+// Localiza o trecho de original_text dentro do texto completo e expande a
+// janela até os limites da frase (ponto anterior → ponto seguinte), pra
+// mostrar o contexto completo em vez de só o fragmento cru capturado pela IA.
+export function findClauseSentence(text: string, needle: string): { before: string; match: string; after: string } | null {
+  if (!needle || needle.length < 15) return null;
+  const normText = buildNormMap(text);
+  const m = findInText(text, needle, normText);
+  if (!m) return null;
+
+  const BACKWARD_CAP = 1500;
+  const FORWARD_CAP = 1500;
+
+  let start = m.start;
+  const backLimit = Math.max(0, m.start - BACKWARD_CAP);
+  while (start > backLimit && !".!?".includes(text[start - 1])) start--;
+  while (start < m.start && /\s/.test(text[start])) start++;
+
+  let end = m.end;
+  const fwdLimit = Math.min(text.length, m.end + FORWARD_CAP);
+  while (end < fwdLimit && !".!?".includes(text[end - 1])) end++;
+
+  return {
+    before: text.slice(start, m.start),
+    match: text.slice(m.start, m.end),
+    after: text.slice(m.end, end),
+  };
+}
+
 export function HighlightedText({ text, clauses }: { text: string; clauses: ClauseRisk[] }) {
   const segments = useMemo(() => {
-    type Seg = { text: string; severity: string | null; title: string | null };
-    const markers: { start: number; end: number; severity: string; title: string }[] = [];
+    type Seg = { text: string; highlight: string | null; title: string | null };
+    const markers: { start: number; end: number; highlight: string; title: string }[] = [];
     const normText = buildNormMap(text);
 
     for (const cl of clauses) {
       if (!cl.original_text || cl.original_text.length < 15) continue;
       const match = findInText(text, cl.original_text, normText);
       if (match) {
-        markers.push({ ...match, severity: cl.severity, title: cl.title });
+        const highlight = cl.gravidade != null
+          ? GRAVIDADE_HIGHLIGHT[gravidadeFaixa(cl.gravidade).zone]
+          : (SEV_HIGHLIGHT[cl.severity] ?? "bg-yellow-500/20");
+        markers.push({ ...match, highlight, title: cl.title });
       }
     }
 
@@ -85,21 +119,21 @@ export function HighlightedText({ text, clauses }: { text: string; clauses: Clau
     for (const m of markers) {
       if (m.end <= pos) continue; // fully inside previous highlight — skip
       const start = Math.max(m.start, pos); // clip start if partially overlapping
-      if (start > pos) segs.push({ text: text.slice(pos, start), severity: null, title: null });
-      segs.push({ text: text.slice(start, m.end), severity: m.severity, title: m.title });
+      if (start > pos) segs.push({ text: text.slice(pos, start), highlight: null, title: null });
+      segs.push({ text: text.slice(start, m.end), highlight: m.highlight, title: m.title });
       pos = m.end;
     }
-    if (pos < text.length) segs.push({ text: text.slice(pos), severity: null, title: null });
+    if (pos < text.length) segs.push({ text: text.slice(pos), highlight: null, title: null });
     return segs;
   }, [text, clauses]);
 
   return (
     <article className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap font-mono max-h-[60vh] overflow-y-auto scroll-hide">
       {segments.map((seg, i) =>
-        seg.severity ? (
+        seg.highlight ? (
           <span
             key={i}
-            className={cn("rounded-sm", SEV_HIGHLIGHT[seg.severity] ?? "bg-yellow-500/20")}
+            className={cn("rounded-sm", seg.highlight)}
             title={seg.title ?? undefined}
           >
             {seg.text}

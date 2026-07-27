@@ -1,13 +1,13 @@
 import { Download, FileText, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SojCard } from "@/components/layout/Primitives";
-import { HighlightedText, SEV_HIGHLIGHT } from "@/features/analysis/components/HighlightedText";
+import { HighlightedText } from "@/features/analysis/components/HighlightedText";
 import { JuridicaTab } from "@/features/analysis/components/JuridicaTab";
 import { FinanceiroTab } from "@/features/analysis/components/FinanceiroTab";
-import { fmtDate, severityColor } from "@/lib/analysisFormat";
+import { fmtDate, GRAVIDADE_HIGHLIGHT, type GravidadeZona } from "@/lib/analysisFormat";
 import { useEconomicIndexes } from "@/hooks/useEconomicIndexes";
 import { useOrganization } from "@/hooks/useOrganization";
-import type { FullContract, ContractContent, ContractAnalysis, ClauseRisk } from "@/hooks/useContractAnalysis";
+import type { FullContract, ContractContent, ContractAnalysis, ClauseRisk, ReviewStatus } from "@/hooks/useContractAnalysis";
 
 // Mesmo numero de WhatsApp comercial usado nos fluxos de upgrade/renovacao.
 const SALES_WHATSAPP = "5511964889002";
@@ -23,6 +23,8 @@ export function AnalisadoView({
   setExpanded,
   indexes,
   saveContractValue,
+  updateClauseReview,
+  updateClauseSuggestion,
 }: {
   contract: FullContract;
   content: ContractContent | null;
@@ -34,6 +36,8 @@ export function AnalisadoView({
   setExpanded: (id: string | null) => void;
   indexes: ReturnType<typeof useEconomicIndexes>["indexes"];
   saveContractValue: (v: number) => Promise<void>;
+  updateClauseReview: (clauseId: string, status: ReviewStatus) => Promise<void>;
+  updateClauseSuggestion: (clauseId: string, suggestion: string) => Promise<void>;
 }) {
   const { org } = useOrganization();
   const isStarter = org?.plan_status === "active";
@@ -86,7 +90,15 @@ export function AnalisadoView({
       </div>
 
       {tab === "juridica" && (
-        <JuridicaTab analysis={analysis} clauses={clauses} expanded={expanded} setExpanded={setExpanded} />
+        <JuridicaTab
+          analysis={analysis}
+          clauses={clauses}
+          content={content}
+          expanded={expanded}
+          setExpanded={setExpanded}
+          updateClauseReview={updateClauseReview}
+          updateClauseSuggestion={updateClauseSuggestion}
+        />
       )}
 
       {tab === "financeiro" && (
@@ -112,10 +124,14 @@ export function AnalisadoView({
                 </p>
                 {clauses.some((cl) => cl.original_text) && (
                   <div className="flex flex-wrap gap-2 text-[10px]">
-                    {(["critico","alto","medio","baixo"] as const).map((s) => (
-                      <span key={s} className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full", SEV_HIGHLIGHT[s])}>
-                        <span className={cn("h-1.5 w-1.5 rounded-full", severityColor[s])} />
-                        {{ critico: "Crítico", alto: "Alto", medio: "Médio", baixo: "Baixo" }[s]}
+                    {([
+                      ["critico", "bg-risk-critical", "Crítico"],
+                      ["atencao", "bg-risk-medium", "Atenção"],
+                      ["equilibrado", "bg-risk-low", "Equilibrado"],
+                    ] as [GravidadeZona, string, string][]).map(([zone, dot, label]) => (
+                      <span key={zone} className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full", GRAVIDADE_HIGHLIGHT[zone])}>
+                        <span className={cn("h-1.5 w-1.5 rounded-full", dot)} />
+                        {label}
                       </span>
                     ))}
                     <span className="text-muted-foreground">= cláusulas destacadas</span>

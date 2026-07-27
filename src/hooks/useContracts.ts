@@ -33,6 +33,7 @@ export type DbContract = {
   file_type: string | null;
   created_at: string;
   risk_score: number | null;
+  indice_desequilibrio: number | null;
   parsed_data: ParsedData | null;
 };
 
@@ -43,22 +44,15 @@ export function useContracts() {
 
   const fetchContracts = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("contracts")
-      .select("id,name,party,type,status,file_name,file_path,file_size,file_type,created_at,parsed_data,contract_analyses(risk_score)")
-      .order("created_at", { ascending: false });
+    const { data, error } = await supabase.rpc("list_contracts");
     if (error) {
       toast.error("Erro ao carregar contratos");
       console.error(error);
     } else {
-      const rows = ((data ?? []) as (Omit<DbContract, "risk_score"> & {
-        contract_analyses: { risk_score: number | null }[] | null;
-      })[]).map((row) => ({
+      const rows = ((data ?? []) as DbContract[]).map((row) => ({
         ...row,
-        risk_score: row.contract_analyses?.[0]?.risk_score ?? null,
         parsed_data: (row.parsed_data as DbContract["parsed_data"]) ?? null,
-        contract_analyses: undefined,
-      })) as DbContract[];
+      }));
       setContracts(rows);
       // Clear processingIds for contracts that are no longer 'aguardando'
       setProcessingIds((prev) => {
