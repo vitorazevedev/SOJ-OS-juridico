@@ -54,22 +54,34 @@ async function sendOnboardingEmail(to: string, name: string, actionLink: string,
         to: [to],
         subject: 'Bem-vindo à Ponderum — crie sua senha de acesso',
         html: `
-          <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:24px">
-            <div style="background:#111;padding:16px 24px;border-radius:8px 8px 0 0">
-              <span style="color:#00e5a0;font-weight:700;font-size:18px">Ponderum</span>
-              <span style="color:#888;font-size:12px;margin-left:8px">Inteligência contratual</span>
-            </div>
-            <div style="border:1px solid #222;border-top:none;padding:24px;border-radius:0 0 8px 8px">
-              <h2 style="margin:0 0 16px;font-size:16px;color:#111">Olá, ${name}!</h2>
-              <p style="font-size:13.5px;color:#555;line-height:1.6;margin:0 0 20px">
-                Sua conta na Ponderum já foi criada. Clique no botão abaixo para definir sua senha de acesso e começar a usar a plataforma.
-              </p>
-              <a href="${actionLink}" style="display:inline-block;background:#067173;color:#fff;text-decoration:none;font-weight:600;font-size:14px;padding:12px 24px;border-radius:8px">
-                Criar minha senha
-              </a>
-              <p style="font-size:11px;color:#999;margin:20px 0 0">
-                Se você não esperava este email, pode ignorá-lo com segurança.
-              </p>
+          <div style="background:#0b1220;padding:40px 16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+            <div style="max-width:480px;margin:0 auto;background:#101a2c;border:1px solid #1e2a3f;border-radius:16px;overflow:hidden">
+              <div style="padding:28px 32px 0 32px">
+                <table width="100%" cellpadding="0" cellspacing="0" role="presentation">
+                  <tr>
+                    <td>
+                      <img src="https://igolxkyahbavripvfeak.supabase.co/storage/v1/object/public/assets/ponderum_logo_branco_master_1.png" alt="Ponderum" width="88" height="23" style="display:block;border:0" />
+                    </td>
+                    <td align="right" style="font-size:13px;color:#6b7d99">
+                      <a href="mailto:contato@ponderum.com" style="color:#0670DB;text-decoration:underline">contato@ponderum.com</a>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+              <div style="padding:32px 32px 0 32px">
+                <p style="margin:0;font-size:20px;line-height:28px;font-weight:700;color:#f4f6fa">Crie sua senha de acesso</p>
+              </div>
+              <div style="padding:20px 32px 0 32px">
+                <p style="margin:0 0 18px;font-size:15px;line-height:24px;color:#cbd5e1">Olá, ${name},</p>
+                <p style="margin:0 0 18px;font-size:15px;line-height:24px;color:#cbd5e1">Sua conta na Ponderum já foi criada. Clique no link abaixo para definir sua senha de acesso e começar a usar a plataforma.</p>
+                <p style="margin:0 0 18px;font-size:15px;line-height:24px">
+                  <a href="${actionLink}" style="color:#4ade80;text-decoration:none;font-weight:600">Criar minha senha →</a>
+                </p>
+                <p style="margin:0 0 24px;font-size:13px;line-height:20px;color:#6b7d99">Se você não esperava este email, pode ignorá-lo com segurança.</p>
+              </div>
+              <div style="padding:0 32px 28px 32px;border-top:1px solid #1e2a3f;padding-top:20px">
+                <p style="margin:0;font-size:13px;line-height:20px;color:#6b7d99">Um abraço,<br/>Equipe Ponderum</p>
+              </div>
             </div>
           </div>
         `,
