@@ -380,7 +380,6 @@ ul,ol{ margin:0; padding:0; list-style:none }
 
 .fdr__rail{ margin-bottom:1.75rem }
 .fdr__body p{ font-size:1.0625rem; line-height:1.85; max-width:60ch }
-.fdr__lead{ font-size:1.1875rem !important; color:var(--lt-92) }
 
 .sign{ margin-top:2.5rem; padding-top:1.6rem; border-top:1px solid var(--lt-14) }
 .sign__n{ margin:0; font-family:var(--serif); font-size:1.625rem; font-weight:400; color:#fff }
@@ -507,6 +506,9 @@ ul,ol{ margin:0; padding:0; list-style:none }
 }
 .ft__brand img{ height:24px; width:auto }
 .ft__brand p{ margin:1.1rem 0 0; max-width:26ch; font-size:.8125rem; line-height:1.7 }
+.ft__social{ margin-top:.9rem !important }
+.ft__social a{ color:var(--lt-55); text-decoration:none; transition:color .2s }
+.ft__social a:hover{ color:var(--teal) }
 .ft__nav{ display:flex; flex-direction:column; gap:.6rem; align-items:flex-start }
 .ft__k{
   margin:0 0 .3rem; font-family:var(--mono); font-size:.625rem; letter-spacing:.16em;
