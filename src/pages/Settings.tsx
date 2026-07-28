@@ -29,7 +29,7 @@ export default function Settings() {
         onValueChange={(v) => setSearchParams(v === "organization" ? {} : { tab: v })}
         className="w-full"
       >
-        <TabsList className="w-full md:w-auto justify-start flex-wrap">
+        <TabsList className="h-auto w-full md:w-auto justify-start flex-wrap gap-y-1">
           <TabsTrigger value="organization">Organização</TabsTrigger>
           <TabsTrigger value="users">Usuários</TabsTrigger>
           <TabsTrigger value="plan">Plano</TabsTrigger>

@@ -58,7 +58,7 @@ export function FeedbackButton() {
       {/* Botão flutuante */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-5 right-5 z-50 flex items-center gap-2 h-10 px-4 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-lg hover:opacity-90 transition-all"
+        className="fixed bottom-[calc(72px_+_env(safe-area-inset-bottom)_+_16px)] md:bottom-5 right-5 z-40 flex items-center gap-2 h-10 px-4 rounded-full bg-primary text-primary-foreground text-xs font-medium shadow-lg hover:opacity-90 transition-all"
         title="Enviar feedback"
       >
         <MessageSquarePlus className="h-4 w-4" />

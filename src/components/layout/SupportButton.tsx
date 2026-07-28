@@ -36,7 +36,7 @@ export function SupportButton() {
   return (
     <button
       onClick={handleClick}
-      className="fixed bottom-20 right-5 z-50 flex items-center gap-2 h-10 px-4 rounded-full bg-card border border-border text-xs font-medium shadow-lg hover:bg-muted/40 transition-all"
+      className="fixed bottom-[calc(72px_+_env(safe-area-inset-bottom)_+_76px)] md:bottom-20 right-5 z-40 flex items-center gap-2 h-10 px-4 rounded-full bg-card border border-border text-xs font-medium shadow-lg hover:bg-muted/40 transition-all"
       title="Falar com o suporte no WhatsApp"
     >
       <MessageCircle className="h-4 w-4" />
