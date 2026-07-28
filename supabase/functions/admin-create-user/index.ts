@@ -82,6 +82,32 @@ async function sendOnboardingEmail(to: string, name: string, actionLink: string,
   }
 }
 
+// Template "Welcome Email" (alias welcome-email) desenhado no editor visual
+// do Resend — separado do email de criar senha acima, os dois saem juntos.
+async function sendWelcomeTemplateEmail(to: string, name: string, resendKey: string): Promise<boolean> {
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resendKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: 'Ponderum <acesso@ponderum.com>',
+        to: [to],
+        template: {
+          id: 'welcome-email',
+          variables: { NOME: name },
+        },
+      }),
+      signal: AbortSignal.timeout(8000),
+    })
+    return res.ok
+  } catch {
+    return false
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
 
@@ -199,7 +225,13 @@ Deno.serve(async (req) => {
     let emailSent = false
     if (sendEmail) {
       const resendKey = Deno.env.get('RESEND_API_KEY') ?? ''
-      if (resendKey) emailSent = await sendOnboardingEmail(email, name, actionLink, resendKey)
+      if (resendKey) {
+        const [passwordEmailOk] = await Promise.all([
+          sendOnboardingEmail(email, name, actionLink, resendKey),
+          sendWelcomeTemplateEmail(email, name, resendKey),
+        ])
+        emailSent = passwordEmailOk
+      }
     }
 
     return jsonResponse({ success: true, userId, orgId, actionLink, emailSent })
