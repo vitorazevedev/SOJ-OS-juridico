@@ -62,7 +62,7 @@ export function ClauseListItem({
         )}
         <div className="flex items-center gap-1.5 mt-1">
           {faixa && (
-            <span className={cn("inline-flex items-center gap-1 text-[11px] font-medium", faixa.text)}>
+            <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-medium", faixa.bg, faixa.text)}>
               {faixa.label}
             </span>
           )}
