@@ -19,7 +19,10 @@ function jsonResponse(body: unknown, status = 200) {
   })
 }
 
-const SITE_URL = 'https://app.ponderum.com'
+// Link do botão "Baixar nota fiscal" precisa apontar direto pro arquivo (não
+// pro app) -- URL assinada de validade longa em vez de curta, já que o link
+// fica parado numa caixa de email e pode ser clicado bem depois do envio.
+const SIGNED_URL_EXPIRY_SECONDS = 60 * 60 * 24 * 365 * 5 // 5 anos
 
 function fmtBRL(cents: number): string {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -65,11 +68,18 @@ Deno.serve(async (req) => {
 
   const { data: invoice, error: invErr } = await serviceClient
     .from('invoices')
-    .select('org_id, numero_nota, valor_cents, data_emissao')
+    .select('org_id, numero_nota, valor_cents, data_emissao, file_path')
     .eq('id', invoiceId)
     .single()
   if (invErr || !invoice) {
     return jsonResponse({ error: 'Nota fiscal não encontrada' }, 404)
+  }
+
+  const { data: signedUrlData, error: signErr } = await serviceClient.storage
+    .from('contracts')
+    .createSignedUrl(invoice.file_path, SIGNED_URL_EXPIRY_SECONDS)
+  if (signErr || !signedUrlData) {
+    return jsonResponse({ error: 'Falha ao gerar o link de download da nota fiscal' }, 500)
   }
 
   const { data: admin } = await serviceClient
@@ -105,7 +115,7 @@ Deno.serve(async (req) => {
             NUMERO_NOTA: invoice.numero_nota,
             VALOR: fmtBRL(invoice.valor_cents),
             DATA_EMISSAO: fmtDate(invoice.data_emissao),
-            LINK_NOTA: `${SITE_URL}/settings?tab=plan`,
+            LINK_NOTA: signedUrlData.signedUrl,
           },
         },
       }),
