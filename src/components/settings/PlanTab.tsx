@@ -9,6 +9,7 @@ import { generateReceiptPdf, downloadBlob } from "@/lib/contractDocs";
 import {
   STARTER_MONTHLY_PRICE_BRL,
   FREEMIUM_MONTHLY_ANALYSIS_LIMIT,
+  STARTER_MONTHLY_ANALYSIS_LIMIT,
   SUBSCRIPTION_RENEWAL_CYCLE_DAYS,
 } from "@/lib/pricing";
 
@@ -33,7 +34,7 @@ const PLAN_INFO: Record<string, { name: string; color: string; price: string; fe
     color: "#3a8dff",
     price: `R$ ${STARTER_MONTHLY_PRICE_BRL}/mês`,
     feats: [
-      "Até 10 contratos analisados por mês",
+      `Até ${STARTER_MONTHLY_ANALYSIS_LIMIT} contratos analisados por mês`,
       "Análise jurídica completa por IA",
       "Relatório completo, com exportação",
       "Índice de Desequilíbrio",

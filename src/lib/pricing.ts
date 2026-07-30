@@ -4,10 +4,11 @@
 // lugar que precisa mudar quando o preço mudar.
 export const STARTER_MONTHLY_PRICE_BRL = 490;
 
-// Mirrors o limite de análises do Freemium em
+// Mirrors o limite de análises do Freemium e do Starter em
 // supabase/functions/parse-contract/index.ts e src/hooks/useContracts.ts
 // (Edge Function roda em runtime separado, não pode importar daqui).
 export const FREEMIUM_MONTHLY_ANALYSIS_LIMIT = 1;
+export const STARTER_MONTHLY_ANALYSIS_LIMIT = 15;
 
 // Assinatura Starter é renovada manualmente pela Equipe Ponderum (sem
 // gateway de pagamento) em ciclos fixos de 30 dias.

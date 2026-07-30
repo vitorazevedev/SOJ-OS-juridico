@@ -127,10 +127,9 @@ export default function Termos() {
             suspensão ou ao encerramento da conta, sem prejuízo de outras medidas cabíveis.
           </p>
           <p>
-            5.3 Durante o período de validação inicial da Plataforma ("MVP"), os Usuários participantes do
-            programa piloto terão limite temporário de 10 (dez) contratos analisados por mês no Plano Starter,
-            ampliado automaticamente para 15 (quinze) contratos por mês ao final do MVP, sem qualquer alteração
-            no valor mensal.
+            5.3 O limite de 15 (quinze) contratos analisados por mês no Plano Starter, previsto na Cláusula 5.1,
+            entrou em vigor em 28 de julho de 2026, substituindo o limite inicial de 10 (dez) contratos vigente
+            durante a fase de validação inicial da Plataforma ("MVP"), sem qualquer alteração no valor mensal.
           </p>
           <p>
             5.4 Aos Usuários que aderirem ao Plano Starter durante o MVP, o valor de R$ 490,00 mensais será

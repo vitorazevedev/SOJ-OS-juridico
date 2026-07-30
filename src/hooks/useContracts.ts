@@ -1,14 +1,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { FREEMIUM_MONTHLY_ANALYSIS_LIMIT, STARTER_MONTHLY_ANALYSIS_LIMIT } from "@/lib/pricing";
 
 // Mirrors PLAN_MONTHLY_LIMIT / FREEMIUM_MONTHLY_LIMIT in supabase/functions/parse-contract/index.ts
 const PLAN_MONTHLY_LIMIT: Record<string, number | null> = {
-  starter: 10,
+  starter: STARTER_MONTHLY_ANALYSIS_LIMIT,
   pro: null,
   enterprise: null,
 };
-const FREEMIUM_MONTHLY_LIMIT = 1;
+const FREEMIUM_MONTHLY_LIMIT = FREEMIUM_MONTHLY_ANALYSIS_LIMIT;
 
 export type ParsedData = {
   parties: string[];

@@ -63,11 +63,11 @@ Deno.serve(async (req) => {
 
   // Monthly plan quota: parsing is the step that actually incurs Claude API cost, so
   // it's the right place to enforce the per-plan contract limit (Freemium/trial:
-  // 1/month, Starter pago: 5/month, Pro/Enterprise: unlimited) rather than at upload time.
-  // Mirrors FREEMIUM_MONTHLY_ANALYSIS_LIMIT em src/lib/pricing.ts.
+  // 1/month, Starter pago: 15/month, Pro/Enterprise: unlimited) rather than at upload time.
+  // Mirrors FREEMIUM_MONTHLY_ANALYSIS_LIMIT / STARTER_MONTHLY_ANALYSIS_LIMIT em src/lib/pricing.ts.
   const FREEMIUM_MONTHLY_LIMIT = 1
   const PLAN_MONTHLY_LIMIT: Record<string, number | null> = {
-    starter: 10,
+    starter: 15,
     pro: null,
     enterprise: null,
   }
