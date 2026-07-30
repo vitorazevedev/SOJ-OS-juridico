@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       ancoras: {
@@ -707,6 +732,54 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          created_at: string
+          data_emissao: string
+          file_path: string
+          id: string
+          numero_nota: string
+          org_id: string
+          uploaded_by: string | null
+          valor_cents: number
+        }
+        Insert: {
+          created_at?: string
+          data_emissao: string
+          file_path: string
+          id?: string
+          numero_nota: string
+          org_id: string
+          uploaded_by?: string | null
+          valor_cents: number
+        }
+        Update: {
+          created_at?: string
+          data_emissao?: string
+          file_path?: string
+          id?: string
+          numero_nota?: string
+          org_id?: string
+          uploaded_by?: string | null
+          valor_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           blocked: boolean
@@ -1042,6 +1115,16 @@ export type Database = {
         Args: { p_analysis_id: string }
         Returns: number
       }
+      staff_create_invoice: {
+        Args: {
+          p_data_emissao: string
+          p_file_path: string
+          p_numero_nota: string
+          p_org_id: string
+          p_valor_cents: number
+        }
+        Returns: string
+      }
       staff_renew_org_subscription: {
         Args: { p_org_id: string }
         Returns: undefined
@@ -1208,6 +1291,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

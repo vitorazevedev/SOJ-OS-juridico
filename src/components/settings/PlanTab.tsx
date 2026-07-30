@@ -6,6 +6,8 @@ import { useOrganization } from "@/hooks/useOrganization";
 import { supabase } from "@/lib/supabase";
 import { fmtBRL } from "@/lib/adminDashboard";
 import { generateReceiptPdf, downloadBlob } from "@/lib/contractDocs";
+import { useInvoices, downloadInvoiceFile } from "@/hooks/useInvoices";
+import { cn } from "@/lib/utils";
 import {
   STARTER_MONTHLY_PRICE_BRL,
   FREEMIUM_MONTHLY_ANALYSIS_LIMIT,
@@ -14,6 +16,7 @@ import {
 } from "@/lib/pricing";
 
 type Receipt = { id: string; amount_cents: number; description: string; issued_at: string };
+type BillingTab = "recibos" | "notas_fiscais";
 
 // Mesmo numero de WhatsApp comercial usado na landing page.
 const SALES_WHATSAPP = "5511964889002";
@@ -67,6 +70,8 @@ export function PlanTab() {
   const { org } = useOrganization();
   const [monthlyUsed, setMonthlyUsed] = useState<number | null>(null);
   const [receipts, setReceipts] = useState<Receipt[] | null>(null);
+  const [billingTab, setBillingTab] = useState<BillingTab>("recibos");
+  const { invoices, loading: invoicesLoading } = useInvoices();
 
   useEffect(() => {
     if (!org?.id) return;
@@ -135,6 +140,11 @@ export function PlanTab() {
       org_cnpj: org?.cnpj ?? null,
     });
     downloadBlob(blob, `recibo-ponderum-${r.id.slice(0, 8)}.pdf`);
+  };
+
+  const handleDownloadInvoice = async (filePath: string) => {
+    const url = await downloadInvoiceFile(filePath);
+    if (url) window.open(url, "_blank");
   };
 
   return (
@@ -220,29 +230,81 @@ export function PlanTab() {
           <h3 className="font-medium text-sm md:text-base">Histórico de Faturamento</h3>
           <p className="text-xs text-muted-foreground mt-0.5">Faturas e recibos da sua organização</p>
         </div>
-        {receipts == null ? null : receipts.length === 0 ? (
+
+        <div className="flex gap-1 border-b border-border">
+          {([
+            ["recibos", "Recibos"],
+            ["notas_fiscais", "Notas fiscais"],
+          ] as const).map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => setBillingTab(id)}
+              className={cn(
+                "px-3 py-2 text-xs font-medium border-b-2 -mb-px transition-colors",
+                billingTab === id
+                  ? "border-primary text-primary"
+                  : "border-transparent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {billingTab === "recibos" ? (
+          receipts == null ? null : receipts.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-6 text-center">
+              Nenhum recibo ainda. Recibos aparecem aqui após a confirmação de um pagamento.
+            </p>
+          ) : (
+            <ul className="flex flex-col divide-y divide-border">
+              {receipts.map((r) => (
+                <li key={r.id} className="flex items-center justify-between gap-3 py-3 text-sm">
+                  <div>
+                    <p className="font-medium">{r.description}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {new Date(r.issued_at).toLocaleString("pt-BR", {
+                        day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="font-semibold tabular-nums">{fmtBRL(r.amount_cents / 100)}</span>
+                    <button
+                      onClick={() => handleDownloadReceipt(r)}
+                      className="flex items-center gap-1 h-8 px-3 rounded-lg border border-border text-xs hover:bg-muted/40 transition-colors"
+                    >
+                      <Download className="h-3.5 w-3.5" /> PDF
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )
+        ) : invoicesLoading ? null : invoices.length === 0 ? (
           <p className="text-sm text-muted-foreground py-6 text-center">
-            Nenhum recibo ainda. Recibos aparecem aqui após a confirmação de um pagamento.
+            Nenhuma nota fiscal disponível ainda.
           </p>
         ) : (
           <ul className="flex flex-col divide-y divide-border">
-            {receipts.map((r) => (
-              <li key={r.id} className="flex items-center justify-between gap-3 py-3 text-sm">
+            {invoices.map((inv) => (
+              <li key={inv.id} className="flex items-center justify-between gap-3 py-3 text-sm">
                 <div>
-                  <p className="font-medium">{r.description}</p>
+                  <p className="font-medium">Nota fiscal Nº {inv.numero_nota}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {new Date(r.issued_at).toLocaleString("pt-BR", {
-                      day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit",
+                    Emitida em{" "}
+                    {new Date(`${inv.data_emissao}T00:00:00`).toLocaleDateString("pt-BR", {
+                      day: "2-digit", month: "long", year: "numeric",
                     })}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
-                  <span className="font-semibold tabular-nums">{fmtBRL(r.amount_cents / 100)}</span>
+                  <span className="font-semibold tabular-nums">{fmtBRL(inv.valor_cents / 100)}</span>
                   <button
-                    onClick={() => handleDownloadReceipt(r)}
+                    onClick={() => handleDownloadInvoice(inv.file_path)}
                     className="flex items-center gap-1 h-8 px-3 rounded-lg border border-border text-xs hover:bg-muted/40 transition-colors"
                   >
-                    <Download className="h-3.5 w-3.5" /> PDF
+                    <Download className="h-3.5 w-3.5" /> Baixar
                   </button>
                 </div>
               </li>

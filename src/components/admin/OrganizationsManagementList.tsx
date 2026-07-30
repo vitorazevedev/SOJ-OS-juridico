@@ -3,10 +3,11 @@ import { SojCard } from "@/components/layout/Primitives";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { MoreVertical, MessageCircle, Loader2 } from "lucide-react";
+import { MoreVertical, MessageCircle, Loader2, FileUp } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+import { UploadInvoiceModal } from "@/components/admin/UploadInvoiceModal";
 
 type StaffOrg = {
   id: string;
@@ -52,6 +53,7 @@ export function OrganizationsManagementList() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [actingId, setActingId] = useState<string | null>(null);
+  const [invoiceOrg, setInvoiceOrg] = useState<{ id: string; name: string } | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const fetchOrgs = async (p: number, s: string) => {
@@ -224,6 +226,9 @@ export function OrganizationsManagementList() {
                             </DropdownMenuItem>
                           </>
                         )}
+                        <DropdownMenuItem onClick={() => setInvoiceOrg({ id: org.id, name: org.name })}>
+                          <FileUp className="h-3.5 w-3.5 mr-2" /> Upload NF
+                        </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setBlocked(org, !org.blocked)}>
                           {org.blocked ? "Desbloquear" : "Bloquear"}
                         </DropdownMenuItem>
@@ -264,6 +269,8 @@ export function OrganizationsManagementList() {
           </Button>
         </div>
       </div>
+
+      <UploadInvoiceModal org={invoiceOrg} onClose={() => setInvoiceOrg(null)} />
     </SojCard>
   );
 }
