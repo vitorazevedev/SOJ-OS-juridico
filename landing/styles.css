@@ -330,8 +330,8 @@ ul,ol{ margin:0; padding:0; list-style:none }
 .step__c h3{ font-size:1.5rem; font-weight:500; margin-bottom:.35rem }
 .step__c p{ max-width:52ch; font-size:.9688rem; line-height:1.72; color:var(--ink-70) }
 .step__meta{
-  margin-top:.7rem; font-family:var(--mono); font-size:.625rem; letter-spacing:.1em;
-  text-transform:uppercase; color:var(--ink-55) !important; line-height:1.9 !important;
+  margin-top:.7rem; font-family:var(--sans); font-size:.8125rem; letter-spacing:0;
+  text-transform:none; color:var(--ink-55) !important; line-height:1.6 !important;
 }
 
 /* ---------- recursos ---------- */
@@ -384,8 +384,8 @@ ul,ol{ margin:0; padding:0; list-style:none }
 .sign{ margin-top:2.5rem; padding-top:1.6rem; border-top:1px solid var(--lt-14) }
 .sign__n{ margin:0; font-family:var(--serif); font-size:1.625rem; font-weight:400; color:#fff }
 .sign__c{
-  margin:.35rem 0 0; font-family:var(--mono); font-size:.6875rem; letter-spacing:.13em;
-  text-transform:uppercase; color:var(--lt-55); line-height:1.8;
+  margin:.35rem 0 0; font-family:var(--sans); font-size:.8125rem; letter-spacing:0;
+  text-transform:none; color:var(--lt-55); line-height:1.6;
 }
 .sign__l{ margin:1rem 0 0; font-size:.9375rem; color:var(--lt-55) }
 .sign__l a{ color:var(--teal); text-decoration:none; border-bottom:1px solid rgba(46,196,169,.3) }
