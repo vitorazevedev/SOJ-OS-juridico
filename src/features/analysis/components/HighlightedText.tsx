@@ -128,7 +128,7 @@ export function HighlightedText({ text, clauses }: { text: string; clauses: Clau
   }, [text, clauses]);
 
   return (
-    <article className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap font-mono max-h-[60vh] overflow-y-auto scroll-hide">
+    <article className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap font-mono max-h-[60vh] overflow-y-auto scroll-hide text-justify">
       {segments.map((seg, i) =>
         seg.highlight ? (
           <span

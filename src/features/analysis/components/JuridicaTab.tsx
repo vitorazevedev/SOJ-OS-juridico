@@ -204,13 +204,13 @@ export function JuridicaTab({
                           ▪ {cl.category ?? cl.title} · Achado registrado
                         </p>
                         {sentence ? (
-                          <p className="text-[12px] md:text-sm leading-relaxed text-foreground/90">
+                          <p className="text-[12px] md:text-sm leading-relaxed text-foreground/90 text-justify">
                             {sentence.before}
                             <span className={cn("rounded-sm", highlight)}>{sentence.match}</span>
                             {sentence.after}
                           </p>
                         ) : (
-                          <p className={cn("text-[12px] md:text-sm leading-relaxed rounded-sm px-1 py-0.5", highlight)}>
+                          <p className={cn("text-[12px] md:text-sm leading-relaxed rounded-sm px-1 py-0.5 text-justify", highlight)}>
                             {cl.original_text}
                           </p>
                         )}
