@@ -27,6 +27,28 @@ function toDateStr(d: Date): string {
   return d.toISOString().split('T')[0]
 }
 
+// Mirrors NotifPrefs / DEFAULT_PREFS em src/components/settings/NotificationsTab.tsx.
+// Ausencia de preferencia salva (usuario nunca abriu a tela) = tudo habilitado,
+// pra nao regredir o comportamento de quem nunca mexeu nisso.
+type NotifPrefs = {
+  obligations_enabled?: boolean
+  alert_30?: boolean
+  alert_15?: boolean
+  alert_7?: boolean
+  alert_0?: boolean
+}
+
+function shouldReceiveAlert(prefs: NotifPrefs | undefined, daysLeft: number): boolean {
+  if ((prefs?.obligations_enabled ?? true) === false) return false
+  switch (daysLeft) {
+    case 30: return prefs?.alert_30 ?? true
+    case 15: return prefs?.alert_15 ?? true
+    case 7: return prefs?.alert_7 ?? true
+    case 0: return prefs?.alert_0 ?? true
+    default: return true
+  }
+}
+
 async function sendEmail(
   to: string,
   subject: string,
@@ -184,11 +206,10 @@ Deno.serve(async (req) => {
 
       const { data: userRows } = await serviceClient
         .from('users')
-        .select('email')
+        .select('id, email')
         .eq('org_id', ob.org_id)
         .limit(5)
 
-      const emails = (userRows ?? []).map((u: { email: string }) => u.email).filter(Boolean)
       const contractName = contractRow?.name ?? 'Contrato'
 
       const { subject, html } = buildAlertEmail(
@@ -198,10 +219,19 @@ Deno.serve(async (req) => {
         window.days
       )
 
-      for (const email of emails) {
-        const sent = await sendEmail(email, subject, html, resendKey)
+      for (const u of userRows ?? []) {
+        if (!u.email) continue
+
+        const { data: authUser } = await serviceClient.auth.admin.getUserById(u.id)
+        const prefs = authUser?.user?.user_metadata?.notification_prefs as NotifPrefs | undefined
+        if (!shouldReceiveAlert(prefs, window.days)) {
+          results.emails_skipped++
+          continue
+        }
+
+        const sent = await sendEmail(u.email, subject, html, resendKey)
         if (sent) results.emails_sent++
-        else results.errors.push(`email failed for ${email}`)
+        else results.errors.push(`email failed for ${u.email}`)
       }
     }
   }

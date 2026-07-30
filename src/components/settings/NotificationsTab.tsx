@@ -142,8 +142,8 @@ export function NotificationsTab() {
       </div>
 
       <p className="text-xs text-muted-foreground text-center">
-        Os e-mails de alerta serão ativados quando o envio automático estiver configurado.
-        As preferências salvas aqui já ficam registradas para quando o serviço for habilitado.
+        O resumo semanal de contratos ainda não está disponível — a preferência fica salva,
+        mas nenhum e-mail é enviado por enquanto.
       </p>
     </div>
   );
