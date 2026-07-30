@@ -10,6 +10,30 @@ export const DOCX_MIME =
 // o formulário (DynamicFieldsStep) já exige todos os campos do modelo antes de
 // permitir gerar, mas o nullGetter é uma defesa extra pra nunca deixar um
 // {{CAMPO}} cru vazando pro documento final.
+// Aviso exigido pela Cláusula 2.4 dos Termos de Uso ("Toda minuta gerada pela
+// Plataforma traz o aviso: ..."). Injetado como último parágrafo do corpo do
+// documento, antes de <w:sectPr> (propriedades de seção sempre ficam no fim
+// de <w:body>, depois do último parágrafo) — funciona em qualquer um dos 54
+// modelos sem precisar editar cada .docx manualmente.
+const LEGAL_NOTICE_TEXT =
+  "Este documento foi gerado pela Ponderum com base em modelos padrão de mercado. " +
+  "Recomendamos revisão por advogado habilitado antes da assinatura.";
+
+function injectLegalNotice(zip: PizZip): void {
+  const file = zip.file("word/document.xml");
+  if (!file) return;
+  const xml = file.asText();
+  const noticeParagraph =
+    '<w:p><w:pPr><w:jc w:val="both"/><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="808080"/></w:rPr></w:pPr>' +
+    '<w:r><w:rPr><w:i/><w:sz w:val="16"/><w:color w:val="808080"/></w:rPr>' +
+    `<w:t xml:space="preserve">${LEGAL_NOTICE_TEXT}</w:t></w:r></w:p>`;
+  const sectPrIdx = xml.lastIndexOf("<w:sectPr");
+  const newXml = sectPrIdx >= 0
+    ? xml.slice(0, sectPrIdx) + noticeParagraph + xml.slice(sectPrIdx)
+    : xml.replace("</w:body>", noticeParagraph + "</w:body>");
+  zip.file("word/document.xml", newXml);
+}
+
 export async function renderContractDocx(
   templateUrl: string,
   values: Record<string, string>,
@@ -27,6 +51,7 @@ export async function renderContractDocx(
   });
 
   doc.render(values);
+  injectLegalNotice(zip);
   // `mimeType` existe em tempo de execução (repassado ao pizzip's zip.generate),
   // mas não está tipado em DXT.ZipOptions — sem isso o Blob sai como
   // application/zip em vez do content-type correto de .docx.

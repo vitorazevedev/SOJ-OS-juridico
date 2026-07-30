@@ -108,15 +108,6 @@ function drawReportHeader(pdf: jsPDF, opts: {
   pdf.setFillColor(...PC.esm);
   pdf.rect(0, 0, pw, 3, "F");
 
-  // Logo Ponderum no vão entre a faixa de acento e o rótulo DOCUMENTO (y 3–11,
-  // hoje em branco) — não desloca nenhuma outra posição do cabeçalho/rodapé.
-  if (opts.logo) {
-    const h = 6;
-    const ratio = opts.logo.width / Math.max(1, opts.logo.height);
-    const w = h * ratio;
-    try { pdf.addImage(opts.logo.dataUrl, opts.logo.mime.toUpperCase(), ml, 4, w, h); } catch { /* ignore */ }
-  }
-
   // Coluna direita: DATA + PÁGINAS (preenchido no footer depois)
   const rx = pw - mr - 48;
   let y = 12;
@@ -134,6 +125,17 @@ function drawReportHeader(pdf: jsPDF, opts: {
 
   pdf.setFont("helvetica", "normal"); pdf.setFontSize(8.5); pdf.setTextColor(...PC.mid);
   pdf.text(opts.subtitle, ml, y);
+
+  // Logo Ponderum abaixo do subtítulo "Ponderum · Inteligência Contratual",
+  // em escala reduzida — cabe no vão até a faixa de metadados (y+10) sem
+  // cobrir o texto acima nem ultrapassar a linha do cabeçalho.
+  if (opts.logo) {
+    const h = 3.2;
+    const ratio = opts.logo.width / Math.max(1, opts.logo.height);
+    const w = h * ratio;
+    try { pdf.addImage(opts.logo.dataUrl, opts.logo.mime.toUpperCase(), ml, y + 2, w, h); } catch { /* ignore */ }
+  }
+
   y += 10;
 
   // Faixa de metadados (cinza claro)
