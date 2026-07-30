@@ -105,6 +105,19 @@ export async function createObligation(data: NewObligationData): Promise<boolean
   return true;
 }
 
+export async function updateObligation(id: string, data: NewObligationData): Promise<boolean> {
+  const { error } = await supabase
+    .from("contract_obligations")
+    .update(data)
+    .eq("id", id);
+  if (error) {
+    toast.error("Erro ao salvar alterações");
+    return false;
+  }
+  toast.success("Obrigação atualizada");
+  return true;
+}
+
 export async function deleteObligation(id: string): Promise<boolean> {
   const { error } = await supabase.from("contract_obligations").delete().eq("id", id);
   if (error) {

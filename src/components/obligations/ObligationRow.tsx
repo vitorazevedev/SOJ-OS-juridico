@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { AlertCircle, CheckCircle2, ExternalLink, MoreVertical, Trash2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, ExternalLink, MoreVertical, Pencil, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -10,9 +11,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { updateObligationStatus, deleteObligation, type DbObligation } from "@/hooks/useObligations";
 import { daysUntil, formatBRL, formatDate, obligationTypeLabel, responsibleLabel, urgencyMeta } from "@/lib/obligationsFormat";
+import { EditObligationModal } from "@/components/obligations/EditObligationModal";
 
 export function ObligationRow({ o }: { o: DbObligation }) {
   const navigate = useNavigate();
+  const [editing, setEditing] = useState(false);
   const days = daysUntil(o.due_date);
   const meta = urgencyMeta(days, o.status);
   const value = formatBRL(o.value_cents);
@@ -81,6 +84,10 @@ export function ObligationRow({ o }: { o: DbObligation }) {
               Ver contrato
             </DropdownMenuItem>
           )}
+          <DropdownMenuItem onClick={() => setEditing(true)}>
+            <Pencil className="h-4 w-4 mr-2" />
+            Editar
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className="text-risk-critical focus:text-risk-critical"
@@ -91,6 +98,10 @@ export function ObligationRow({ o }: { o: DbObligation }) {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {editing && (
+        <EditObligationModal obligation={o} onClose={() => setEditing(false)} />
+      )}
     </div>
   );
 }

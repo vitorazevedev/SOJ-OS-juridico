@@ -75,3 +75,20 @@ export function buildRecurrenceValue(form: ObligationFormState): string | null {
   if (form.recurrence !== "none") return form.recurrence;
   return null;
 }
+
+// Reconstrói recurrence/custom_qty/custom_unit a partir do texto salvo no banco
+// (inverso de buildRecurrenceValue) — usado ao abrir o formulário de edição.
+export function parseRecurrenceValue(recurrence: string | null): Pick<ObligationFormState, "recurrence" | "custom_qty" | "custom_unit"> {
+  if (!recurrence) return { recurrence: "none", custom_qty: "1", custom_unit: "meses" };
+  if (RECURRENCES.some((r) => r.value === recurrence)) {
+    return { recurrence, custom_qty: "1", custom_unit: "meses" };
+  }
+  const match = recurrence.match(/^a cada (\d+) (dias|semanas|meses|anos)$/);
+  if (match) return { recurrence: "custom", custom_qty: match[1], custom_unit: match[2] };
+  return { recurrence: "none", custom_qty: "1", custom_unit: "meses" };
+}
+
+export function centsToBRLInput(cents: number | null): string {
+  if (cents == null) return "";
+  return (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}

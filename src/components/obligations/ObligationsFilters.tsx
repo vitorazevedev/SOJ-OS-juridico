@@ -1,6 +1,14 @@
 import { cn } from "@/lib/utils";
 
-type FilterStatus = "todos" | "pendente" | "cumprida" | "atrasada";
+type FilterStatus = "todos" | "pendente" | "cumprida" | "atrasada" | "sem_data";
+
+const STATUS_LABELS: Record<FilterStatus, string> = {
+  todos: "Todos",
+  pendente: "pendente",
+  cumprida: "cumprida",
+  atrasada: "atrasada",
+  sem_data: "Sem data",
+};
 
 export function ObligationsFilters({
   statusFilter,
@@ -28,7 +36,7 @@ export function ObligationsFilters({
   return (
     <div className="flex flex-col gap-2.5 md:flex-row md:items-center md:justify-between">
       <div className="flex gap-2 overflow-x-auto scroll-hide -mx-1 px-1">
-        {(["todos", "pendente", "cumprida", "atrasada"] as FilterStatus[]).map((s) => (
+        {(["todos", "pendente", "cumprida", "atrasada", "sem_data"] as FilterStatus[]).map((s) => (
           <button
             key={s}
             onClick={() => setStatusFilter(s)}
@@ -40,7 +48,7 @@ export function ObligationsFilters({
             )}
             style={{ minHeight: 32 }}
           >
-            {s === "todos" ? "Todos" : s}
+            {STATUS_LABELS[s]}
           </button>
         ))}
         <button

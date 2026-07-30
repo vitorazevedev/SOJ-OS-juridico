@@ -12,7 +12,7 @@ import { daysUntil, obligationTypeLabel } from "@/lib/obligationsFormat";
 import { useOrganization } from "@/hooks/useOrganization";
 import { PlanFeatureLock } from "@/components/layout/PlanFeatureLock";
 
-type FilterStatus = "todos" | "pendente" | "cumprida" | "atrasada";
+type FilterStatus = "todos" | "pendente" | "cumprida" | "atrasada" | "sem_data";
 
 export default function Obligations() {
   const { org, loading: orgLoading } = useOrganization();
@@ -39,7 +39,11 @@ export default function Obligations() {
 
   const filtered = useMemo(() => {
     return obligations.filter((o) => {
-      if (statusFilter !== "todos" && o.status !== statusFilter) return false;
+      if (statusFilter === "sem_data") {
+        if (o.due_date !== null) return false;
+      } else if (statusFilter !== "todos" && o.status !== statusFilter) {
+        return false;
+      }
       if (contractFilter !== "todos" && o.contract_id !== contractFilter) return false;
       if (typeFilter !== "todos" && o.obligation_type !== typeFilter) return false;
       if (onlyUrgent) {
