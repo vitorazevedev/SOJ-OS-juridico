@@ -132,7 +132,7 @@ export function GaugeChart({ score, compact = false }: { score: number; compact?
   const c = Math.PI * r;
   const offset = c - (pct / 100) * c;
   const w = compact ? 140 : 180;
-  const h = compact ? 80 : 110;
+  const h = compact ? 86 : 110; // mesma proporção do viewBox (180x110) — evita o SVG distorcer e o arco invadir o número
 
   return (
     <div className="relative flex items-center justify-center" style={{ width: w, height: h }}>

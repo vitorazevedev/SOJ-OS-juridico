@@ -94,8 +94,6 @@ export function ClauseDetailPanel({
 
   const gravidade = clause.gravidade;
   const faixa = gravidade != null ? gravidadeFaixa(gravidade) : null;
-  const padrao = clause.ancoras?.gravidade_referencia ?? null;
-  const desvio = gravidade != null && padrao != null ? Math.round((gravidade - padrao) * 10) / 10 : null;
 
   const handleCopy = async () => {
     if (!clause.suggestion) return;
@@ -124,11 +122,6 @@ export function ClauseDetailPanel({
             {faixa.label}
           </span>
           <span className="text-[13px] text-muted-foreground">Índice {Math.round(gravidade!)} de 100</span>
-          {desvio != null && (
-            <span className="text-[13px] text-muted-foreground">
-              {desvio >= 0 ? "+" : ""}{desvio} pontos vs seu padrão
-            </span>
-          )}
           <span className="text-[11px] text-muted-foreground">
             {clause.review_status ? REVIEW_LABELS[clause.review_status] : "Ainda não revisado"}
           </span>
@@ -138,23 +131,10 @@ export function ClauseDetailPanel({
       {gravidade != null && (
         <div className="rounded-lg border border-border p-3 md:p-4">
           <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Índice de Desequilíbrio</p>
-          <div className="grid grid-cols-3 gap-2 text-center mb-2">
-            <div>
-              <p className="text-[11px] text-muted-foreground">Leitura desta cláusula</p>
-              <p className="text-xl font-semibold tabular-nums">{Math.round(gravidade)}</p>
-            </div>
-            <div>
-              <p className="text-[11px] text-muted-foreground">Seu padrão para esta cláusula</p>
-              <p className="text-xl font-semibold tabular-nums">{padrao != null ? Math.round(padrao) : "—"}</p>
-            </div>
-            <div>
-              <p className="text-[11px] text-muted-foreground">Desvio</p>
-              <p className="text-xl font-semibold tabular-nums">{desvio != null ? `${desvio >= 0 ? "+" : ""}${desvio}` : "—"}</p>
-            </div>
+          <div className="text-center mb-2">
+            <p className="text-[11px] text-muted-foreground">Leitura desta cláusula</p>
+            <p className="text-xl font-semibold tabular-nums">{Math.round(gravidade)}</p>
           </div>
-          {padrao == null && (
-            <p className="text-[11px] text-muted-foreground/70 mb-2">Sem padrão de referência para esta cláusula.</p>
-          )}
           {clause.polaridade_parte_representada != null && (() => {
             const voce = clause.polaridade_parte_representada!;
             const contraparte = 100 - voce;
