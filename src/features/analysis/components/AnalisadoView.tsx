@@ -49,7 +49,7 @@ export function AnalisadoView({
       return;
     }
     const { generateAnalysisPdf, downloadBlob } = await import("@/lib/contractDocs");
-    const blob = generateAnalysisPdf({ contract, analysis, clauses });
+    const blob = await generateAnalysisPdf({ contract, analysis, clauses });
     const slug = (contract.name || "analise").normalize("NFD").replace(/[̀-ͯ]/g, "")
       .toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 60);
     downloadBlob(blob, `analise-${slug}.pdf`);

@@ -99,6 +99,7 @@ const PC = {
 function drawReportHeader(pdf: jsPDF, opts: {
   title: string; subtitle: string; date: string;
   fields: { label: string; value: string }[];
+  logo?: LogoData | null;
 }): { y: number; ml: number; mr: number; cw: number } {
   const pw = pdf.internal.pageSize.getWidth();
   const ml = 25, mr = 20, cw = pw - ml - mr;
@@ -106,6 +107,15 @@ function drawReportHeader(pdf: jsPDF, opts: {
   // Faixa de acento (Esmeralda, 3mm)
   pdf.setFillColor(...PC.esm);
   pdf.rect(0, 0, pw, 3, "F");
+
+  // Logo Ponderum no vão entre a faixa de acento e o rótulo DOCUMENTO (y 3–11,
+  // hoje em branco) — não desloca nenhuma outra posição do cabeçalho/rodapé.
+  if (opts.logo) {
+    const h = 6;
+    const ratio = opts.logo.width / Math.max(1, opts.logo.height);
+    const w = h * ratio;
+    try { pdf.addImage(opts.logo.dataUrl, opts.logo.mime.toUpperCase(), ml, 4, w, h); } catch { /* ignore */ }
+  }
 
   // Coluna direita: DATA + PÁGINAS (preenchido no footer depois)
   const rx = pw - mr - 48;
@@ -190,10 +200,12 @@ function fmtDatePdf(iso: string | null | undefined): string {
   return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 }
 
-export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
+export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> {
   const { contract, analysis, clauses } = data;
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
   const ph  = pdf.internal.pageSize.getHeight();
+
+  const ponderumLogo = await fetchLogoData("/ponderum-logo-dark.png");
 
   const { value: resolvedScore, legacy: isLegacyIndex } = resolvedIndex(analysis);
   const score   = resolvedScore ?? 0;
@@ -207,6 +219,7 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
     title:    "Relatório de Análise Contratual",
     subtitle: "Ponderum · Inteligência Contratual",
     date:     fmtDatePdf(analysis.analyzed_at),
+    logo:     ponderumLogo,
     fields: [
       { label: "CONTRATO",    value: contract.name },
       { label: "CONTRAPARTE", value: contract.party ?? "—" },
@@ -225,7 +238,13 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
   const writeTxt = (text: string, sz = 10, bold = false, color = PC.navy, maxW = cw) => {
     pdf.setFont("helvetica", bold ? "bold" : "normal"); pdf.setFontSize(sz); pdf.setTextColor(...color);
     const lines = pdf.splitTextToSize(text, maxW) as string[];
-    lines.forEach((l) => { check(sz * 0.5); pdf.text(l, ml, y); y += sz * 0.5; });
+    const lineH = sz * 0.5;
+    check(lines.length * lineH);
+    // Um único pdf.text com maxWidth+align:"justify" (em vez do loop linha a
+    // linha) — é assim que o jsPDF justifica; a última linha do parágrafo não
+    // é esticada, seguindo a convenção tipográfica padrão.
+    pdf.text(text, ml, y, { maxWidth: maxW, align: "justify" });
+    y += lines.length * lineH;
   };
 
   const sectionHeader = (title: string) => {
@@ -245,7 +264,7 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
     pdf.setFillColor(...PC.light);
     pdf.roundedRect(ml, y, cw, boxH, 2, 2, "F");
     pdf.setFontSize(9); pdf.setFont("helvetica", "normal"); pdf.setTextColor(...PC.navy);
-    summaryLines.forEach((l, i) => { pdf.text(l, ml + 5, y + 6 + i * 4.5); });
+    pdf.text(analysis.summary, ml + 5, y + 6, { maxWidth: cw - 10, align: "justify" });
     y += boxH + 6;
   }
 
@@ -382,6 +401,22 @@ export function generateAnalysisPdf(data: AnalysisPdfData): Blob {
       y += 4;
     });
   }
+
+  // ── Aviso legal ────────────────────────────────────────────────────────────
+  check(20);
+  pdf.setFillColor(...PC.light);
+  const avisoLegal =
+    "AVISO LEGAL: Esta análise foi gerada pela Ponderum com base em inteligência artificial, a partir do " +
+    "texto do contrato analisado. Recomendamos revisão por advogado habilitado antes da assinatura. A " +
+    "Ponderum não se responsabiliza por decisões tomadas com base neste documento sem orientação jurídica " +
+    "profissional. Conforme Cláusula 8 dos Termos de Uso e Privacidade.";
+  const avisoLines = pdf.splitTextToSize(avisoLegal, cw - 10) as string[];
+  const avisoBoxH = avisoLines.length * 3.8 + 8;
+  check(avisoBoxH);
+  pdf.roundedRect(ml, y, cw, avisoBoxH, 2, 2, "F");
+  pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(...PC.mid);
+  pdf.text(avisoLegal, ml + 5, y + 5, { maxWidth: cw - 10, align: "justify" });
+  y += avisoBoxH + 6;
 
   drawReportFooters(
     pdf,
