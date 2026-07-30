@@ -16,7 +16,7 @@ export const DOCX_MIME =
 // de <w:body>, depois do último parágrafo) — funciona em qualquer um dos 54
 // modelos sem precisar editar cada .docx manualmente.
 const LEGAL_NOTICE_TEXT =
-  "Este documento foi gerado pela Ponderum com base em modelos padrão de mercado. " +
+  "Este documento foi gerado pelo Ponderum com base em modelos padrão de mercado. " +
   "Recomendamos revisão por advogado habilitado antes da assinatura.";
 
 function injectLegalNotice(zip: PizZip): void {

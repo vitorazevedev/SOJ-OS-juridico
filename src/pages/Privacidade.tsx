@@ -27,7 +27,7 @@ export default function Privacidade() {
           ← Voltar
         </a>
 
-        <div className="flex flex-col gap-4 text-sm leading-relaxed text-foreground/90">
+        <div className="flex flex-col gap-4 text-sm leading-relaxed text-foreground/90 text-justify">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Política de Privacidade</h1>
           <p className="text-xs text-muted-foreground">
             Ponderum, plataforma de inteligência contratual · Última atualização: 04 de julho de 2026
