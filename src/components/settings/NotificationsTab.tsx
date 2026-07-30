@@ -26,12 +26,14 @@ const DEFAULT_PREFS: NotifPrefs = {
 
 function Row({
   label,
+  badge,
   description,
   checked,
   onChange,
   disabled,
 }: {
   label: string;
+  badge?: string;
   description?: string;
   checked: boolean;
   onChange: (v: boolean) => void;
@@ -40,7 +42,14 @@ function Row({
   return (
     <div className="flex items-center justify-between gap-4 py-3">
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium">{label}</p>
+        <div className="flex items-center gap-2">
+          <p className="text-sm font-medium">{label}</p>
+          {badge && (
+            <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground shrink-0">
+              {badge}
+            </span>
+          )}
+        </div>
         {description && (
           <p className="text-xs text-muted-foreground mt-0.5">{description}</p>
         )}
@@ -124,6 +133,7 @@ export function NotificationsTab() {
         <div className="divide-y divide-border">
           <Row
             label="Resumo semanal de contratos"
+            badge="Em breve"
             description="Resumo por e-mail toda segunda-feira com o status dos contratos ativos"
             checked={prefs.contracts_summary}
             onChange={set("contracts_summary")}
