@@ -125,8 +125,8 @@ export function PlanTab() {
   const freemiumExhausted = isTrial && monthlyUsed != null && monthlyUsed >= FREEMIUM_MONTHLY_ANALYSIS_LIMIT;
   const freemiumRemaining = isTrial && monthlyUsed != null ? Math.max(0, FREEMIUM_MONTHLY_ANALYSIS_LIMIT - monthlyUsed) : null;
 
-  const handleDownloadReceipt = (r: Receipt) => {
-    const blob = generateReceiptPdf({
+  const handleDownloadReceipt = async (r: Receipt) => {
+    const blob = await generateReceiptPdf({
       id: r.id,
       amount_cents: r.amount_cents,
       description: r.description,

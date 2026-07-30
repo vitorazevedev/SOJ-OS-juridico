@@ -556,8 +556,14 @@ export type ReceiptPdfData = {
   org_cnpj: string | null;
 };
 
-export function generateReceiptPdf(data: ReceiptPdfData): Blob {
+// Pessoa jurídica que recebe o pagamento — Ponderum é a marca, GVF é a
+// empresa por trás. Mesmo par usado no rodapé da landing page.
+const RECEIVER_NAME = "GVF Serviços de Tecnologia Ltda";
+const RECEIVER_CNPJ = "68.051.706/0001-16";
+
+export async function generateReceiptPdf(data: ReceiptPdfData): Promise<Blob> {
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
+  const ponderumLogo = await fetchLogoData("/ponderum-logo-dark.png");
 
   const issuedDate = new Date(data.issued_at);
   const dateLabel = issuedDate.toLocaleDateString("pt-BR", { day: "2-digit", month: "short", year: "numeric" });
@@ -569,6 +575,7 @@ export function generateReceiptPdf(data: ReceiptPdfData): Blob {
     title: "Recibo de Pagamento",
     subtitle: "Ponderum · Inteligência contratual",
     date: dateLabel,
+    logo: ponderumLogo,
     fields: [
       { label: "ORGANIZAÇÃO", value: data.org_name },
       { label: "CNPJ/CPF", value: data.org_cnpj ?? "—" },
@@ -584,8 +591,10 @@ export function generateReceiptPdf(data: ReceiptPdfData): Blob {
   const rows: [string, string][] = [
     ["Recibo Nº", data.id.slice(0, 8).toUpperCase()],
     ["Data e hora do pagamento", dateTimeLabel],
-    ["Organização", data.org_name],
-    ["CNPJ/CPF", data.org_cnpj ?? "—"],
+    ["Pagador", data.org_name],
+    ["CNPJ/CPF do pagador", data.org_cnpj ?? "—"],
+    ["Recebedor", RECEIVER_NAME],
+    ["CNPJ do recebedor", RECEIVER_CNPJ],
     ["Valor pago", fmtBRLPdf(data.amount_cents)],
   ];
   rows.forEach(([label, value]) => {
