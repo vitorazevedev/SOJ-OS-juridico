@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { SojCard } from "@/components/layout/Primitives";
 import { supabase } from "@/lib/supabase";
 import { fmtBRL } from "@/lib/adminDashboard";
-import { Loader2, TrendingUp, Users, Building2, ShieldAlert } from "lucide-react";
+import { Loader2, TrendingUp, Users, Building2, ShieldAlert, Wallet } from "lucide-react";
 
 type ExecStats = {
   total_orgs: number;
@@ -12,13 +12,22 @@ type ExecStats = {
   mrr_estimate: number;
   churned_30d: number;
   churn_rate_30d: number;
+  revenue_30d: number;
 };
 
 type MonthCount = { month: string; new_orgs: number };
+type MonthRevenue = { month: string; revenue: number };
+
+// Rótulo de valor dentro do gráfico: sem "R$" pra caber nas colunas mensais
+// (o "R$" já fica explícito na legenda abaixo do gráfico).
+function fmtCompact(value: number) {
+  return value.toLocaleString("pt-BR", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
 
 export function ExecutiveDashboard() {
   const [stats, setStats] = useState<ExecStats | null>(null);
   const [growth, setGrowth] = useState<MonthCount[]>([]);
+  const [revenue, setRevenue] = useState<MonthRevenue[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -27,9 +36,10 @@ export function ExecutiveDashboard() {
         setLoading(false);
         return;
       }
-      const d = data as unknown as { stats: ExecStats; growth_monthly: MonthCount[] };
+      const d = data as unknown as { stats: ExecStats; growth_monthly: MonthCount[]; revenue_monthly: MonthRevenue[] };
       setStats(d.stats);
       setGrowth(d.growth_monthly ?? []);
+      setRevenue(d.revenue_monthly ?? []);
       setLoading(false);
     });
   }, []);
@@ -45,10 +55,12 @@ export function ExecutiveDashboard() {
   if (!stats) return null;
 
   const maxNewOrgs = Math.max(...growth.map((g) => g.new_orgs), 1);
+  const maxRevenue = Math.max(...revenue.map((r) => r.revenue), stats.mrr_estimate, 1);
+  const chartH = 96;
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <SojCard className="flex flex-col gap-1 p-4 border-primary/30">
           <div className="flex items-center gap-1.5 text-primary">
             <TrendingUp className="h-3.5 w-3.5" />
@@ -57,6 +69,17 @@ export function ExecutiveDashboard() {
           <p className="text-lg md:text-2xl font-semibold tabular-nums text-primary whitespace-nowrap">{fmtBRL(stats.mrr_estimate)}</p>
           <p className="text-[10px] text-muted-foreground leading-tight">
             {stats.starter_count} conta(s) Starter × preço atual do plano
+          </p>
+        </SojCard>
+
+        <SojCard className="flex flex-col gap-1 p-4">
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Wallet className="h-3.5 w-3.5" />
+            <span className="text-[10px] font-mono uppercase tracking-wider">Receita real (30d)</span>
+          </div>
+          <p className="text-lg md:text-2xl font-semibold tabular-nums whitespace-nowrap">{fmtBRL(stats.revenue_30d)}</p>
+          <p className="text-[10px] text-muted-foreground leading-tight">
+            Recibos confirmados nos últimos 30 dias
           </p>
         </SojCard>
 
@@ -109,6 +132,33 @@ export function ExecutiveDashboard() {
             </div>
           ))}
         </div>
+      </SojCard>
+
+      <SojCard className="flex flex-col gap-4 p-5">
+        <div className="flex items-center gap-2">
+          <Wallet className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-medium">Receita real por mês — recibos confirmados</h2>
+        </div>
+        <div className="relative flex items-end gap-2" style={{ height: chartH }}>
+          <div
+            className="absolute left-0 right-0 border-t border-dashed border-muted-foreground/50"
+            style={{ bottom: `${Math.min((stats.mrr_estimate / maxRevenue) * chartH, chartH)}px` }}
+          />
+          {revenue.map(({ month, revenue }) => (
+            <div key={month} className="flex-1 flex flex-col items-center gap-1 relative z-10">
+              <span className="text-[10px] tabular-nums text-muted-foreground">{revenue > 0 ? fmtCompact(revenue) : ""}</span>
+              <div
+                className="w-full rounded-t-md bg-primary/70 transition-all"
+                style={{ height: `${Math.max((revenue / maxRevenue) * chartH, revenue > 0 ? 6 : 2)}px` }}
+              />
+              <span className="text-[10px] text-muted-foreground font-mono">{month}</span>
+            </div>
+          ))}
+        </div>
+        <p className="text-[10px] text-muted-foreground flex items-center gap-1.5">
+          <span className="inline-block h-px w-4 border-t border-dashed border-muted-foreground/70" />
+          Linha tracejada = MRR estimado atual ({fmtBRL(stats.mrr_estimate)}) · barras = receita real confirmada (recibos) no mês
+        </p>
       </SojCard>
     </div>
   );
