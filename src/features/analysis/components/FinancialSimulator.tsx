@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { useContractAnalysis } from "@/hooks/useContractAnalysis";
 
 export function FinancialSimulator({
@@ -33,7 +35,23 @@ export function FinancialSimulator({
   return (
     <div className="rounded-xl border border-border bg-muted/20 p-4 flex flex-col gap-3">
       <div>
-        <p className="text-sm font-medium">Simulador de Valor do Contrato</p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-sm font-medium">Simulador de Valor do Contrato</p>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                aria-label="Como funciona o simulador"
+              >
+                <Info className="h-3.5 w-3.5" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-[280px] text-xs leading-relaxed">
+              A IA já estimou a exposição financeira das cláusulas com base no texto do contrato, sem saber o valor real do negócio. Informe aqui o valor real do contrato para ver que porcentagem dele essa exposição representa — isso ajuda a dimensionar o risco financeiro em proporção ao tamanho real do contrato.
+            </TooltipContent>
+          </Tooltip>
+        </div>
         <p className="text-xs text-muted-foreground mt-0.5">
           Informe o valor real para calcular a exposição proporcional
         </p>
