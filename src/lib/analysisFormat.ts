@@ -51,23 +51,28 @@ export function resolvedIndex(a: { risk_score: number | null; indice_desequilibr
 // Trocar para true de uma vez só quando a calibração for aprovada.
 export const POLARIDADE_CALIBRADA = false;
 
-// Três faixas de risco por cláusula, calculadas a partir da gravidade contínua
-// (0-100), no mesmo espírito de scoreToLevel mas com rótulos do painel de
-// detalhe da cláusula (Fase 4).
-export type GravidadeZona = "critico" | "atencao" | "equilibrado";
+// Régua única de faixas de risco (0-100), usada tanto por cláusula (gravidade)
+// quanto pelo índice agregado do contrato — antes existiam 2 réguas divergentes
+// (uma para badge por cláusula, outra para o badge do índice/score), nenhuma
+// batendo com os cortes que o Fellipe já tinha especificado (v2.1) na tabela
+// indice_desequilibrio_parametros (piso_critico=80, piso_alto=60, piso_medio=30).
+// Unificado aqui: mesmos cortes e mesmos nomes nos dois lugares.
+export type GravidadeZona = "critico" | "alto" | "medio" | "baixo";
 
 export function gravidadeFaixa(gravidade: number): { zone: GravidadeZona; label: string; dot: string; text: string; bg: string } {
-  if (gravidade >= 65) return { zone: "critico", label: "Risco crítico", dot: "bg-risk-critical", text: "text-risk-critical", bg: "bg-risk-critical-dim" };
-  if (gravidade >= 35) return { zone: "atencao", label: "Risco de atenção", dot: "bg-risk-medium", text: "text-risk-medium", bg: "bg-risk-medium-dim" };
-  return { zone: "equilibrado", label: "Risco equilibrado", dot: "bg-risk-low", text: "text-risk-low", bg: "bg-risk-low-dim" };
+  if (gravidade >= 80) return { zone: "critico", label: "Risco crítico", dot: "bg-risk-critical", text: "text-risk-critical", bg: "bg-risk-critical-dim" };
+  if (gravidade >= 60) return { zone: "alto", label: "Risco alto", dot: "bg-risk-high", text: "text-risk-high", bg: "bg-risk-high-dim" };
+  if (gravidade >= 30) return { zone: "medio", label: "Risco médio", dot: "bg-risk-medium", text: "text-risk-medium", bg: "bg-risk-medium-dim" };
+  return { zone: "baixo", label: "Risco baixo", dot: "bg-risk-low", text: "text-risk-low", bg: "bg-risk-low-dim" };
 }
 
 // Destaque de texto por zona de gravidade (mesmo padrão visual de SEV_HIGHLIGHT,
-// mas nas 3 faixas novas em vez das 4 categorias antigas de severity).
+// agora nas mesmas 4 faixas da régua unificada acima).
 export const GRAVIDADE_HIGHLIGHT: Record<GravidadeZona, string> = {
   critico: "bg-risk-critical/25 border-b-2 border-risk-critical",
-  atencao: "bg-risk-medium/25 border-b-2 border-risk-medium",
-  equilibrado: "bg-risk-low/25 border-b-2 border-risk-low",
+  alto: "bg-risk-high/25 border-b-2 border-risk-high",
+  medio: "bg-risk-medium/25 border-b-2 border-risk-medium",
+  baixo: "bg-risk-low/25 border-b-2 border-risk-low",
 };
 
 export const severityColor: Record<string, string> = {

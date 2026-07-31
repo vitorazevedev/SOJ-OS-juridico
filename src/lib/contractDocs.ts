@@ -211,8 +211,9 @@ export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> 
 
   const { value: resolvedScore, legacy: isLegacyIndex } = resolvedIndex(analysis);
   const score   = resolvedScore ?? 0;
-  const sevRgb: [number,number,number] = score >= 70 ? [220, 38, 38] : score >= 40 ? [234, 88, 12] : score >= 20 ? [202, 138, 4] : [6, 113, 115];
-  const sevLabel = score >= 70 ? "CRÍTICO" : score >= 40 ? "ALTO" : score >= 20 ? "MÉDIO" : "BAIXO";
+  const scoreZona = gravidadeFaixa(score).zone;
+  const sevRgb = SEV_RGB[scoreZona];
+  const sevLabel = SEV_LABEL[scoreZona];
 
   // ── Cabeçalho ──────────────────────────────────────────────────────────────
   // Score badge inline no campo da direita
@@ -296,12 +297,8 @@ export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> 
 
     clauses.forEach((cl, idx) => {
       const zona = cl.gravidade != null ? gravidadeFaixa(cl.gravidade) : null;
-      const zonaRgb: [number, number, number] = zona
-        ? (zona.zone === "critico" ? [220, 38, 38] : zona.zone === "atencao" ? [202, 138, 4] : [22, 163, 74])
-        : (SEV_RGB[cl.severity] ?? [100, 100, 100]);
-      const zonaLabel = zona
-        ? (zona.zone === "critico" ? "CRÍTICO" : zona.zone === "atencao" ? "ATENÇÃO" : "EQUILIBRADO")
-        : (SEV_LABEL[cl.severity] ?? cl.severity.toUpperCase());
+      const zonaRgb: [number, number, number] = zona ? SEV_RGB[zona.zone] : (SEV_RGB[cl.severity] ?? [100, 100, 100]);
+      const zonaLabel = zona ? SEV_LABEL[zona.zone] : (SEV_LABEL[cl.severity] ?? cl.severity.toUpperCase());
       const sev = zonaRgb;
       const hasExp = cl.exposure_likely != null;
       const titleW = cw - 35 - (hasExp ? 32 : 5);

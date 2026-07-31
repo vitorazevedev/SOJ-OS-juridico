@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { ReactNode } from "react";
 import { Lock } from "lucide-react";
+import { gravidadeFaixa } from "@/lib/analysisFormat";
 
 export function SojCard({ children, className, padding = true }: { children: ReactNode; className?: string; padding?: boolean }) {
   return (
@@ -61,18 +62,13 @@ export function RiskBadge({ score, locked }: { score: number; locked?: boolean }
       </span>
     );
   }
-  const level = score >= 65 ? "critical" : score >= 40 ? "medium" : "low";
-  const label = score >= 65 ? "Crítico" : score >= 40 ? "Médio" : "Baixo";
-  const cls = {
-    critical: "bg-risk-critical-dim text-risk-critical",
-    medium: "bg-risk-medium-dim text-risk-medium",
-    low: "bg-risk-low-dim text-risk-low",
-  }[level];
+  const faixa = gravidadeFaixa(score);
+  const shortLabel = faixa.label.replace("Risco ", "");
   return (
-    <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium tabular-nums", cls)}>
+    <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium tabular-nums", faixa.bg, faixa.text)}>
       <span className="font-semibold">{score}</span>
       <span className="opacity-70">·</span>
-      <span>{label}</span>
+      <span>{shortLabel.charAt(0).toUpperCase() + shortLabel.slice(1)}</span>
     </span>
   );
 }

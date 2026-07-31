@@ -31,7 +31,7 @@ export function JuridicaTab({
   const { value: indexValue, legacy: isLegacyIndex } = resolvedIndex(analysis);
   const riskScore = indexValue ?? 0;
   const [leftTab, setLeftTab] = useState<"achados" | "documento">("achados");
-  const zonaCount = { critico: 0, atencao: 0, equilibrado: 0 };
+  const zonaCount = { critico: 0, alto: 0, medio: 0, baixo: 0 };
   clauses.forEach((c) => {
     if (c.gravidade == null) return;
     zonaCount[gravidadeFaixa(c.gravidade).zone]++;
@@ -103,8 +103,9 @@ export function JuridicaTab({
           <div className="flex flex-col gap-2 mt-4 w-full">
             {([
               ["Crítico", "bg-risk-critical", zonaCount.critico],
-              ["Atenção", "bg-risk-medium", zonaCount.atencao],
-              ["Equilibrado", "bg-risk-low", zonaCount.equilibrado],
+              ["Alto", "bg-risk-high", zonaCount.alto],
+              ["Médio", "bg-risk-medium", zonaCount.medio],
+              ["Baixo", "bg-risk-low", zonaCount.baixo],
             ] as const).map(([lbl, dot, n]) => (
               <div key={lbl} className="flex items-center justify-between rounded-md bg-muted/40 px-3 py-2">
                 <span className="flex items-center gap-2 text-[11px] md:text-xs">

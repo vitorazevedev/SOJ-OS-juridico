@@ -126,8 +126,9 @@ export function AnalisadoView({
                   <div className="flex flex-wrap gap-2 text-[10px]">
                     {([
                       ["critico", "bg-risk-critical", "Crítico"],
-                      ["atencao", "bg-risk-medium", "Atenção"],
-                      ["equilibrado", "bg-risk-low", "Equilibrado"],
+                      ["alto", "bg-risk-high", "Alto"],
+                      ["medio", "bg-risk-medium", "Médio"],
+                      ["baixo", "bg-risk-low", "Baixo"],
                     ] as [GravidadeZona, string, string][]).map(([zone, dot, label]) => (
                       <span key={zone} className={cn("inline-flex items-center gap-1 px-2 py-0.5 rounded-full", GRAVIDADE_HIGHLIGHT[zone])}>
                         <span className={cn("h-1.5 w-1.5 rounded-full", dot)} />

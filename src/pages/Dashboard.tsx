@@ -12,6 +12,7 @@ import { TopRisksCard } from "@/components/dashboard/TopRisksCard";
 import { UpcomingObligationsCard } from "@/components/dashboard/UpcomingObligationsCard";
 import { RecentContractsTable } from "@/components/dashboard/RecentContractsTable";
 import { formatBRL, formatToday, greeting } from "@/lib/dashboardFormat";
+import { gravidadeFaixa } from "@/lib/analysisFormat";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -84,7 +85,7 @@ export default function Dashboard() {
             label="Índice médio de Desequilíbrio"
             value={isStarter ? (summary.avg_risk_score > 0 ? String(Math.round(summary.avg_risk_score)) : "—") : "—"}
             hint={isStarter ? "Contratos analisados" : "Disponível no Starter"}
-            highlight={isStarter && summary.avg_risk_score >= 65}
+            highlight={isStarter && gravidadeFaixa(summary.avg_risk_score).zone === "critico"}
           />
           <KpiCard
             label="Obrigações pendentes"

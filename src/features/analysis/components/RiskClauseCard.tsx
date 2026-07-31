@@ -149,10 +149,11 @@ export function ClauseDetailPanel({
                   )}
                 </p>
 
-                <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-2.5 mb-1.5">
-                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-risk-low shrink-0" /> Equilibrado · 0 a 34</span>
-                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-risk-medium shrink-0" /> Atenção · 35 a 64</span>
-                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-risk-critical shrink-0" /> Crítico · 65 a 100</span>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground mt-2.5 mb-1.5">
+                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-risk-low shrink-0" /> Baixo · 0 a 29</span>
+                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-risk-medium shrink-0" /> Médio · 30 a 59</span>
+                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-risk-high shrink-0" /> Alto · 60 a 79</span>
+                  <span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-risk-critical shrink-0" /> Crítico · 80 a 100</span>
                 </div>
 
                 <div className="flex items-center gap-1.5">

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { gravidadeFaixa } from "@/lib/analysisFormat";
 import {
   Bar,
   BarChart,
@@ -127,7 +128,13 @@ export function VolumeExposureChart() {
 
 export function GaugeChart({ score, compact = false }: { score: number; compact?: boolean }) {
   const pct = Math.min(100, Math.max(0, score));
-  const color = pct >= 65 ? "hsl(var(--risk-critical))" : pct >= 40 ? "hsl(var(--risk-medium))" : "hsl(var(--risk-low))";
+  const GAUGE_COLOR: Record<string, string> = {
+    critico: "hsl(var(--risk-critical))",
+    alto: "hsl(var(--risk-high))",
+    medio: "hsl(var(--risk-medium))",
+    baixo: "hsl(var(--risk-low))",
+  };
+  const color = GAUGE_COLOR[gravidadeFaixa(pct).zone];
   const r = 70;
   const c = Math.PI * r;
   const offset = c - (pct / 100) * c;
