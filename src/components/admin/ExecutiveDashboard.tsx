@@ -54,7 +54,7 @@ export function ExecutiveDashboard() {
             <TrendingUp className="h-3.5 w-3.5" />
             <span className="text-[10px] font-mono uppercase tracking-wider">MRR estimado</span>
           </div>
-          <p className="text-2xl font-semibold tabular-nums text-primary">{fmtBRL(stats.mrr_estimate)}</p>
+          <p className="text-lg md:text-2xl font-semibold tabular-nums text-primary whitespace-nowrap">{fmtBRL(stats.mrr_estimate)}</p>
           <p className="text-[10px] text-muted-foreground leading-tight">
             {stats.starter_count} conta(s) Starter × preço atual do plano
           </p>
