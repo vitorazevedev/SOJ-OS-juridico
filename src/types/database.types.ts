@@ -42,79 +42,76 @@ export type Database = {
     Tables: {
       analysis_shadow_context: {
         Row: {
-          ambiguo_documento: boolean
-          ambiguo_fluxo: boolean
           analysis_id: string
-          confianca_documento: number | null
-          confianca_fluxo: number | null
-          estagio_negocial: string | null
-          evidencias_documento: Json | null
-          evidencias_fluxo: Json | null
+          applicable: boolean | null
+          business_nature: string | null
+          confidence_document: number | null
+          confidence_flow: number | null
+          context_schema_version: string
+          disclosing_parties: Json | null
+          document_purpose: string | null
+          document_type: string | null
+          evidence_document: Json | null
+          evidence_flow: Json | null
           extracted_at: string
-          finalidade_documento: string | null
-          fluxo_aplicavel: boolean | null
-          fluxo_modalidade: string | null
           id: string
-          natureza_relacao: string | null
-          papel_parte_representada: string | null
-          parte_representada_tambem_divulga: boolean | null
-          partes_divulgadoras: Json | null
-          partes_receptoras: Json | null
+          modality: string | null
+          negotiation_stage: string | null
           prompt_version: string
-          protecoes_reciprocas_necessarias: boolean | null
-          schema_version: string
-          subtipo_documento: string | null
-          tipo_documento: string | null
+          receiving_parties: Json | null
+          represented_party: string | null
+          represented_party_also_discloses: boolean | null
+          represented_party_role: string | null
+          requires_confirmation_document: boolean
+          requires_confirmation_flow: boolean
         }
         Insert: {
-          ambiguo_documento?: boolean
-          ambiguo_fluxo?: boolean
           analysis_id: string
-          confianca_documento?: number | null
-          confianca_fluxo?: number | null
-          estagio_negocial?: string | null
-          evidencias_documento?: Json | null
-          evidencias_fluxo?: Json | null
+          applicable?: boolean | null
+          business_nature?: string | null
+          confidence_document?: number | null
+          confidence_flow?: number | null
+          context_schema_version?: string
+          disclosing_parties?: Json | null
+          document_purpose?: string | null
+          document_type?: string | null
+          evidence_document?: Json | null
+          evidence_flow?: Json | null
           extracted_at?: string
-          finalidade_documento?: string | null
-          fluxo_aplicavel?: boolean | null
-          fluxo_modalidade?: string | null
           id?: string
-          natureza_relacao?: string | null
-          papel_parte_representada?: string | null
-          parte_representada_tambem_divulga?: boolean | null
-          partes_divulgadoras?: Json | null
-          partes_receptoras?: Json | null
+          modality?: string | null
+          negotiation_stage?: string | null
           prompt_version: string
-          protecoes_reciprocas_necessarias?: boolean | null
-          schema_version?: string
-          subtipo_documento?: string | null
-          tipo_documento?: string | null
+          receiving_parties?: Json | null
+          represented_party?: string | null
+          represented_party_also_discloses?: boolean | null
+          represented_party_role?: string | null
+          requires_confirmation_document?: boolean
+          requires_confirmation_flow?: boolean
         }
         Update: {
-          ambiguo_documento?: boolean
-          ambiguo_fluxo?: boolean
           analysis_id?: string
-          confianca_documento?: number | null
-          confianca_fluxo?: number | null
-          estagio_negocial?: string | null
-          evidencias_documento?: Json | null
-          evidencias_fluxo?: Json | null
+          applicable?: boolean | null
+          business_nature?: string | null
+          confidence_document?: number | null
+          confidence_flow?: number | null
+          context_schema_version?: string
+          disclosing_parties?: Json | null
+          document_purpose?: string | null
+          document_type?: string | null
+          evidence_document?: Json | null
+          evidence_flow?: Json | null
           extracted_at?: string
-          finalidade_documento?: string | null
-          fluxo_aplicavel?: boolean | null
-          fluxo_modalidade?: string | null
           id?: string
-          natureza_relacao?: string | null
-          papel_parte_representada?: string | null
-          parte_representada_tambem_divulga?: boolean | null
-          partes_divulgadoras?: Json | null
-          partes_receptoras?: Json | null
+          modality?: string | null
+          negotiation_stage?: string | null
           prompt_version?: string
-          protecoes_reciprocas_necessarias?: boolean | null
-          schema_version?: string
-          subtipo_documento?: string | null
-          tipo_documento?: string | null
+          receiving_parties?: Json | null
+          represented_party?: string | null
+          represented_party_also_discloses?: boolean | null
+          represented_party_role?: string | null
+          requires_confirmation_document?: boolean
+          requires_confirmation_flow?: boolean
         }
         Relationships: [
           {
