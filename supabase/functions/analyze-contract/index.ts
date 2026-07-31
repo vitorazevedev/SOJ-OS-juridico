@@ -224,6 +224,7 @@ REGRAS PARA VALORES FINANCEIROS (crítico para responsabilidade jurídica):
 GRAVIDADE (0-100, contínua):
 - Use a régua de âncoras abaixo como referência de calibração — interpole entre as âncoras mais próximas, não invente uma escala própria.
 - Preencha ancora_referencia com o código da âncora mais próxima quando aplicável.
+- Equiparação a crime (ex: "equipara-se a crime de...", "sujeita o infrator às sanções penais", "constitui violação de segredo profissional"): a simples presença dessa redação NÃO deve, por si só, gerar gravidade alta. É um reforço retórico comum em cláusulas de confidencialidade e não tem efeito jurídico automático. Só eleve a gravidade por causa disso quando houver um agravante concreto: consequência econômica vinculada (multa, indenização presumida), presunção de culpa/inversão do ônus da prova, ou penalidade automática sem exame do caso concreto. Na ausência desses agravantes, trate como observação qualitativa de baixo peso.
 - justificativa_gravidade: até 20 palavras explicando a nota atribuída.
 - confianca: "alta" quando a cláusula se encaixa claramente numa âncora ou padrão conhecido; "media"/"baixa" quando for julgamento mais livre.${ancorasPrompt}${parteRepresentadaPrompt}`
 
@@ -451,7 +452,7 @@ CONCLUSÃO E IMPACTO:
         financial_total: financialTotal,
         status: 'completed',
         model_used: MODEL,
-        prompt_version: 'v4',
+        prompt_version: 'v5',
         parte_representada,
         tokens_input: tokensInput,
         tokens_output: tokensOutput,
