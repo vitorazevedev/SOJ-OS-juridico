@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useContractAnalysis } from "@/hooks/useContractAnalysis";
 import { useEconomicIndexes } from "@/hooks/useEconomicIndexes";
@@ -10,9 +10,18 @@ import { AnalisadoView } from "@/features/analysis/components/AnalisadoView";
 import { AnalysisFeedbackPrompt } from "@/features/analysis/components/AnalysisFeedbackPrompt";
 import { fmtDate } from "@/lib/analysisFormat";
 
+const LAST_ANALYSIS_KEY = "soj:lastAnalysisId";
+
 export default function Analysis() {
   const navigate = useNavigate();
   const { id } = useParams();
+
+  useEffect(() => {
+    if (!id) {
+      const lastId = localStorage.getItem(LAST_ANALYSIS_KEY);
+      if (lastId) navigate(`/analysis/${lastId}`, { replace: true });
+    }
+  }, [id, navigate]);
 
   if (!id) {
     return (
@@ -56,6 +65,14 @@ function AnalysisView({ id }: { id: string }) {
   const [analisadoTab, setAnalisadoTab] = useState<"juridica" | "financeiro" | "texto">("juridica");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
+
+  useEffect(() => {
+    if (contract) {
+      localStorage.setItem(LAST_ANALYSIS_KEY, id);
+    } else if (notFound) {
+      localStorage.removeItem(LAST_ANALYSIS_KEY);
+    }
+  }, [id, contract, notFound]);
 
   const handleAnalyze = async (parteRepresentada?: string) => {
     setAnalyzing(true);
