@@ -1,3 +1,4 @@
+Initialising login role...
 export type Json =
   | string
   | number
@@ -39,50 +40,235 @@ export type Database = {
   }
   public: {
     Tables: {
+      analysis_shadow_context: {
+        Row: {
+          ambiguo_documento: boolean
+          ambiguo_fluxo: boolean
+          analysis_id: string
+          confianca_documento: number | null
+          confianca_fluxo: number | null
+          estagio_negocial: string | null
+          evidencias_documento: Json | null
+          evidencias_fluxo: Json | null
+          extracted_at: string
+          finalidade_documento: string | null
+          fluxo_aplicavel: boolean | null
+          fluxo_modalidade: string | null
+          id: string
+          natureza_relacao: string | null
+          papel_parte_representada: string | null
+          parte_representada_tambem_divulga: boolean | null
+          partes_divulgadoras: Json | null
+          partes_receptoras: Json | null
+          prompt_version: string
+          protecoes_reciprocas_necessarias: boolean | null
+          schema_version: string
+          subtipo_documento: string | null
+          tipo_documento: string | null
+        }
+        Insert: {
+          ambiguo_documento?: boolean
+          ambiguo_fluxo?: boolean
+          analysis_id: string
+          confianca_documento?: number | null
+          confianca_fluxo?: number | null
+          estagio_negocial?: string | null
+          evidencias_documento?: Json | null
+          evidencias_fluxo?: Json | null
+          extracted_at?: string
+          finalidade_documento?: string | null
+          fluxo_aplicavel?: boolean | null
+          fluxo_modalidade?: string | null
+          id?: string
+          natureza_relacao?: string | null
+          papel_parte_representada?: string | null
+          parte_representada_tambem_divulga?: boolean | null
+          partes_divulgadoras?: Json | null
+          partes_receptoras?: Json | null
+          prompt_version: string
+          protecoes_reciprocas_necessarias?: boolean | null
+          schema_version?: string
+          subtipo_documento?: string | null
+          tipo_documento?: string | null
+        }
+        Update: {
+          ambiguo_documento?: boolean
+          ambiguo_fluxo?: boolean
+          analysis_id?: string
+          confianca_documento?: number | null
+          confianca_fluxo?: number | null
+          estagio_negocial?: string | null
+          evidencias_documento?: Json | null
+          evidencias_fluxo?: Json | null
+          extracted_at?: string
+          finalidade_documento?: string | null
+          fluxo_aplicavel?: boolean | null
+          fluxo_modalidade?: string | null
+          id?: string
+          natureza_relacao?: string | null
+          papel_parte_representada?: string | null
+          parte_representada_tambem_divulga?: boolean | null
+          partes_divulgadoras?: Json | null
+          partes_receptoras?: Json | null
+          prompt_version?: string
+          protecoes_reciprocas_necessarias?: boolean | null
+          schema_version?: string
+          subtipo_documento?: string | null
+          tipo_documento?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_shadow_context_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "contract_analyses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analysis_shadow_context_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "contract_analyses_gated"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      anchor_bank_releases: {
+        Row: {
+          active_anchor_count: number | null
+          aggregation_policy: Json | null
+          anchor_bank_version: string
+          approved_at: string | null
+          approved_by: string | null
+          bands: Json | null
+          hard_rule: string | null
+          id: string
+          imported_at: string
+          inactive_anchor_count: number | null
+          manifest: Json | null
+          release_version: string | null
+          risk_family_count: number | null
+          status: string
+        }
+        Insert: {
+          active_anchor_count?: number | null
+          aggregation_policy?: Json | null
+          anchor_bank_version: string
+          approved_at?: string | null
+          approved_by?: string | null
+          bands?: Json | null
+          hard_rule?: string | null
+          id?: string
+          imported_at?: string
+          inactive_anchor_count?: number | null
+          manifest?: Json | null
+          release_version?: string | null
+          risk_family_count?: number | null
+          status: string
+        }
+        Update: {
+          active_anchor_count?: number | null
+          aggregation_policy?: Json | null
+          anchor_bank_version?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          bands?: Json | null
+          hard_rule?: string | null
+          id?: string
+          imported_at?: string
+          inactive_anchor_count?: number | null
+          manifest?: Json | null
+          release_version?: string | null
+          risk_family_count?: number | null
+          status?: string
+        }
+        Relationships: []
+      }
       ancoras: {
         Row: {
+          anchor_bank_version: string | null
+          applicability: Json | null
+          approval: Json | null
           ativo: boolean
           categoria: string
           codigo: string
           condicoes_disparo: string
           created_at: string
+          directionality: Json | null
           especie: string
+          family_id: string | null
+          gating: Json | null
           gravidade_referencia: number
           id: string
+          qualitative_alert: Json | null
           razao: string
+          regression: Json | null
+          source_observation: string | null
+          subfamily_id: string | null
+          technical_notes: string | null
           titulo: string
           updated_at: string
           versao: number
         }
         Insert: {
+          anchor_bank_version?: string | null
+          applicability?: Json | null
+          approval?: Json | null
           ativo?: boolean
           categoria: string
           codigo: string
           condicoes_disparo: string
           created_at?: string
+          directionality?: Json | null
           especie: string
+          family_id?: string | null
+          gating?: Json | null
           gravidade_referencia: number
           id?: string
+          qualitative_alert?: Json | null
           razao: string
+          regression?: Json | null
+          source_observation?: string | null
+          subfamily_id?: string | null
+          technical_notes?: string | null
           titulo: string
           updated_at?: string
           versao?: number
         }
         Update: {
+          anchor_bank_version?: string | null
+          applicability?: Json | null
+          approval?: Json | null
           ativo?: boolean
           categoria?: string
           codigo?: string
           condicoes_disparo?: string
           created_at?: string
+          directionality?: Json | null
           especie?: string
+          family_id?: string | null
+          gating?: Json | null
           gravidade_referencia?: number
           id?: string
+          qualitative_alert?: Json | null
           razao?: string
+          regression?: Json | null
+          source_observation?: string | null
+          subfamily_id?: string | null
+          technical_notes?: string | null
           titulo?: string
           updated_at?: string
           versao?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "ancoras_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "risk_families"
+            referencedColumns: ["family_id"]
+          },
+        ]
       }
       app_settings: {
         Row: {
@@ -863,6 +1049,30 @@ export type Database = {
           },
         ]
       }
+      risk_families: {
+        Row: {
+          aggregation_use: string | null
+          definition: string
+          family_id: string
+          name: string
+          status: string
+        }
+        Insert: {
+          aggregation_use?: string | null
+          definition: string
+          family_id: string
+          name: string
+          status?: string
+        }
+        Update: {
+          aggregation_use?: string | null
+          definition?: string
+          family_id?: string
+          name?: string
+          status?: string
+        }
+        Relationships: []
+      }
       support_clicks: {
         Row: {
           clicked_at: string
@@ -1298,3 +1508,6 @@ export const Constants = {
     Enums: {},
   },
 } as const
+<claude-code-hint v="1" type="plugin" value="supabase@claude-plugins-official" />
+A new version of Supabase CLI is available: v2.111.0 (currently installed v2.98.2)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli
