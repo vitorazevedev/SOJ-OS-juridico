@@ -94,7 +94,7 @@ export function FinancialSimulator({
           )}
         </div>
       )}
-      <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
+      <p className="text-[10px] text-muted-foreground leading-relaxed">
         * Estimativa baseada nas cláusulas identificadas pela IA. Consulte um advogado para avaliação definitiva.
       </p>
     </div>
