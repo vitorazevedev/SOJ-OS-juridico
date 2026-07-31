@@ -150,7 +150,100 @@ export function OrganizationsManagementList() {
         />
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Mobile: lista de cards, sem scroll lateral */}
+      <div className="flex flex-col gap-3 md:hidden">
+        {orgs.map((org) => {
+          const isTrial = org.plan_status === "trial";
+          const daysLeft = renewalDaysLeft(org.plan_renews_at);
+          return (
+            <div key={org.id} className="rounded-lg border border-border p-3 flex flex-col gap-2.5">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{org.name}</p>
+                  <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                    <span className={cn(
+                      "text-[10px] px-2 py-0.5 rounded-full font-medium",
+                      isTrial ? "bg-muted text-muted-foreground" : "bg-primary-dim text-primary"
+                    )}>
+                      {isTrial ? "Freemium" : "Starter"}
+                    </span>
+                    {org.blocked && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-destructive/10 text-destructive">
+                        Bloqueada
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" disabled={actingId === org.id}>
+                      {actingId === org.id
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        : <MoreVertical className="h-3.5 w-3.5" />}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {isTrial && org.admin_phone && (
+                      <DropdownMenuItem
+                        onClick={() => window.open(waLink(org.admin_phone, upgradeWhatsappTemplate(org.admin_name ?? "")), "_blank")}
+                      >
+                        <MessageCircle className="h-3.5 w-3.5 mr-2" /> Chamar no WhatsApp (upgrade)
+                      </DropdownMenuItem>
+                    )}
+                    {isTrial ? (
+                      <DropdownMenuItem onClick={() => setPlanStatus(org, "active")}>
+                        Confirmar upgrade (marcar como pago)
+                      </DropdownMenuItem>
+                    ) : (
+                      <>
+                        <DropdownMenuItem onClick={() => renewSubscription(org)}>
+                          Renovar assinatura (+30 dias)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setPlanStatus(org, "trial")}>
+                          Rebaixar para Freemium
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                    <DropdownMenuItem onClick={() => setInvoiceOrg({ id: org.id, name: org.name })}>
+                      <FileUp className="h-3.5 w-3.5 mr-2" /> Upload NF
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setBlocked(org, !org.blocked)}>
+                      {org.blocked ? "Desbloquear" : "Bloquear"}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+
+              <div className="text-xs text-muted-foreground flex flex-col gap-0.5">
+                <span className="truncate">{org.admin_name ?? "—"}</span>
+                <span className="truncate">{org.admin_email ?? "—"}</span>
+                <span className="truncate">{org.admin_phone ?? "—"}</span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 text-xs pt-2 border-t border-border">
+                <div>
+                  <p className="text-muted-foreground text-[10px] font-mono uppercase tracking-wider">CNPJ/CPF</p>
+                  <p className="mt-0.5 truncate">{org.cnpj ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-[10px] font-mono uppercase tracking-wider">Vence em</p>
+                  <p className="mt-0.5">{isTrial ? "—" : daysLeft == null ? "—" : daysLeft <= 0 ? "Vencida" : `${daysLeft}d`}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-[10px] font-mono uppercase tracking-wider">Criada em</p>
+                  <p className="mt-0.5">{fmtDate(org.created_at)}</p>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+        {!loading && orgs.length === 0 && (
+          <p className="py-6 text-center text-xs text-muted-foreground">Nenhuma organização encontrada.</p>
+        )}
+      </div>
+
+      {/* Desktop: tabela */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left">
