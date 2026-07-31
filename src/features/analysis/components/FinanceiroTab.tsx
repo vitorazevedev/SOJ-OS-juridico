@@ -112,7 +112,7 @@ export function FinanceiroTab({
             ))}
           </dl>
           {indexes.fetched_at && (
-            <p className="text-[10px] text-muted-foreground mt-2">
+            <p className="text-[10px] text-muted-foreground mt-4">
               Fonte: BCB · {new Date(indexes.fetched_at).toLocaleDateString("pt-BR")}
             </p>
           )}
