@@ -17,6 +17,15 @@ export function fmtBRL(cents: number | null) {
   return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+// Exposição financeira total: 0 não significa "sem risco financeiro", significa que
+// nenhuma cláusula tinha valor monetário explícito no texto (has_explicit_amount).
+// "R$ 0,00" nesse caso é enganoso — deixa parecer um cálculo, quando na verdade é
+// ausência de base para calcular.
+export function fmtBRLExposicao(cents: number | null) {
+  if (!cents) return "Não quantificável";
+  return fmtBRL(cents);
+}
+
 // Exposição é exibida como faixa (mín–máx) quando a cláusula tem uma faixa real;
 // cai para o valor único quando min/max não foram calculados (dados legados).
 export function fmtExposureRange(min: number | null, max: number | null, likely: number | null): string {

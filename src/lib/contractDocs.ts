@@ -277,8 +277,14 @@ export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> 
     pdf.roundedRect(ml, y, cw, 14, 2, 2, "F");
     pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor(...PC.mid);
     pdf.text("Exposição financeira total estimada:", ml + 5, y + 6);
-    pdf.setFont("helvetica", "bold"); pdf.setFontSize(12); pdf.setTextColor(220, 38, 38);
-    pdf.text(fmtBRLPdf(analysis.financial_total), ml + 5, y + 12);
+    pdf.setFont("helvetica", "bold"); pdf.setFontSize(12);
+    if (analysis.financial_total) {
+      pdf.setTextColor(220, 38, 38);
+      pdf.text(fmtBRLPdf(analysis.financial_total), ml + 5, y + 12);
+    } else {
+      pdf.setTextColor(...PC.mid);
+      pdf.text("Não quantificável", ml + 5, y + 12);
+    }
     pdf.setFont("helvetica", "normal"); pdf.setFontSize(9); pdf.setTextColor(...PC.mid);
     pdf.text(`${clauses.length} cláusula(s) identificada(s)`, ml + 80, y + 12);
     y += 20;

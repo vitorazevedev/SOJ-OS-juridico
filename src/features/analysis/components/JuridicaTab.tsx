@@ -5,7 +5,7 @@ import { RiskBadge, SojCard } from "@/components/layout/Primitives";
 import { GaugeChart } from "@/components/layout/Charts";
 import { ClauseListItem, ClauseDetailPanel } from "@/features/analysis/components/RiskClauseCard";
 import { findClauseSentence } from "@/features/analysis/components/HighlightedText";
-import { fmtBRL, resolvedIndex, gravidadeFaixa, GRAVIDADE_HIGHLIGHT } from "@/lib/analysisFormat";
+import { fmtBRLExposicao, resolvedIndex, gravidadeFaixa, GRAVIDADE_HIGHLIGHT } from "@/lib/analysisFormat";
 import { useOrganization } from "@/hooks/useOrganization";
 import type { ContractAnalysis, ClauseRisk, ContractContent, ReviewStatus } from "@/hooks/useContractAnalysis";
 
@@ -120,13 +120,15 @@ export function JuridicaTab({
         <SojCard className="flex flex-col gap-4">
           {analysis.financial_total != null && (
             <div className="grid grid-cols-1 gap-2.5">
-              <div className="rounded-lg bg-risk-critical-dim p-3">
+              <div className={cn("rounded-lg p-3", analysis.financial_total ? "bg-risk-critical-dim" : "bg-muted/40")}>
                 <p className="text-[10px] md:text-[11px] text-muted-foreground uppercase tracking-wider">Exposição financeira total estimada</p>
-                <p className="text-base md:text-lg font-semibold text-risk-critical tabular-nums mt-1">
-                  {fmtBRL(analysis.financial_total)}
+                <p className={cn("text-base md:text-lg font-semibold tabular-nums mt-1", analysis.financial_total ? "text-risk-critical" : "text-muted-foreground")}>
+                  {fmtBRLExposicao(analysis.financial_total)}
                 </p>
                 <p className="text-[10px] text-muted-foreground/70 mt-1.5">
-                  Estimativa de IA com base nas cláusulas identificadas — não é cálculo financeiro ou jurídico definitivo.
+                  {analysis.financial_total
+                    ? "Estimativa de IA com base nas cláusulas identificadas — não é cálculo financeiro ou jurídico definitivo."
+                    : "Nenhuma cláusula do contrato apresenta valor monetário explícito para basear uma estimativa."}
                 </p>
               </div>
             </div>

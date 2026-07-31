@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import { SojCard } from "@/components/layout/Primitives";
 import { FinancialSimulator } from "@/features/analysis/components/FinancialSimulator";
 import {
-  fmtBRL, fmtDate, fmtExposureRange, severityColor, SEV_REDUCTION, PARAMS_LABELS,
+  fmtBRL, fmtBRLExposicao, fmtDate, fmtExposureRange, severityColor, SEV_REDUCTION, PARAMS_LABELS,
 } from "@/lib/analysisFormat";
 import { useEconomicIndexes } from "@/hooks/useEconomicIndexes";
 import type { FullContract, ContractAnalysis, ClauseRisk } from "@/hooks/useContractAnalysis";
@@ -31,8 +31,8 @@ export function FinanceiroTab({
       <SojCard className="lg:col-span-2 flex flex-col gap-4">
         <div className="flex items-baseline justify-between">
           <h3 className="font-medium text-sm md:text-base">Exposição por Cláusula</h3>
-          <p className="text-lg md:text-xl font-semibold text-risk-critical tabular-nums">
-            {fmtBRL(totalExposure)}
+          <p className={cn("text-lg md:text-xl font-semibold tabular-nums", totalExposure > 0 ? "text-risk-critical" : "text-muted-foreground")}>
+            {fmtBRLExposicao(totalExposure)}
           </p>
         </div>
         {clauses.filter((cl) => (cl.exposure_likely ?? 0) > 0).length === 0 ? (
@@ -69,30 +69,36 @@ export function FinanceiroTab({
       <div className="flex flex-col gap-4">
         <SojCard>
           <h4 className="text-sm font-medium mb-3">Comparativo de Impacto</h4>
-          <div className="grid grid-cols-2 gap-2 mb-3">
-            <div className="rounded-lg bg-risk-critical-dim p-3">
-              <p className="text-[10px] md:text-[11px] text-muted-foreground leading-tight">Sem ajustes</p>
-              <p className="text-base md:text-lg font-semibold text-risk-critical tabular-nums mt-1">
-                {fmtBRL(totalExposure)}
-              </p>
-            </div>
-            <div className="rounded-lg bg-primary-dim p-3">
-              <p className="text-[10px] md:text-[11px] text-muted-foreground leading-tight">Com sugestões</p>
-              <p className="text-base md:text-lg font-semibold text-primary tabular-nums mt-1">
-                {fmtBRL(Math.round(adjustedExposure))}
-              </p>
-            </div>
-          </div>
-          {totalExposure > 0 && (
-            <div className="rounded-lg bg-muted/40 px-3 py-2.5">
-              <p className="text-[11px] md:text-xs text-muted-foreground">
-                Redução estimada aplicando as sugestões:{" "}
-                <span className="font-semibold text-primary">
-                  {fmtBRL(Math.round(totalExposure - adjustedExposure))}
-                  {" "}({((1 - adjustedExposure / totalExposure) * 100).toFixed(0)}%)
-                </span>
-              </p>
-            </div>
+          {totalExposure > 0 ? (
+            <>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="rounded-lg bg-risk-critical-dim p-3">
+                  <p className="text-[10px] md:text-[11px] text-muted-foreground leading-tight">Sem ajustes</p>
+                  <p className="text-base md:text-lg font-semibold text-risk-critical tabular-nums mt-1">
+                    {fmtBRL(totalExposure)}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-primary-dim p-3">
+                  <p className="text-[10px] md:text-[11px] text-muted-foreground leading-tight">Com sugestões</p>
+                  <p className="text-base md:text-lg font-semibold text-primary tabular-nums mt-1">
+                    {fmtBRL(Math.round(adjustedExposure))}
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-lg bg-muted/40 px-3 py-2.5">
+                <p className="text-[11px] md:text-xs text-muted-foreground">
+                  Redução estimada aplicando as sugestões:{" "}
+                  <span className="font-semibold text-primary">
+                    {fmtBRL(Math.round(totalExposure - adjustedExposure))}
+                    {" "}({((1 - adjustedExposure / totalExposure) * 100).toFixed(0)}%)
+                  </span>
+                </p>
+              </div>
+            </>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Não quantificável — nenhuma cláusula do contrato apresenta valor monetário explícito.
+            </p>
           )}
         </SojCard>
 
