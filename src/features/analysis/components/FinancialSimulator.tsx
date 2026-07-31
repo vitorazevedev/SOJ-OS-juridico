@@ -12,18 +12,26 @@ export function FinancialSimulator({
   totalExposure: number;
   onSave: (value: number) => Promise<void>;
 }) {
-  const [raw, setRaw] = useState(
+  const [cents, setCents] = useState(
     contract.contract_value_informed != null
-      ? String(contract.contract_value_informed)
-      : ""
+      ? Math.round(contract.contract_value_informed * 100)
+      : 0
   );
   const [saving, setSaving] = useState(false);
 
-  const parsedValue = parseFloat(raw.replace(/\./g, "").replace(",", "."));
-  const isValid = !isNaN(parsedValue) && parsedValue > 0;
+  const display = cents > 0
+    ? (cents / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : "";
+  const parsedValue = cents / 100;
+  const isValid = cents > 0;
   const exposurePct = isValid && totalExposure > 0
     ? ((totalExposure / 100) / parsedValue * 100).toFixed(1)
     : null;
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const digits = e.target.value.replace(/\D/g, "");
+    setCents(digits ? parseInt(digits, 10) : 0);
+  };
 
   const handleSave = async () => {
     if (!isValid) return;
@@ -62,8 +70,8 @@ export function FinancialSimulator({
           <input
             type="text"
             inputMode="decimal"
-            value={raw}
-            onChange={(e) => setRaw(e.target.value)}
+            value={display}
+            onChange={handleChange}
             placeholder="500.000,00"
             className="w-full h-9 pl-8 pr-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:border-primary/60 transition-colors"
           />
