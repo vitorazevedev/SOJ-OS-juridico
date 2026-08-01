@@ -350,6 +350,99 @@ export type Database = {
           },
         ]
       }
+      clause_gating_shadow: {
+        Row: {
+          aggregation_version: string
+          analysis_id: string
+          anchor_bank_version: string | null
+          candidate_anchor_id: string | null
+          clause_id: string
+          conditions_met: Json | null
+          context_schema_version: string | null
+          created_at: string
+          evidence: string | null
+          gating_anchor_id: string | null
+          id: string
+          matched: boolean
+          prompt_version: string
+          qualitative_alert: string | null
+          score: number
+          suppressor_triggered: string | null
+        }
+        Insert: {
+          aggregation_version?: string
+          analysis_id: string
+          anchor_bank_version?: string | null
+          candidate_anchor_id?: string | null
+          clause_id: string
+          conditions_met?: Json | null
+          context_schema_version?: string | null
+          created_at?: string
+          evidence?: string | null
+          gating_anchor_id?: string | null
+          id?: string
+          matched?: boolean
+          prompt_version: string
+          qualitative_alert?: string | null
+          score?: number
+          suppressor_triggered?: string | null
+        }
+        Update: {
+          aggregation_version?: string
+          analysis_id?: string
+          anchor_bank_version?: string | null
+          candidate_anchor_id?: string | null
+          clause_id?: string
+          conditions_met?: Json | null
+          context_schema_version?: string | null
+          created_at?: string
+          evidence?: string | null
+          gating_anchor_id?: string | null
+          id?: string
+          matched?: boolean
+          prompt_version?: string
+          qualitative_alert?: string | null
+          score?: number
+          suppressor_triggered?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clause_gating_shadow_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "contract_analyses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clause_gating_shadow_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "contract_analyses_gated"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clause_gating_shadow_candidate_anchor_id_fkey"
+            columns: ["candidate_anchor_id"]
+            isOneToOne: false
+            referencedRelation: "ancoras"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clause_gating_shadow_clause_id_fkey"
+            columns: ["clause_id"]
+            isOneToOne: false
+            referencedRelation: "clause_risks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clause_gating_shadow_gating_anchor_id_fkey"
+            columns: ["gating_anchor_id"]
+            isOneToOne: false
+            referencedRelation: "ancoras"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clause_risks: {
         Row: {
           analysis_id: string

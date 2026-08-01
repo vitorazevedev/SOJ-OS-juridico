@@ -181,7 +181,7 @@ Deno.serve(async (req) => {
   // contínua em vez de inventar do zero (Fase 1 do Índice de Desequilíbrio).
   const { data: ancoras } = await serviceClient
     .from('ancoras')
-    .select('id, codigo, titulo, condicoes_disparo, gravidade_referencia, especie')
+    .select('id, codigo, titulo, condicoes_disparo, gravidade_referencia, especie, gating, anchor_bank_version')
     .eq('ativo', true)
     .order('gravidade_referencia', { ascending: false })
 
@@ -374,9 +374,12 @@ GRAVIDADE (0-100, contínua):
       .map((cl, i) => {
         const ancoraCodigo = cl.ancora_referencia ? String(cl.ancora_referencia) : null
         const ancora = ancoraCodigo ? (ancoras ?? []).find((a) => a.codigo === ancoraCodigo) : null
+        const gatingBlock = ancora?.gating
+          ? `\nÂNCORA CANDIDATA A VALIDAR (gating, [${ancora.codigo}] ${ancora.titulo}):\n${JSON.stringify(ancora.gating)}`
+          : ''
         return `[${i}] Título: ${cl.title}
 Categoria: ${cl.category} · Severidade: ${cl.severity} · Gravidade: ${cl.gravidade}${ancora ? ` · Âncora: ${ancora.titulo} (ref. ${ancora.gravidade_referencia})` : ''}
-Trecho: ${String(cl.original_text ?? '').slice(0, 2000)}`
+Trecho: ${String(cl.original_text ?? '').slice(0, 2000)}${gatingBlock}`
       })
       .join('\n\n')
 
@@ -397,7 +400,16 @@ POLARIDADE (parte representada: "${parte_representada}"):
 CONCLUSÃO E IMPACTO:
 - conclusao: 1-2 frases diretas contrastando o efeito nas duas partes (ou "obrigação equilibrada" quando não houver desequilíbrio relevante).
 - impacto_identificado: 2-4 bullets curtos; se não houver desequilíbrio identificado, um único bullet dizendo isso.
-- mitigacao: frase curta com a recomendação; se não houver alteração recomendada, diga isso explicitamente em vez de inventar uma mitigação desnecessária.`
+- mitigacao: frase curta com a recomendação; se não houver alteração recomendada, diga isso explicitamente em vez de inventar uma mitigação desnecessária.
+
+GATING DA ÂNCORA (shadow mode — não afeta a nota exibida ao usuário; ponto 4 do banco de âncoras aprovado por Fellipe Andrade). REGRA CENTRAL, obrigatória: NUNCA valide uma âncora só porque ela é semanticamente parecida com a cláusula. Só para os índices que tiverem um bloco "ÂNCORA CANDIDATA A VALIDAR" acima, avalie o objeto de gating (mandatory_conditions, alternative_conditions, aggravants, attenuants, suppressors) contra o trecho da cláusula e preencha:
+- gating_matched: true SOMENTE se pelo menos uma mandatory_condition (ou alternative_condition materialmente equivalente) estiver clara e literalmente demonstrada pelo trecho, E nenhum suppressor se aplicar. Na dúvida, false.
+- gating_anchor_id: repita o código da âncora candidata quando gating_matched=true; omita quando false.
+- gating_conditions_met: lista curta dos condition_id (ou resumo) que foram de fato atendidos.
+- gating_suppressor_triggered: texto do suppressor que impediu o match, se algum se aplicar; omita se não houver.
+- gating_evidence: trecho exato que demonstra a condição atendida (ou a razão da não-aderência).
+- gating_qualitative_alert: SÓ quando gating_matched=false mas a cláusula ainda merece um alerta qualitativo sem impacto numérico (ex: menção a crime sem consequência econômica concreta); frase curta. Omita nos demais casos.
+Para índices SEM bloco "ÂNCORA CANDIDATA A VALIDAR", não preencha nenhum campo gating_*.`
   }
 
   async function callAnthropicB(clausesA: Record<string, unknown>[]) {
@@ -429,6 +441,14 @@ CONCLUSÃO E IMPACTO:
                     conclusao: { type: 'string', description: '1-2 frases diretas contrastando o efeito da cláusula nas duas partes, ex: "A contraparte pode encerrar o contrato sem custo, enquanto você está sujeito a multa de 30%"' },
                     impacto_identificado: { type: 'array', items: { type: 'string' }, description: '2-4 bullets curtos com os impactos identificados nesta cláusula' },
                     mitigacao: { type: 'string', description: 'Frase curta explicando a recomendação de mitigação (separado da redação sugerida em suggestion)' },
+                    // Gating shadow (ponto 4) — só preenchido para índices com bloco
+                    // "ÂNCORA CANDIDATA A VALIDAR" no prompt. Nunca afeta a nota exibida.
+                    gating_matched: { type: 'boolean', description: 'true somente se as condições obrigatórias da âncora candidata estão demonstradas e nenhum supressor se aplica' },
+                    gating_anchor_id: { type: 'string', description: 'Código da âncora candidata, repetido apenas quando gating_matched=true' },
+                    gating_conditions_met: { type: 'array', items: { type: 'string' } },
+                    gating_suppressor_triggered: { type: 'string' },
+                    gating_evidence: { type: 'string' },
+                    gating_qualitative_alert: { type: 'string' },
                   },
                   required: ['index', 'score_simetria', 'score_valor_exposto', 'score_prazo_reversibilidade', 'score_foro_execucao', 'conclusao', 'impacto_identificado'],
                 },
@@ -536,7 +556,7 @@ CONCLUSÃO E IMPACTO:
         financial_total: financialTotal,
         status: 'completed',
         model_used: MODEL,
-        prompt_version: 'v5',
+        prompt_version: 'v6',
         parte_representada,
         tokens_input: tokensInput,
         tokens_output: tokensOutput,
@@ -593,7 +613,53 @@ CONCLUSÃO E IMPACTO:
             mitigacao: cl.mitigacao ? String(cl.mitigacao) : null,
           }
         })
-      await serviceClient.from('clause_risks').insert(clauseRows)
+      const { data: insertedClauses } = await serviceClient
+        .from('clause_risks')
+        .insert(clauseRows)
+        .select('id, sort_order')
+
+      // Gating shadow (ponto 4) — melhor esforço, nunca bloqueia a análise
+      // principal (já salva acima). Casa pelo sort_order (não pela ordem do
+      // array retornado, que o Postgres não garante bater com a ordem do
+      // insert em todo cenário).
+      if (insertedClauses) {
+        const clauseIdBySortOrder = new Map(insertedClauses.map((c) => [c.sort_order, c.id] as const))
+        const gatingRows = (clauses as Record<string, unknown>[])
+          .slice(0, 50)
+          .map((cl, i) => {
+            const clauseId = clauseIdBySortOrder.get(i)
+            if (!clauseId) return null
+            const candidateCodigo = cl.ancora_referencia ? String(cl.ancora_referencia) : null
+            const candidateAncora = candidateCodigo ? ancoraIdByCodigo.get(candidateCodigo) : null
+            // Só grava gating shadow pra cláusulas que de fato tinham uma âncora
+            // candidata com gating estruturado pra validar contra.
+            if (!candidateAncora?.gating) return null
+            const matched = cl.gating_matched === true
+            const gatingCodigo = matched && cl.gating_anchor_id ? String(cl.gating_anchor_id) : null
+            const gatingAncora = gatingCodigo ? ancoraIdByCodigo.get(gatingCodigo) : null
+            return {
+              clause_id: clauseId,
+              analysis_id: analysis.id,
+              candidate_anchor_id: candidateAncora.id,
+              gating_anchor_id: matched ? (gatingAncora?.id ?? candidateAncora.id) : null,
+              matched,
+              score: matched ? Math.round(Number(cl.gravidade) || 0) : 0,
+              conditions_met: Array.isArray(cl.gating_conditions_met) ? cl.gating_conditions_met : null,
+              suppressor_triggered: cl.gating_suppressor_triggered ? String(cl.gating_suppressor_triggered) : null,
+              evidence: cl.gating_evidence ? String(cl.gating_evidence) : null,
+              qualitative_alert: cl.gating_qualitative_alert ? String(cl.gating_qualitative_alert) : null,
+              prompt_version: 'v6',
+              context_schema_version: CONTEXT_SCHEMA_VERSION,
+              anchor_bank_version: candidateAncora.anchor_bank_version ?? null,
+            }
+          })
+          .filter((r): r is NonNullable<typeof r> => r !== null)
+
+        if (gatingRows.length > 0) {
+          const { error: gatingErr } = await serviceClient.from('clause_gating_shadow').insert(gatingRows)
+          if (gatingErr) console.error('gating shadow insert failed:', gatingErr)
+        }
+      }
     }
 
     // Índice de Desequilíbrio — calculado deterministicamente a partir da
@@ -622,7 +688,7 @@ CONCLUSÃO E IMPACTO:
         const { error: shadowErr } = await serviceClient.from('analysis_shadow_context').insert({
           analysis_id: analysisId,
           context_schema_version: CONTEXT_SCHEMA_VERSION,
-          prompt_version: 'v5',
+          prompt_version: 'v6',
           document_type: sc.document_type ? String(sc.document_type) : null,
           document_purpose: sc.document_purpose ? String(sc.document_purpose) : null,
           negotiation_stage: sc.negotiation_stage ? String(sc.negotiation_stage) : null,
