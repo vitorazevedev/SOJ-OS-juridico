@@ -152,8 +152,12 @@ export function useContractAnalysis(contractId: string | undefined) {
     try {
       for (let attempt = 1; attempt <= ANALYSIS_MAX_ATTEMPTS; attempt++) {
         if (attempt > 1) setRetrying(true);
+        // Timeout no cliente (acima do idle timeout de 150s da Edge Function) —
+        // sem isso, uma requisição que trava sem nunca responder (rede) deixava
+        // o usuário preso em "Analisando..." indefinidamente, sem erro nem retry.
         const { error } = await supabase.functions.invoke('analyze-contract', {
           body: { contract_id: contractId, ...(parteRepresentada ? { parte_representada: parteRepresentada } : {}) },
+          timeout: 160000,
         });
 
         if (!error) {
@@ -162,10 +166,12 @@ export function useContractAnalysis(contractId: string | undefined) {
         }
 
         // FunctionsHttpError.message é um texto genérico "non-2xx status code" —
-        // o erro de verdade está no corpo da resposta, acessível via error.context.
+        // o erro de verdade está no corpo da resposta, acessível via error.context
+        // (só existe um Response de verdade nesse tipo específico de erro).
         let message = error.message ?? String(error);
         const context = (error as { context?: Response }).context;
-        if (context && typeof context.json === 'function') {
+        const isHttpError = error.name === 'FunctionsHttpError';
+        if (isHttpError && context && typeof context.json === 'function') {
           try {
             const body = await context.json();
             if (body?.error) message = body.error;
@@ -175,10 +181,13 @@ export function useContractAnalysis(contractId: string | undefined) {
         }
         lastMessage = message;
 
-        // Sem context = a requisição nem chegou a ter resposta (timeout/rede) —
-        // também é falha de infra. Status 5xx explícito idem. Qualquer outra
-        // coisa (4xx) é erro de negócio, não retry.
-        const isInfraFailure = !context || context.status >= 500;
+        // FunctionsFetchError/FunctionsRelayError (nome, não status) = a
+        // requisição nem chegou a ter resposta HTTP — rede, timeout do
+        // cliente, ou o relay do Supabase não alcançou a function. Sempre
+        // falha de infra. Em FunctionsHttpError, só é infra se status 5xx —
+        // 4xx é erro de negócio (rate limit, texto não extraído) e não deve
+        // ser retried.
+        const isInfraFailure = !isHttpError || (context?.status ?? 0) >= 500;
         if (!isInfraFailure || attempt === ANALYSIS_MAX_ATTEMPTS) {
           return { error: message };
         }
