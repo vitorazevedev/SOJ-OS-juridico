@@ -185,6 +185,8 @@ Deno.serve(async (req) => {
     .eq('ativo', true)
     .order('gravidade_referencia', { ascending: false })
 
+  const ancoraIdByCodigo = new Map((ancoras ?? []).map((a) => [a.codigo, a] as const))
+
   const ancorasPrompt = (ancoras ?? []).length
     ? `\n\nRÉGUA DE ÂNCORAS (referência de gravidade — use para calibrar a nota 0-100 de cada cláusula por interpolação, não invente a escala):\n${(ancoras ?? [])
         .map((a) => `- [${a.codigo}] ${a.titulo} (gravidade de referência: ${a.gravidade_referencia}${a.especie === 'referencia_negativa' ? ' — NÃO conta como desequilíbrio, serve só de calibração de normalidade' : ''}). Condição: ${a.condicoes_disparo}`)
@@ -370,13 +372,24 @@ GRAVIDADE (0-100, contínua):
   // (não o contrato inteiro de novo), o que mantém a resposta pequena mesmo em
   // contratos com muitas cláusulas.
   function buildUserPromptB(clausesA: Record<string, unknown>[]): string {
+    // Memoiza o JSON do gating por código de âncora — várias cláusulas do mesmo
+    // contrato costumam referenciar a mesma âncora (ex: multa, rescisão), e
+    // sem cache o mesmo objeto seria serializado (e mandado pro modelo) de novo
+    // a cada repetição.
+    const gatingJsonByCodigo = new Map<string, string>()
     const resumo = clausesA
       .map((cl, i) => {
         const ancoraCodigo = cl.ancora_referencia ? String(cl.ancora_referencia) : null
-        const ancora = ancoraCodigo ? (ancoras ?? []).find((a) => a.codigo === ancoraCodigo) : null
-        const gatingBlock = ancora?.gating
-          ? `\nÂNCORA CANDIDATA A VALIDAR (gating, [${ancora.codigo}] ${ancora.titulo}):\n${JSON.stringify(ancora.gating)}`
-          : ''
+        const ancora = ancoraCodigo ? ancoraIdByCodigo.get(ancoraCodigo) : null
+        let gatingBlock = ''
+        if (ancora?.gating) {
+          let gatingJson = gatingJsonByCodigo.get(ancora.codigo)
+          if (!gatingJson) {
+            gatingJson = JSON.stringify(ancora.gating)
+            gatingJsonByCodigo.set(ancora.codigo, gatingJson)
+          }
+          gatingBlock = `\nÂNCORA CANDIDATA A VALIDAR (gating, [${ancora.codigo}] ${ancora.titulo}):\n${gatingJson}`
+        }
         return `[${i}] Título: ${cl.title}
 Categoria: ${cl.category} · Severidade: ${cl.severity} · Gravidade: ${cl.gravidade}${ancora ? ` · Âncora: ${ancora.titulo} (ref. ${ancora.gravidade_referencia})` : ''}
 Trecho: ${String(cl.original_text ?? '').slice(0, 2000)}${gatingBlock}`
@@ -574,8 +587,6 @@ Para índices SEM bloco "ÂNCORA CANDIDATA A VALIDAR", não preencha nenhum camp
     // has_explicit_amount = true (cláusula líquida com valor apurável no contrato).
     // Isso impede que estimativas sem base monetária explícita sejam exibidas ao usuário
     // como se fossem cálculos financeiros determinísticos.
-    const ancoraIdByCodigo = new Map((ancoras ?? []).map((a) => [a.codigo, a] as const))
-
     if (clauses.length > 0) {
       const clauseRows = (clauses as Record<string, unknown>[])
         .slice(0, 50)
@@ -634,14 +645,16 @@ Para índices SEM bloco "ÂNCORA CANDIDATA A VALIDAR", não preencha nenhum camp
             // Só grava gating shadow pra cláusulas que de fato tinham uma âncora
             // candidata com gating estruturado pra validar contra.
             if (!candidateAncora?.gating) return null
+            // O prompt só pede pra IA ecoar o código da própria âncora candidata
+            // quando der match (nunca uma âncora diferente) — então o resultado
+            // do gating só pode ser a candidata ou null, sem precisar resolver
+            // cl.gating_anchor_id contra o banco de novo.
             const matched = cl.gating_matched === true
-            const gatingCodigo = matched && cl.gating_anchor_id ? String(cl.gating_anchor_id) : null
-            const gatingAncora = gatingCodigo ? ancoraIdByCodigo.get(gatingCodigo) : null
             return {
               clause_id: clauseId,
               analysis_id: analysis.id,
               candidate_anchor_id: candidateAncora.id,
-              gating_anchor_id: matched ? (gatingAncora?.id ?? candidateAncora.id) : null,
+              gating_anchor_id: matched ? candidateAncora.id : null,
               matched,
               score: matched ? Math.round(Number(cl.gravidade) || 0) : 0,
               conditions_met: Array.isArray(cl.gating_conditions_met) ? cl.gating_conditions_met : null,
