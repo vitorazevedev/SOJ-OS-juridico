@@ -712,8 +712,7 @@ Para índices SEM bloco "ÂNCORA CANDIDATA A VALIDAR", não preencha nenhum camp
         console.error('shadow context extraction failed:', err)
       }
     })()
-    // deno-lint-ignore no-explicit-any
-    const edgeRuntime = (globalThis as any).EdgeRuntime
+    const edgeRuntime = (globalThis as unknown as { EdgeRuntime?: { waitUntil?: (task: Promise<unknown>) => void } }).EdgeRuntime
     if (edgeRuntime?.waitUntil) {
       edgeRuntime.waitUntil(shadowTask)
     }
