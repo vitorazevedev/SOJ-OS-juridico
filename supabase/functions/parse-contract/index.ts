@@ -149,6 +149,10 @@ Deno.serve(async (req) => {
 
   try {
     if (isPDF) {
+      // Extração em Markdown (não texto cru): mesma chamada, mesmo custo, mas
+      // títulos/listas/tabelas viram sintaxe compacta em vez de texto solto
+      // desalinhado — reduz o volume de tokens que o analyze-contract reenvia
+      // depois (Fase A/B leem esse texto por completo a cada análise).
       const base64 = toBase64(bytes)
       const res = await anthropic.messages.create({
         model: 'claude-haiku-4-5-20251001',
@@ -163,7 +167,7 @@ Deno.serve(async (req) => {
               },
               {
                 type: 'text',
-                text: 'Extract the complete text from this document. Preserve paragraph structure with line breaks. Return only the raw text, no commentary.',
+                text: 'Extraia o conteúdo completo deste documento em Markdown: títulos com #, listas com - ou números, tabelas em sintaxe de tabela Markdown, negrito/itálico quando aparente no original. Preserve a ordem e a estrutura de cláusulas/seções. Retorne APENAS o Markdown, sem comentários.',
               },
             ],
           },
@@ -173,9 +177,11 @@ Deno.serve(async (req) => {
     } else if (isDOCX) {
       // @ts-expect-error — mammoth works via npm compat layer in Deno
       const mammoth = (await import('npm:mammoth')).default
-      // mammoth's API only recognizes `buffer` or `path` — `arrayBuffer` is silently
+      // mammoth's API only recognizes `buffer` or `path` — `arrayBuffer` é silently
       // rejected ("Could not find file in options"), which made every .docx parse fail.
-      const result = await mammoth.extractRawText({ buffer: bytes })
+      // convertToMarkdown (em vez de extractRawText) preserva títulos, listas e
+      // tabelas como Markdown — mesma biblioteca, sem custo/dependência extra.
+      const result = await mammoth.convertToMarkdown({ buffer: bytes })
       rawText = result.value ?? ''
     } else if (isImage) {
       ocrApplied = true
@@ -192,7 +198,7 @@ Deno.serve(async (req) => {
               { type: 'image', source: { type: 'base64', media_type: imageMediaType, data: base64 } },
               {
                 type: 'text',
-                text: 'Extract all visible text from this scanned document image. Preserve structure with line breaks. Return only the extracted text.',
+                text: 'Extraia todo o texto visível desta imagem de documento escaneado, em Markdown: títulos com #, listas com - ou números, tabelas em sintaxe de tabela Markdown quando aplicável. Retorne APENAS o Markdown extraído.',
               },
             ],
           },
