@@ -136,14 +136,29 @@ export function useContractAnalysis(contractId: string | undefined) {
     return () => { supabase.removeChannel(ch); };
   }, [contractId, fetchAll]);
 
+  // Falhas de infraestrutura (worker sem recurso, idle timeout, gateway fora do
+  // ar) são transitórias e intermitentes — retry costuma resolver sem custo
+  // extra real, já que a maioria falha antes de sequer chamar a Anthropic.
+  // Erros de negócio (rate limit, contrato sem texto extraído, etc.) vêm com
+  // status 4xx e não devem ser retried — tentar de novo não muda o resultado.
+  const ANALYSIS_MAX_ATTEMPTS = 3; // 1 tentativa original + 2 retries
+
   const triggerAnalysis = useCallback(async (parteRepresentada?: string): Promise<{ error?: string }> => {
     if (!contractId) return { error: 'No contract ID' };
-    const { error } = await supabase.functions.invoke('analyze-contract', {
-      body: { contract_id: contractId, ...(parteRepresentada ? { parte_representada: parteRepresentada } : {}) },
-    });
-    if (error) {
-      // FunctionsHttpError.message is a generic "non-2xx status code" string —
-      // the actual error is in the response body, reachable via error.context.
+    let lastMessage = 'Erro desconhecido';
+
+    for (let attempt = 1; attempt <= ANALYSIS_MAX_ATTEMPTS; attempt++) {
+      const { error } = await supabase.functions.invoke('analyze-contract', {
+        body: { contract_id: contractId, ...(parteRepresentada ? { parte_representada: parteRepresentada } : {}) },
+      });
+
+      if (!error) {
+        await fetchAll();
+        return {};
+      }
+
+      // FunctionsHttpError.message é um texto genérico "non-2xx status code" —
+      // o erro de verdade está no corpo da resposta, acessível via error.context.
       let message = error.message ?? String(error);
       const context = (error as { context?: Response }).context;
       if (context && typeof context.json === 'function') {
@@ -151,13 +166,21 @@ export function useContractAnalysis(contractId: string | undefined) {
           const body = await context.json();
           if (body?.error) message = body.error;
         } catch {
-          // response body wasn't JSON — keep the generic message
+          // corpo da resposta não era JSON — mantém a mensagem genérica
         }
       }
-      return { error: message };
+      lastMessage = message;
+
+      // Sem context = a requisição nem chegou a ter resposta (timeout/rede) —
+      // também é falha de infra. Status 5xx explícito idem. Qualquer outra
+      // coisa (4xx) é erro de negócio, não retry.
+      const isInfraFailure = !context || context.status >= 500;
+      if (!isInfraFailure || attempt === ANALYSIS_MAX_ATTEMPTS) {
+        return { error: message };
+      }
+      await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
     }
-    await fetchAll();
-    return {};
+    return { error: lastMessage };
   }, [contractId, fetchAll]);
 
   const updateClauseReview = useCallback(async (clauseId: string, status: ReviewStatus): Promise<void> => {

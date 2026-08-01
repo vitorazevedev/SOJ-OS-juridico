@@ -4,6 +4,17 @@ import { cn } from "@/lib/utils";
 import { SojCard } from "@/components/layout/Primitives";
 import { ParsedDataSummary } from "@/features/contracts/components/ParsedDataSummary";
 import { fmtBytes, fmtDate } from "@/lib/analysisFormat";
+
+// Análise tem 2 chamadas de IA sequenciais (identificação + detalhamento por
+// cláusula) — contratos maiores/com mais cláusulas levam mais na segunda
+// etapa. Faixa aproximada em vez de número fixo, que na prática variava
+// bastante e não refletia contratos maiores nem retries em caso de
+// instabilidade de infraestrutura.
+function estimateAnalysisDuration(wordCount: number | null | undefined): string {
+  if (!wordCount || wordCount < 1500) return "30 segundos a 1 minuto";
+  if (wordCount < 5000) return "1 a 2 minutos";
+  return "2 a 3 minutos";
+}
 import type { FullContract, ContractContent } from "@/hooks/useContractAnalysis";
 import {
   Dialog,
@@ -64,7 +75,7 @@ export function InAnaliseView({
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {analyzing
-                ? "A IA está lendo o contrato. Isso pode levar até 45 segundos."
+                ? `A IA está lendo o contrato. Costuma levar ${estimateAnalysisDuration(content?.word_count)} — pode demorar mais em caso de nova tentativa automática.`
                 : content?.word_count
                   ? `${content.word_count.toLocaleString("pt-BR")} palavras extraídas. Clique em Analisar para iniciar a análise jurídica.`
                   : "Clique em Analisar para iniciar a análise jurídica com IA."}
