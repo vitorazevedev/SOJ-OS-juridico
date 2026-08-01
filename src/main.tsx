@@ -24,6 +24,20 @@ if (env.sentryDsn) {
   });
 }
 
+// Cada deploy troca o hash dos arquivos JS. Se o usuário estava com o app
+// aberto quando um deploy novo saiu no Vercel, o navegador tenta buscar um
+// chunk lazy (React.lazy) que já não existe mais no servidor — "Failed to
+// fetch dynamically imported module". O Vite dispara esse evento nesse caso;
+// um reload busca o index.html atual (com os hashes certos) e resolve
+// sozinho. A guarda de sessionStorage evita loop de reload se o erro
+// persistir por outro motivo.
+window.addEventListener("vite:preloadError", () => {
+  const key = "ponderum:reloaded-after-preload-error";
+  if (sessionStorage.getItem(key)) return;
+  sessionStorage.setItem(key, "1");
+  window.location.reload();
+});
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <App />
