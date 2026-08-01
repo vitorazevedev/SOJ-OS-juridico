@@ -1,3 +1,29 @@
+// O texto extraído de PDF/DOCX vem em Markdown (parse-contract, pra reduzir
+// tokens reenviados na análise) — mas o usuário deve ver o contrato como
+// texto normal, não a sintaxe de formatação usada internamente. Remove
+// marcadores de título, negrito/itálico, código, listas e tabelas, mantendo
+// o texto corrido. Aplicar sempre com a MESMA função nos dois lados de uma
+// comparação de substring (texto completo e trecho de cláusula) — a remoção
+// muda o comprimento da string, então precisa ser consistente pros dois
+// lados continuarem batendo.
+export function stripMarkdown(md: string): string {
+  return md
+    .replace(/^\s*\|?[\s:-]+\|[\s:|-]*$/gm, "") // linha separadora de tabela (---|---)
+    .replace(/\|/g, " ") // demais barras de tabela viram espaço
+    .replace(/^#{1,6}\s+/gm, "") // títulos
+    .replace(/\*\*\*(.+?)\*\*\*/g, "$1")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/__(.+?)__/g, "$1")
+    .replace(/_(.+?)_/g, "$1")
+    .replace(/`{1,3}([^`]*?)`{1,3}/g, "$1") // código inline/bloco
+    .replace(/^\s*[-*+]\s+/gm, "") // marcador de lista
+    .replace(/^\s*\d+\.\s+/gm, "") // marcador de lista numerada
+    .replace(/^\s*-{3,}\s*$/gm, "") // linha horizontal
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\n{3,}/g, "\n\n");
+}
+
 export function fmtDate(iso: string | null | undefined) {
   if (!iso) return "—";
   return new Date(iso).toLocaleDateString("pt-BR", {

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import type { ClauseRisk } from "@/hooks/useContractAnalysis";
-import { gravidadeFaixa, GRAVIDADE_HIGHLIGHT } from "@/lib/analysisFormat";
+import { gravidadeFaixa, GRAVIDADE_HIGHLIGHT, stripMarkdown } from "@/lib/analysisFormat";
 
 // Destaque legado por severity (4 categorias) — mantido só como fallback
 // para cláusulas antigas sem gravidade calculada (Fase 6, Parte 5).
@@ -70,8 +70,12 @@ function findInText(
 // Localiza o trecho de original_text dentro do texto completo e expande a
 // janela até os limites da frase (ponto anterior → ponto seguinte), pra
 // mostrar o contexto completo em vez de só o fragmento cru capturado pela IA.
-export function findClauseSentence(text: string, needle: string): { before: string; match: string; after: string } | null {
-  if (!needle || needle.length < 15) return null;
+export function findClauseSentence(rawText: string, rawNeedle: string): { before: string; match: string; after: string } | null {
+  if (!rawNeedle || rawNeedle.length < 15) return null;
+  // Ambos os lados precisam passar pela mesma limpeza de Markdown — senão a
+  // sintaxe (##, **, |) que sobrevive só de um lado desalinha as posições.
+  const text = stripMarkdown(rawText);
+  const needle = stripMarkdown(rawNeedle);
   const normText = buildNormMap(text);
   const m = findInText(text, needle, normText);
   if (!m) return null;
@@ -95,15 +99,17 @@ export function findClauseSentence(text: string, needle: string): { before: stri
   };
 }
 
-export function HighlightedText({ text, clauses }: { text: string; clauses: ClauseRisk[] }) {
+export function HighlightedText({ text: rawText, clauses }: { text: string; clauses: ClauseRisk[] }) {
   const segments = useMemo(() => {
     type Seg = { text: string; highlight: string | null; title: string | null };
+    const text = stripMarkdown(rawText);
     const markers: { start: number; end: number; highlight: string; title: string }[] = [];
     const normText = buildNormMap(text);
 
     for (const cl of clauses) {
       if (!cl.original_text || cl.original_text.length < 15) continue;
-      const match = findInText(text, cl.original_text, normText);
+      const needle = stripMarkdown(cl.original_text);
+      const match = findInText(text, needle, normText);
       if (match) {
         const highlight = cl.gravidade != null
           ? GRAVIDADE_HIGHLIGHT[gravidadeFaixa(cl.gravidade).zone]
@@ -125,7 +131,7 @@ export function HighlightedText({ text, clauses }: { text: string; clauses: Clau
     }
     if (pos < text.length) segs.push({ text: text.slice(pos), highlight: null, title: null });
     return segs;
-  }, [text, clauses]);
+  }, [rawText, clauses]);
 
   return (
     <article className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap font-mono max-h-[60vh] overflow-y-auto scroll-hide text-justify">

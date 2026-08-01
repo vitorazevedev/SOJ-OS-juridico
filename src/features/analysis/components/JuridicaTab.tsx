@@ -5,7 +5,7 @@ import { RiskBadge, SojCard } from "@/components/layout/Primitives";
 import { GaugeChart } from "@/components/layout/Charts";
 import { ClauseListItem, ClauseDetailPanel } from "@/features/analysis/components/RiskClauseCard";
 import { findClauseSentence } from "@/features/analysis/components/HighlightedText";
-import { fmtBRLExposicao, resolvedIndex, gravidadeFaixa, GRAVIDADE_HIGHLIGHT } from "@/lib/analysisFormat";
+import { fmtBRLExposicao, resolvedIndex, gravidadeFaixa, GRAVIDADE_HIGHLIGHT, stripMarkdown } from "@/lib/analysisFormat";
 import { useOrganization } from "@/hooks/useOrganization";
 import type { ContractAnalysis, ClauseRisk, ContractContent, ReviewStatus } from "@/hooks/useContractAnalysis";
 
@@ -214,7 +214,7 @@ export function JuridicaTab({
                           </p>
                         ) : (
                           <p className={cn("text-[12px] md:text-sm leading-relaxed rounded-sm px-1 py-0.5 text-justify", highlight)}>
-                            {cl.original_text}
+                            {stripMarkdown(cl.original_text!)}
                           </p>
                         )}
                       </div>

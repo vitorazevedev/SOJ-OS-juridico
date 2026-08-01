@@ -3,7 +3,7 @@ import { AlertTriangle, CheckCircle2, Copy, ExternalLink, Pencil } from "lucide-
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { gravidadeFaixa, POLARIDADE_CALIBRADA } from "@/lib/analysisFormat";
+import { gravidadeFaixa, POLARIDADE_CALIBRADA, stripMarkdown } from "@/lib/analysisFormat";
 import type { ClauseRisk, ReviewStatus } from "@/hooks/useContractAnalysis";
 
 const REVIEW_LABELS: Record<ReviewStatus, string> = {
@@ -195,7 +195,7 @@ export function ClauseDetailPanel({
           <p className="text-[12px] md:text-[13px] font-medium text-risk-critical flex items-center gap-1.5 mb-2">
             <AlertTriangle className="h-3.5 w-3.5" /> Original (Risco)
           </p>
-          <p className="text-[13px] md:text-sm leading-relaxed text-foreground/90">{clause.original_text}</p>
+          <p className="text-[13px] md:text-sm leading-relaxed text-foreground/90">{stripMarkdown(clause.original_text)}</p>
         </div>
       )}
 

@@ -3,7 +3,7 @@ import { CheckCircle2, FileText, Info, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SojCard } from "@/components/layout/Primitives";
 import { ParsedDataSummary } from "@/features/contracts/components/ParsedDataSummary";
-import { fmtBytes, fmtDate } from "@/lib/analysisFormat";
+import { fmtBytes, fmtDate, stripMarkdown } from "@/lib/analysisFormat";
 
 // Análise tem 2 chamadas de IA sequenciais (identificação + detalhamento por
 // cláusula) — contratos maiores/com mais cláusulas levam mais na segunda
@@ -211,7 +211,7 @@ export function InAnaliseView({
                 {content.ocr_applied && " · via OCR"}
               </p>
               <article className="text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap font-mono max-h-[60vh] overflow-y-auto scroll-hide">
-                {content.raw_text}
+                {stripMarkdown(content.raw_text)}
               </article>
             </>
           ) : (

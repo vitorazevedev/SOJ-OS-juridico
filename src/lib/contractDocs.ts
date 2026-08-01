@@ -1,5 +1,5 @@
 import { jsPDF } from "jspdf";
-import { resolvedIndex, gravidadeFaixa, POLARIDADE_CALIBRADA } from "@/lib/analysisFormat";
+import { resolvedIndex, gravidadeFaixa, POLARIDADE_CALIBRADA, stripMarkdown } from "@/lib/analysisFormat";
 
 export type LogoData = {
   bytes: Uint8Array;
@@ -296,6 +296,9 @@ export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> 
     sectionHeader(`Cláusulas Identificadas  (${clauses.length})`);
 
     clauses.forEach((cl, idx) => {
+      // original_text vem em Markdown (parse-contract extrai assim pra economizar
+      // tokens) — remove a sintaxe antes de exibir no PDF, que é um documento final.
+      const originalText = cl.original_text ? stripMarkdown(cl.original_text) : null;
       const zona = cl.gravidade != null ? gravidadeFaixa(cl.gravidade) : null;
       const zonaRgb: [number, number, number] = zona ? SEV_RGB[zona.zone] : (SEV_RGB[cl.severity] ?? [100, 100, 100]);
       const zonaLabel = zona ? SEV_LABEL[zona.zone] : (SEV_LABEL[cl.severity] ?? cl.severity.toUpperCase());
@@ -305,8 +308,8 @@ export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> 
       const titleLines = (pdf.splitTextToSize(cl.title, titleW) as string[]).slice(0, 2);
       const hdrH = Math.max(10, titleLines.length * 5 + 5);
       const needH = hdrH + 7
-        + (cl.original_text ? Math.min((pdf.splitTextToSize(cl.original_text, cw - 14) as string[]).length * 4.5 + 10, 40) : 0)
-        + (cl.suggestion    ? Math.min((pdf.splitTextToSize(cl.suggestion,    cw - 14) as string[]).length * 4.5 + 10, 40) : 0);
+        + (originalText  ? Math.min((pdf.splitTextToSize(originalText, cw - 14) as string[]).length * 4.5 + 10, 40) : 0)
+        + (cl.suggestion ? Math.min((pdf.splitTextToSize(cl.suggestion, cw - 14) as string[]).length * 4.5 + 10, 40) : 0);
       check(Math.min(needH, 60));
 
       // Cabeçalho da cláusula
@@ -356,7 +359,7 @@ export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> 
       }
 
       // Original
-      if (cl.original_text) {
+      if (originalText) {
         check(14);
         // Faixa de rótulo (7mm) + corpo separado por gap abaixo
         pdf.setFillColor(254, 242, 242);
@@ -365,7 +368,7 @@ export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> 
         pdf.setFont("helvetica", "bold"); pdf.setFontSize(7.5); pdf.setTextColor(180, 30, 30);
         pdf.text("ORIGINAL (RISCO)", ml + 6, y + 4.5);
         y += 12; // 7mm faixa + 5mm de respiro antes do texto
-        writeTxt(cl.original_text, 8.5, false, [60, 60, 60], cw - 10);
+        writeTxt(originalText, 8.5, false, [60, 60, 60], cw - 10);
         y += 4;
       }
 
