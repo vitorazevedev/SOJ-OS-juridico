@@ -85,6 +85,7 @@ export function useContractAnalysis(contractId: string | undefined) {
   const [clauses, setClauses] = useState<ClauseRisk[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [retrying, setRetrying] = useState(false);
 
   const fetchAll = useCallback(async () => {
     if (!contractId) { setLoading(false); return; }
@@ -146,41 +147,47 @@ export function useContractAnalysis(contractId: string | undefined) {
   const triggerAnalysis = useCallback(async (parteRepresentada?: string): Promise<{ error?: string }> => {
     if (!contractId) return { error: 'No contract ID' };
     let lastMessage = 'Erro desconhecido';
+    setRetrying(false);
 
-    for (let attempt = 1; attempt <= ANALYSIS_MAX_ATTEMPTS; attempt++) {
-      const { error } = await supabase.functions.invoke('analyze-contract', {
-        body: { contract_id: contractId, ...(parteRepresentada ? { parte_representada: parteRepresentada } : {}) },
-      });
+    try {
+      for (let attempt = 1; attempt <= ANALYSIS_MAX_ATTEMPTS; attempt++) {
+        if (attempt > 1) setRetrying(true);
+        const { error } = await supabase.functions.invoke('analyze-contract', {
+          body: { contract_id: contractId, ...(parteRepresentada ? { parte_representada: parteRepresentada } : {}) },
+        });
 
-      if (!error) {
-        await fetchAll();
-        return {};
-      }
-
-      // FunctionsHttpError.message é um texto genérico "non-2xx status code" —
-      // o erro de verdade está no corpo da resposta, acessível via error.context.
-      let message = error.message ?? String(error);
-      const context = (error as { context?: Response }).context;
-      if (context && typeof context.json === 'function') {
-        try {
-          const body = await context.json();
-          if (body?.error) message = body.error;
-        } catch {
-          // corpo da resposta não era JSON — mantém a mensagem genérica
+        if (!error) {
+          await fetchAll();
+          return {};
         }
-      }
-      lastMessage = message;
 
-      // Sem context = a requisição nem chegou a ter resposta (timeout/rede) —
-      // também é falha de infra. Status 5xx explícito idem. Qualquer outra
-      // coisa (4xx) é erro de negócio, não retry.
-      const isInfraFailure = !context || context.status >= 500;
-      if (!isInfraFailure || attempt === ANALYSIS_MAX_ATTEMPTS) {
-        return { error: message };
+        // FunctionsHttpError.message é um texto genérico "non-2xx status code" —
+        // o erro de verdade está no corpo da resposta, acessível via error.context.
+        let message = error.message ?? String(error);
+        const context = (error as { context?: Response }).context;
+        if (context && typeof context.json === 'function') {
+          try {
+            const body = await context.json();
+            if (body?.error) message = body.error;
+          } catch {
+            // corpo da resposta não era JSON — mantém a mensagem genérica
+          }
+        }
+        lastMessage = message;
+
+        // Sem context = a requisição nem chegou a ter resposta (timeout/rede) —
+        // também é falha de infra. Status 5xx explícito idem. Qualquer outra
+        // coisa (4xx) é erro de negócio, não retry.
+        const isInfraFailure = !context || context.status >= 500;
+        if (!isInfraFailure || attempt === ANALYSIS_MAX_ATTEMPTS) {
+          return { error: message };
+        }
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
       }
-      await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+      return { error: lastMessage };
+    } finally {
+      setRetrying(false);
     }
-    return { error: lastMessage };
   }, [contractId, fetchAll]);
 
   const updateClauseReview = useCallback(async (clauseId: string, status: ReviewStatus): Promise<void> => {
@@ -208,5 +215,5 @@ export function useContractAnalysis(contractId: string | undefined) {
     await fetchAll();
   }, [contractId, fetchAll]);
 
-  return { contract, content, analysis, clauses, loading, notFound, refetch: fetchAll, triggerAnalysis, saveContractValue, updateClauseReview, updateClauseSuggestion };
+  return { contract, content, analysis, clauses, loading, notFound, retrying, refetch: fetchAll, triggerAnalysis, saveContractValue, updateClauseReview, updateClauseSuggestion };
 }

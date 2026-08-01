@@ -33,6 +33,7 @@ export function InAnaliseView({
   setTab,
   onAnalyze,
   analyzing,
+  retrying,
 }: {
   contract: FullContract;
   content: ContractContent | null;
@@ -40,6 +41,7 @@ export function InAnaliseView({
   setTab: (t: "info" | "texto") => void;
   onAnalyze: (parteRepresentada?: string) => void;
   analyzing: boolean;
+  retrying?: boolean;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedParty, setSelectedParty] = useState("");
@@ -75,7 +77,9 @@ export function InAnaliseView({
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {analyzing
-                ? `A IA está lendo o contrato. Costuma levar ${estimateAnalysisDuration(content?.word_count)} — pode demorar mais em caso de nova tentativa automática.`
+                ? retrying
+                  ? "Tivemos uma instabilidade momentânea e estamos tentando novamente automaticamente."
+                  : `A IA está lendo o contrato. Costuma levar ${estimateAnalysisDuration(content?.word_count)}.`
                 : content?.word_count
                   ? `${content.word_count.toLocaleString("pt-BR")} palavras extraídas. Clique em Analisar para iniciar a análise jurídica.`
                   : "Clique em Analisar para iniciar a análise jurídica com IA."}

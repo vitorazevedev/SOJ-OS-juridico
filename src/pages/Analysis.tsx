@@ -58,7 +58,7 @@ export default function Analysis() {
 
 function AnalysisView({ id }: { id: string }) {
   const navigate = useNavigate();
-  const { contract, content, analysis, clauses, loading, notFound, refetch, triggerAnalysis, saveContractValue, updateClauseReview, updateClauseSuggestion } = useContractAnalysis(id);
+  const { contract, content, analysis, clauses, loading, notFound, retrying, refetch, triggerAnalysis, saveContractValue, updateClauseReview, updateClauseSuggestion } = useContractAnalysis(id);
   const { indexes } = useEconomicIndexes();
 
   const [inAnaliseTab, setInAnaliseTab] = useState<"info" | "texto">("info");
@@ -167,6 +167,7 @@ function AnalysisView({ id }: { id: string }) {
           setTab={setInAnaliseTab}
           onAnalyze={handleAnalyze}
           analyzing={analyzing}
+          retrying={retrying}
         />
       )}
 
