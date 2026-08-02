@@ -120,6 +120,13 @@ function buildAlertEmail(
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
 
+  // verify_jwt=false (pg_cron chama sem Authorization) -- exige o segredo
+  // compartilhado que o proprio job de cron envia, pra ninguem mais poder
+  // disparar a function so por descobrir a URL.
+  if (req.headers.get('x-cron-secret') !== Deno.env.get('CRON_SECRET')) {
+    return jsonResponse({ error: 'Unauthorized' }, 401)
+  }
+
   const serviceClient = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -183,13 +190,13 @@ Deno.serve(async (req) => {
     for (const ob of obligations) {
       results.alerts_sent++
 
-      // Mark alert as sent
-      await serviceClient
-        .from('contract_obligations')
-        .update({ [window.col]: true })
-        .eq('id', ob.id)
-
       if (!emailEnabled) {
+        // Sem chave configurada, nao ha como enviar de jeito nenhum -- marca como
+        // tratado pra nao reprocessar indefinidamente enquanto a chave nao existir.
+        await serviceClient
+          .from('contract_obligations')
+          .update({ [window.col]: true })
+          .eq('id', ob.id)
         results.emails_skipped++
         console.log(
           `[alert-dry-run] ${window.days}d: obligation=${ob.id} contract=${ob.contract_id}`
@@ -219,6 +226,15 @@ Deno.serve(async (req) => {
         window.days
       )
 
+      // So marca o alerta como enviado se pelo menos um destinatario elegivel
+      // recebeu de fato (ou se nao havia nenhum elegivel). Se o envio falhar
+      // (dominio nao verificado, Resend fora do ar, etc.), o flag fica false e o
+      // cron do dia seguinte tenta de novo -- antes disso, o flag era marcado
+      // antes de saber se o e-mail saiu, e um alerta que falhava nunca mais era
+      // reenviado nem notado.
+      let eligibleCount = 0
+      let anySent = false
+
       for (const u of userRows ?? []) {
         if (!u.email) continue
 
@@ -229,9 +245,21 @@ Deno.serve(async (req) => {
           continue
         }
 
+        eligibleCount++
         const sent = await sendEmail(u.email, subject, html, resendKey)
-        if (sent) results.emails_sent++
-        else results.errors.push(`email failed for ${u.email}`)
+        if (sent) {
+          results.emails_sent++
+          anySent = true
+        } else {
+          results.errors.push(`email failed for ${u.email}`)
+        }
+      }
+
+      if (eligibleCount === 0 || anySent) {
+        await serviceClient
+          .from('contract_obligations')
+          .update({ [window.col]: true })
+          .eq('id', ob.id)
       }
     }
   }

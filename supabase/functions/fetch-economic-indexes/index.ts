@@ -73,6 +73,13 @@ async function fetchInpc(): Promise<{ value: number; period: string } | null> {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
 
+  // verify_jwt=false (pg_cron chama sem Authorization) -- exige o segredo
+  // compartilhado que o proprio job de cron envia, pra ninguem mais poder
+  // disparar a function so por descobrir a URL.
+  if (req.headers.get('x-cron-secret') !== Deno.env.get('CRON_SECRET')) {
+    return jsonResponse({ error: 'Unauthorized' }, 401)
+  }
+
   const serviceClient = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!

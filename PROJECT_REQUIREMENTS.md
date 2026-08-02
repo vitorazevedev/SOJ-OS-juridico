@@ -51,6 +51,8 @@
 
 ## Planos e Pricing
 
+> ⚠️ **Desatualizado.** A tabela abaixo é o modelo de pricing original do spec (4 tiers pagos + Enterprise). O que está de fato implementado hoje é mais simples: **Freemium** (`trial`, 1 análise/mês grátis) e **Starter** (`active`, R$ 490/mês, 15 análises/mês, renovação manual pela Equipe Ponderum, sem gateway de pagamento) — ver `src/lib/pricing.ts` (fonte da verdade) e `PLAN_MONTHLY_LIMIT` em `supabase/functions/parse-contract/index.ts`. Os planos `pro`/`enterprise` existem no código (limite ilimitado), mas ainda não têm preço/fluxo de venda definidos. Pro/Business/Firm da tabela original nunca foram implementados.
+
 | Plano | Preço/mês | Contratos/mês | Usuários | Alvo |
 |---|---|---|---|---|
 | Starter | R$ 147 | 5 | 1 | Freelancers, MEI |
