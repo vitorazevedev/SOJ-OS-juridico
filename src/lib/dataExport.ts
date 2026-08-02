@@ -21,7 +21,7 @@ export async function fetchOrgExportData(): Promise<OrgExportData> {
       supabase.from("users").select("id,name,email,role,created_at"),
       supabase.from("contracts").select("*"),
       supabase.from("contract_contents").select("*"),
-      supabase.from("contract_analyses").select("*"),
+      supabase.from("contract_analyses_gated").select("*"),
       supabase.from("clause_risks").select("*"),
       supabase.from("contract_obligations").select("*"),
       supabase.from("generated_contracts").select("*"),
