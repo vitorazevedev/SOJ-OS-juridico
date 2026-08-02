@@ -138,7 +138,11 @@ export function ClauseDetailPanel({
           {clause.polaridade_parte_representada != null && (() => {
             const voce = clause.polaridade_parte_representada!;
             const contraparte = 100 - voce;
-            const zonaCor = gravidadeFaixa(Math.max(voce, contraparte)).dot;
+            // Cor da régua reflete a gravidade da cláusula (a mesma do badge "Risco
+            // X" acima), não o quanto o desequilíbrio pende pra um lado — antes usava
+            // a própria polaridade como se fosse o índice, então uma cláusula de
+            // risco baixo com pendência 50/50 saía colorida como "médio" (amarelo).
+            const zonaCor = gravidadeFaixa(gravidade).dot;
             return (
               <div>
                 <p className="text-[12px] md:text-[13px] text-foreground/90">
