@@ -166,11 +166,26 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Contract text not available. Run parsing first.' }, 422)
   }
 
-  // Mark contract as being analyzed
-  await serviceClient
+  // Lock atômico: só segue se não houver analysis_started_at recente (nenhuma
+  // outra aba/requisição analisando agora) ou se o lock estiver obsoleto
+  // (> 5min — function anterior travou/caiu sem chegar no catch). UPDATE com
+  // WHERE check-and-set numa única query evita corrida entre checar e marcar.
+  const STALE_LOCK_MS = 5 * 60 * 1000
+  const staleThreshold = new Date(Date.now() - STALE_LOCK_MS).toISOString()
+  const { data: lockedContract, error: lockErr } = await serviceClient
     .from('contracts')
-    .update({ status: 'em_analise', updated_at: new Date().toISOString() })
+    .update({ status: 'em_analise', analysis_started_at: new Date().toISOString(), updated_at: new Date().toISOString() })
     .eq('id', contract_id)
+    .or(`analysis_started_at.is.null,analysis_started_at.lt.${staleThreshold}`)
+    .select('id')
+    .maybeSingle()
+
+  if (lockErr) {
+    return jsonResponse({ error: 'Failed to acquire analysis lock' }, 500)
+  }
+  if (!lockedContract) {
+    return jsonResponse({ error: 'Este contrato já está sendo analisado. Aguarde a conclusão antes de tentar novamente.' }, 409)
+  }
 
   const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') })
 
@@ -679,10 +694,10 @@ Para índices SEM bloco "ÂNCORA CANDIDATA A VALIDAR", não preencha nenhum camp
     // gravidade persistida acima, sem nova chamada à IA (Fase 1, sem UI ainda).
     await serviceClient.rpc('recalcular_indice_desequilibrio', { p_analysis_id: analysis.id })
 
-    // Update contract status to 'analisado'
+    // Update contract status to 'analisado' — libera o lock de análise
     await serviceClient
       .from('contracts')
-      .update({ status: 'analisado', updated_at: new Date().toISOString() })
+      .update({ status: 'analisado', analysis_started_at: null, updated_at: new Date().toISOString() })
       .eq('id', contract_id)
 
     // Shadow context (document_context + information_flow, pontos 3/4 da spec) —
@@ -737,10 +752,10 @@ Para índices SEM bloco "ÂNCORA CANDIDATA A VALIDAR", não preencha nenhum camp
     })
   } catch (err) {
     console.error('analyze-contract error:', err)
-    // Revert to em_analise so user can retry
+    // Revert to em_analise e libera o lock, para o usuário poder tentar de novo
     await serviceClient
       .from('contracts')
-      .update({ status: 'em_analise', updated_at: new Date().toISOString() })
+      .update({ status: 'em_analise', analysis_started_at: null, updated_at: new Date().toISOString() })
       .eq('id', contract_id)
     return jsonResponse({ error: String(err) }, 500)
   }

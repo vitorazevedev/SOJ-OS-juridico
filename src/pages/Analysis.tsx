@@ -12,6 +12,16 @@ import { fmtDate } from "@/lib/analysisFormat";
 
 const LAST_ANALYSIS_KEY = "soj:lastAnalysisId";
 
+// Mirror do STALE_LOCK_MS em supabase/functions/analyze-contract/index.ts —
+// depois desse tempo, um analysis_started_at é tratado como lock obsoleto
+// (function anterior travou/caiu) e a tela volta a permitir novo clique.
+const ANALYSIS_LOCK_STALE_MS = 5 * 60 * 1000;
+
+function isAnalysisLocked(startedAt: string | null): boolean {
+  if (!startedAt) return false;
+  return Date.now() - new Date(startedAt).getTime() < ANALYSIS_LOCK_STALE_MS;
+}
+
 export default function Analysis() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -166,7 +176,7 @@ function AnalysisView({ id }: { id: string }) {
           tab={inAnaliseTab}
           setTab={setInAnaliseTab}
           onAnalyze={handleAnalyze}
-          analyzing={analyzing}
+          analyzing={analyzing || isAnalysisLocked(contract.analysis_started_at)}
           retrying={retrying}
         />
       )}

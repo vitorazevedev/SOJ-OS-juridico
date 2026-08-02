@@ -740,6 +740,7 @@ export type Database = {
       }
       contracts: {
         Row: {
+          analysis_started_at: string | null
           contract_value_informed: number | null
           created_at: string | null
           file_name: string | null
@@ -757,6 +758,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          analysis_started_at?: string | null
           contract_value_informed?: number | null
           created_at?: string | null
           file_name?: string | null
@@ -774,6 +776,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          analysis_started_at?: string | null
           contract_value_informed?: number | null
           created_at?: string | null
           file_name?: string | null
