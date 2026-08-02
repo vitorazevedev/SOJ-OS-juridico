@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { SojCard } from "@/components/layout/Primitives";
 import { supabase } from "@/lib/supabase";
-import { fmtBRL } from "@/lib/adminDashboard";
-import { Loader2, TrendingUp, Users, Building2, ShieldAlert, Wallet } from "lucide-react";
+import { aiCostBRL, fmtBRL } from "@/lib/adminDashboard";
+import { Loader2, TrendingUp, Users, Building2, ShieldAlert, Wallet, Coins } from "lucide-react";
 
 type ExecStats = {
   total_orgs: number;
@@ -13,6 +13,10 @@ type ExecStats = {
   churned_30d: number;
   churn_rate_30d: number;
   revenue_30d: number;
+  parse_tokens_input_30d: number;
+  parse_tokens_output_30d: number;
+  analysis_tokens_input_30d: number;
+  analysis_tokens_output_30d: number;
 };
 
 type MonthCount = { month: string; new_orgs: number };
@@ -54,13 +58,22 @@ export function ExecutiveDashboard() {
 
   if (!stats) return null;
 
+  const aiCost30d = aiCostBRL({
+    parseTokensInput: stats.parse_tokens_input_30d,
+    parseTokensOutput: stats.parse_tokens_output_30d,
+    analysisTokensInput: stats.analysis_tokens_input_30d,
+    analysisTokensOutput: stats.analysis_tokens_output_30d,
+  });
+  const grossProfit30d = stats.revenue_30d - aiCost30d;
+  const grossMargin30d = stats.revenue_30d > 0 ? (grossProfit30d / stats.revenue_30d) * 100 : null;
+
   const maxNewOrgs = Math.max(...growth.map((g) => g.new_orgs), 1);
   const maxRevenue = Math.max(...revenue.map((r) => r.revenue), stats.mrr_estimate, 1);
   const chartH = 96;
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <SojCard className="flex flex-col gap-1 p-4 border-primary/30">
           <div className="flex items-center gap-1.5 text-primary">
             <TrendingUp className="h-3.5 w-3.5" />
@@ -83,6 +96,32 @@ export function ExecutiveDashboard() {
           </p>
         </SojCard>
 
+        <SojCard className="flex flex-col gap-1 p-4">
+          <div className="flex items-center gap-1.5 text-muted-foreground">
+            <Coins className="h-3.5 w-3.5" />
+            <span className="text-[10px] font-mono uppercase tracking-wider">Custo de IA (30d)</span>
+          </div>
+          <p className="text-lg md:text-2xl font-semibold tabular-nums whitespace-nowrap">{fmtBRL(aiCost30d)}</p>
+          <p className="text-[10px] text-muted-foreground leading-tight">
+            Tokens reais de parse (Haiku) + análise (Sonnet)
+          </p>
+        </SojCard>
+
+        <SojCard className={`flex flex-col gap-1 p-4 ${grossProfit30d >= 0 ? "border-primary/30" : "border-risk-critical/40"}`}>
+          <div className={`flex items-center gap-1.5 ${grossProfit30d >= 0 ? "text-primary" : "text-risk-critical"}`}>
+            <Wallet className="h-3.5 w-3.5" />
+            <span className="text-[10px] font-mono uppercase tracking-wider">Lucro bruto (30d)</span>
+          </div>
+          <p className={`text-lg md:text-2xl font-semibold tabular-nums whitespace-nowrap ${grossProfit30d >= 0 ? "text-primary" : "text-risk-critical"}`}>
+            {fmtBRL(grossProfit30d)}
+          </p>
+          <p className="text-[10px] text-muted-foreground leading-tight">
+            Receita real − custo de IA{grossMargin30d !== null ? ` · margem ${grossMargin30d.toFixed(0)}%` : ""}
+          </p>
+        </SojCard>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         <SojCard className="flex flex-col gap-1 p-4">
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <Building2 className="h-3.5 w-3.5" />

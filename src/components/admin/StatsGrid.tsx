@@ -1,9 +1,9 @@
 import { SojCard } from "@/components/layout/Primitives";
 import { Building2, FileText, MessageSquare, ScanSearch, UserPlus } from "lucide-react";
-import { COST_ANALYSIS_BRL, COST_PARSE_BRL, fmtBRL, type Stats } from "@/lib/adminDashboard";
+import { estimatedCostBRL, fmtBRL, type Stats } from "@/lib/adminDashboard";
 
 export function StatsGrid({ stats }: { stats: Stats }) {
-  const estimatedCostBRL = stats.contracts_this_month * COST_PARSE_BRL + stats.analyses_this_month * COST_ANALYSIS_BRL;
+  const costBRL = estimatedCostBRL(stats);
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -28,9 +28,9 @@ export function StatsGrid({ stats }: { stats: Stats }) {
         <div className="flex items-center gap-1.5 text-primary">
           <span className="text-[10px] font-mono uppercase tracking-wider">Custo est. mês</span>
         </div>
-        <p className="text-2xl font-semibold tabular-nums text-primary">{fmtBRL(estimatedCostBRL)}</p>
+        <p className="text-2xl font-semibold tabular-nums text-primary">{fmtBRL(costBRL)}</p>
         <p className="text-[10px] text-muted-foreground leading-tight">
-          {stats.contracts_this_month} × R$0,05 (parse) + {stats.analyses_this_month} × R$0,45 (análise)
+          Baseado em tokens reais de uso (Haiku parse + Sonnet análise) — não é um valor de fatura oficial.
         </p>
       </SojCard>
     </div>

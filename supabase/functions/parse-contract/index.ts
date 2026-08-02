@@ -146,6 +146,8 @@ Deno.serve(async (req) => {
   const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') })
   let rawText = ''
   let ocrApplied = false
+  let tokensInput = 0
+  let tokensOutput = 0
 
   try {
     if (isPDF) {
@@ -174,6 +176,8 @@ Deno.serve(async (req) => {
         ],
       })
       rawText = res.content[0].type === 'text' ? res.content[0].text : ''
+      tokensInput += res.usage.input_tokens
+      tokensOutput += res.usage.output_tokens
     } else if (isDOCX) {
       // @ts-expect-error — mammoth works via npm compat layer in Deno
       const mammoth = (await import('npm:mammoth')).default
@@ -205,6 +209,8 @@ Deno.serve(async (req) => {
         ],
       })
       rawText = res.content[0].type === 'text' ? res.content[0].text : ''
+      tokensInput += res.usage.input_tokens
+      tokensOutput += res.usage.output_tokens
     } else {
       return jsonResponse({ error: `Unsupported file type: ${mimeType}. Use PDF, DOCX, JPG or PNG.` }, 400)
     }
@@ -242,6 +248,8 @@ Retorne exatamente neste formato:
         },
       ],
     })
+    tokensInput += metaRes.usage.input_tokens
+    tokensOutput += metaRes.usage.output_tokens
 
     let counterparty: string | null = null
     let typeLabel: string | null = null
@@ -280,12 +288,27 @@ Retorne exatamente neste formato:
     if (existing) {
       await serviceClient
         .from('contract_contents')
-        .update({ raw_text: rawText, word_count: wordCount, ocr_applied: ocrApplied, parsed_at: new Date().toISOString() })
+        .update({
+          raw_text: rawText,
+          word_count: wordCount,
+          ocr_applied: ocrApplied,
+          parsed_at: new Date().toISOString(),
+          tokens_input: tokensInput,
+          tokens_output: tokensOutput,
+        })
         .eq('contract_id', contract_id)
     } else {
       await serviceClient
         .from('contract_contents')
-        .insert({ contract_id, raw_text: rawText, word_count: wordCount, ocr_applied: ocrApplied, parsed_at: new Date().toISOString() })
+        .insert({
+          contract_id,
+          raw_text: rawText,
+          word_count: wordCount,
+          ocr_applied: ocrApplied,
+          parsed_at: new Date().toISOString(),
+          tokens_input: tokensInput,
+          tokens_output: tokensOutput,
+        })
     }
 
     // Update contract record — status → em_analise, fill extracted fields

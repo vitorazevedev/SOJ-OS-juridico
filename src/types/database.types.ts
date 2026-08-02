@@ -629,6 +629,8 @@ export type Database = {
           ocr_applied: boolean | null
           parsed_at: string | null
           raw_text: string | null
+          tokens_input: number | null
+          tokens_output: number | null
           word_count: number | null
         }
         Insert: {
@@ -637,6 +639,8 @@ export type Database = {
           ocr_applied?: boolean | null
           parsed_at?: string | null
           raw_text?: string | null
+          tokens_input?: number | null
+          tokens_output?: number | null
           word_count?: number | null
         }
         Update: {
@@ -645,6 +649,8 @@ export type Database = {
           ocr_applied?: boolean | null
           parsed_at?: string | null
           raw_text?: string | null
+          tokens_input?: number | null
+          tokens_output?: number | null
           word_count?: number | null
         }
         Relationships: [
