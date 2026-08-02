@@ -33,7 +33,7 @@ _Nenhuma pendente no momento._
 - Chaves expostas: apenas `VITE_SUPABASE_ANON_KEY` (publishable) no frontend — correto
 - `service_role` key: não presente em nenhum arquivo do repositório — verificar antes de cada PR
 - `react-router-dom@6.30.x`: 2 CVEs moderadas (open redirect via `<Link>`/`useNavigate`; injeção via `deserializeErrors()` em hidratação SSR). Correção exige major bump pra v7 (sem patch dentro do v6) — adiado do lançamento de 2026-08-05 por risco de quebra sem tempo de teste. App é SPA sem SSR, então a segunda CVE não se aplica hoje. Fazer o upgrade com calma pós-lançamento.
-- Remetente de e-mail (`alertas@ponderum.com`, Resend) — confirmar que o domínio está com SPF/DKIM verificados no painel do Resend antes do lançamento; sem isso, alertas de obrigação falham silenciosamente (mitigado por SD-009, mas o ideal é o envio funcionar de fato)
+- ~~Remetente de e-mail (`alertas@ponderum.com`, Resend) — confirmar SPF/DKIM~~ **Confirmado 2026-08-02** — domínio `ponderum.com` verificado no Resend desde 2026-07-20 ("Domain verified: Your domain is ready to send emails"). Envio real funcionando.
 
 ---
 
