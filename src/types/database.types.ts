@@ -1191,18 +1191,6 @@ export type Database = {
           },
         ]
       }
-      temp_org: {
-        Row: {
-          org_id: string | null
-        }
-        Insert: {
-          org_id?: string | null
-        }
-        Update: {
-          org_id?: string | null
-        }
-        Relationships: []
-      }
       user_feedback: {
         Row: {
           category: string
