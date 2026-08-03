@@ -82,6 +82,8 @@ export type AnalysisPdfData = {
     score_simetria: number | null; score_valor_exposto: number | null;
     score_prazo_reversibilidade: number | null; score_foro_execucao: number | null;
     conclusao: string | null; impacto_identificado: string[] | null; mitigacao: string | null;
+    finding_type?: "anchored" | "qualitative_unmapped" | "no_finding";
+    gating_reason?: string | null;
   }[];
 };
 
@@ -191,6 +193,9 @@ const SEV_RGB: Record<string, [number, number, number]> = {
   medio: [202, 138, 4],
   baixo: [22, 163, 74],
 };
+// Mesmo azul do token --info do design system, pra achado qualitativo (sem
+// âncora aprovada pelo gating) não ser confundido com um "BAIXO" real.
+const INFO_RGB: [number, number, number] = [71, 158, 245];
 
 function fmtBRLPdf(cents: number | null): string {
   if (cents == null) return "—";
@@ -314,9 +319,12 @@ export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> 
       // original_text vem em Markdown (parse-contract extrai assim pra economizar
       // tokens) — remove a sintaxe antes de exibir no PDF, que é um documento final.
       const originalText = cl.original_text ? stripMarkdown(cl.original_text) : null;
-      const zona = cl.gravidade != null ? gravidadeFaixa(cl.gravidade) : null;
-      const zonaRgb: [number, number, number] = zona ? SEV_RGB[zona.zone] : (SEV_RGB[cl.severity] ?? [100, 100, 100]);
-      const zonaLabel = zona ? SEV_LABEL[zona.zone] : (SEV_LABEL[cl.severity] ?? cl.severity.toUpperCase());
+      const isQualitative = cl.finding_type === "qualitative_unmapped";
+      const zona = !isQualitative && cl.gravidade != null ? gravidadeFaixa(cl.gravidade) : null;
+      const zonaRgb: [number, number, number] = isQualitative ? INFO_RGB : zona ? SEV_RGB[zona.zone] : (SEV_RGB[cl.severity] ?? [100, 100, 100]);
+      // "ALERTA" (não "ALERTA QUALITATIVO") pra caber na mesma largura fixa
+      // reservada pros outros selos (CRÍTICO/ALTO/MÉDIO/BAIXO) sem sobrepor o título.
+      const zonaLabel = isQualitative ? "ALERTA" : zona ? SEV_LABEL[zona.zone] : (SEV_LABEL[cl.severity] ?? cl.severity.toUpperCase());
       const sev = zonaRgb;
       const hasExp = cl.exposure_likely != null && cl.exposure_likely > 0;
       const titleW = cw - 35 - (hasExp ? 32 : 5);
@@ -342,31 +350,43 @@ export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> 
       }
       y += hdrH + 7;
 
-      // Índice / seu padrão / desvio — "seu padrão" e "desvio" dependem da
-      // calibração de polaridade (DEC-047, ver POLARIDADE_CALIBRADA); enquanto
-      // não aprovados pelo Fellipe, mostra só o índice da cláusula.
-      if (cl.gravidade != null) {
-        check(6);
-        pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor(...PC.mid);
-        const txt = POLARIDADE_CALIBRADA && cl.ancoras?.gravidade_referencia != null
-          ? (() => {
-              const desvio = cl.gravidade! - cl.ancoras!.gravidade_referencia!;
-              return `Índice: ${cl.gravidade!.toFixed(0)}  ·  Seu padrão: ${cl.ancoras!.gravidade_referencia!.toFixed(0)}  ·  Desvio: ${desvio >= 0 ? "+" : ""}${desvio.toFixed(0)}`;
-            })()
-          : `Índice: ${cl.gravidade.toFixed(0)}`;
-        pdf.text(txt, ml + 6, y);
-        y += 5;
-      }
+      if (isQualitative) {
+        // Achado sem âncora quantitativa aprovada pelo gating — não mostra
+        // índice/distribuição (não são reais pra esse tipo de achado);
+        // mostra o motivo em vez disso, mesmo tratamento da tela.
+        if (cl.gating_reason) {
+          check(8);
+          pdf.setFont("helvetica", "italic"); pdf.setFontSize(8); pdf.setTextColor(...INFO_RGB);
+          writeTxt(`Por que não entra no índice: ${cl.gating_reason}`, 8, false, INFO_RGB, cw - 10);
+          y += 2;
+        }
+      } else {
+        // Índice / seu padrão / desvio — "seu padrão" e "desvio" dependem da
+        // calibração de polaridade (DEC-047, ver POLARIDADE_CALIBRADA); enquanto
+        // não aprovados pelo Fellipe, mostra só o índice da cláusula.
+        if (cl.gravidade != null) {
+          check(6);
+          pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor(...PC.mid);
+          const txt = POLARIDADE_CALIBRADA && cl.ancoras?.gravidade_referencia != null
+            ? (() => {
+                const desvio = cl.gravidade! - cl.ancoras!.gravidade_referencia!;
+                return `Índice: ${cl.gravidade!.toFixed(0)}  ·  Seu padrão: ${cl.ancoras!.gravidade_referencia!.toFixed(0)}  ·  Desvio: ${desvio >= 0 ? "+" : ""}${desvio.toFixed(0)}`;
+              })()
+            : `Índice: ${cl.gravidade.toFixed(0)}`;
+          pdf.text(txt, ml + 6, y);
+          y += 5;
+        }
 
-      // Polaridade
-      if (cl.polaridade_parte_representada != null) {
-        check(6);
-        const voce = cl.polaridade_parte_representada;
-        const contraparte = 100 - voce;
-        pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor(...PC.navy);
-        const txt = `Distribuição estimada do impacto: ${voce.toFixed(0)}% para você e ${contraparte.toFixed(0)}% para a contraparte.`;
-        pdf.text(txt, ml + 6, y);
-        y += 5;
+        // Polaridade
+        if (cl.polaridade_parte_representada != null) {
+          check(6);
+          const voce = cl.polaridade_parte_representada;
+          const contraparte = 100 - voce;
+          pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor(...PC.navy);
+          const txt = `Distribuição estimada do impacto: ${voce.toFixed(0)}% para você e ${contraparte.toFixed(0)}% para a contraparte.`;
+          pdf.text(txt, ml + 6, y);
+          y += 5;
+        }
       }
 
       // Conclusão
@@ -453,7 +473,7 @@ export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> 
 
   const dynamicText = [
     analysis.summary,
-    ...clauses.flatMap((cl) => [cl.title, cl.conclusao, cl.mitigacao, cl.suggestion]),
+    ...clauses.flatMap((cl) => [cl.title, cl.conclusao, cl.mitigacao, cl.suggestion, cl.gating_reason]),
   ].filter((s): s is string => !!s).join("\n");
   const violations = validateReportOutput(dynamicText);
   if (violations.length > 0) {
