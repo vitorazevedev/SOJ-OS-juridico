@@ -88,6 +88,20 @@ function mentionsCrimeEquiparation(text: string | null | undefined): boolean {
   return /\bcrime\b|sanç(?:ões|ão) penal|concorrência desleal|viola(?:ção|r) de segredo/.test(t)
 }
 
+// Correção pontual pedida pelo Fellipe (2026-08-03): quando não há valor
+// monetário explícito no contrato, o resumo às vezes descreve isso como
+// "exposição financeira é zero" — ausência de valor expresso não é o mesmo
+// que exposição zero. Troca o padrão específico observado pela frase exata
+// pedida, só quando o total financeiro é de fato 0 (calculado
+// deterministicamente, não pela IA).
+function sanitizeFinancialSummaryClaim(summary: string, financialTotalIsZero: boolean): string {
+  if (!financialTotalIsZero) return summary
+  return summary.replace(
+    /Não há valores monetários explícitos no contrato,?\s*de modo que a exposição financeira[^.]*\.?/i,
+    'Não há valores monetários explícitos no contrato, de modo que a exposição financeira total não é quantificável com base apenas no instrumento.'
+  )
+}
+
 const SYSTEM_PROMPT = `Você é um analisador automatizado de contratos jurídicos brasileiros integrado à plataforma Ponderum.
 Sua única função é analisar o texto de contratos e identificar cláusulas de risco com base em:
 - Código Civil Brasileiro (CC/2002)
@@ -601,7 +615,7 @@ GRAVIDADE (0-100, contínua):
     if (!toolUseA || toolUseA.type !== 'tool_use') throw new Error('Claude did not return a tool_use block (fase A)')
 
     const resultA = toolUseA.input as Record<string, unknown>
-    const summary: string = (resultA.summary as string) || ''
+    const rawSummary: string = (resultA.summary as string) || ''
     const clauses: Record<string, unknown>[] = parseJsonArrayField(resultA.clauses, resA.stop_reason, 'a lista de cláusulas')
 
     // Score determinístico (fórmula híbrida) — não confia numa nota livre da IA.
@@ -612,6 +626,8 @@ GRAVIDADE (0-100, contínua):
     const financialTotal: number = clauses
       .filter((cl) => cl.has_explicit_amount === true)
       .reduce((sum, cl) => sum + (Number(cl.exposure_likely_cents) || 0), 0)
+
+    const summary = sanitizeFinancialSummaryClaim(rawSummary, financialTotal === 0)
 
     // Delete existing analysis if any (re-analyze flow)
     const { data: existing } = await serviceClient
