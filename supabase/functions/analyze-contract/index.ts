@@ -76,6 +76,18 @@ function qualitativeLevelFromSeverity(severity: string): string {
   return 'informativo'
 }
 
+// Equiparação a crime nunca vira achado quantitativo só pela redação (seção 7
+// do hotfix) — mas essa regra só age dentro do bloco de gating de uma âncora
+// candidata. Quando a Fase A não propõe candidato nenhum pra essa cláusula
+// (acontece — o julgamento livre dela não é determinístico), a cláusula
+// escaparia da regra e ficaria com pontuação livre. Esta checagem cobre os
+// dois casos, com ou sem candidato.
+function mentionsCrimeEquiparation(text: string | null | undefined): boolean {
+  if (!text) return false
+  const t = text.toLowerCase()
+  return /\bcrime\b|sanç(?:ões|ão) penal|concorrência desleal|viola(?:ção|r) de segredo/.test(t)
+}
+
 const SYSTEM_PROMPT = `Você é um analisador automatizado de contratos jurídicos brasileiros integrado à plataforma Ponderum.
 Sua única função é analisar o texto de contratos e identificar cláusulas de risco com base em:
 - Código Civil Brasileiro (CC/2002)
@@ -358,12 +370,12 @@ async function ensureDocumentContext(
   contractText: string,
   parte_representada: string | null,
 ): Promise<{ document_context: DocumentContext; information_flow: InformationFlow }> {
+  // analysis_id tem índice único nessa tabela — no máximo uma linha por
+  // análise, então maybeSingle() direto (sem order/limit) já é seguro.
   const { data: existing } = await serviceClient
     .from('analysis_shadow_context')
     .select('document_type, document_purpose, negotiation_stage, represented_party, business_nature, applicable, modality, disclosing_parties, receiving_parties, represented_party_role, represented_party_also_discloses')
     .eq('analysis_id', analysisId)
-    .order('created_at', { ascending: true })
-    .limit(1)
     .maybeSingle()
 
   if (existing) {
@@ -948,6 +960,16 @@ REGRAS ESPECÍFICAS DE CALIBRAÇÃO (aplicam mesmo sem bloco de âncora, quando 
             finding_type = gatingReason ? 'qualitative_unmapped' : 'no_finding'
             qualitative_level = gatingReason ? qualitativeLevelFromSeverity(row.severity) : null
           }
+        } else if (ANCHOR_GATING_V1 && !hadCandidate && mentionsCrimeEquiparation(`${row.title} ${row.original_text ?? ''}`) && !mult01HasRealMulta(row.original_text)) {
+          // Sem candidato de âncora, mas a redação equipara a crime sem
+          // consequência contratual concreta (sem multa real) — mesma regra
+          // do bloco de gating acima, aplicada aqui pra cobrir o caso em que
+          // a Fase A não propôs nenhuma âncora pra essa cláusula.
+          finalAncoraId = null
+          finalGravidade = 0
+          finding_type = 'qualitative_unmapped'
+          qualitative_level = qualitativeLevelFromSeverity(row.severity)
+          gatingReason = gatingReason ?? 'Checagem determinística: a redação equipara a conduta a crime, mas não há consequência contratual autônoma (multa real, penalidade automática); a caracterização penal depende de exame concreto dos elementos legais.'
         }
 
         return {

@@ -5,15 +5,15 @@ import { SojCard } from "@/components/layout/Primitives";
 import { ParsedDataSummary } from "@/features/contracts/components/ParsedDataSummary";
 import { fmtBytes, fmtDate, stripMarkdown } from "@/lib/analysisFormat";
 
-// Análise tem 2 chamadas de IA sequenciais (identificação + detalhamento por
-// cláusula) — contratos maiores/com mais cláusulas levam mais na segunda
-// etapa. Faixa aproximada em vez de número fixo, que na prática variava
-// bastante e não refletia contratos maiores nem retries em caso de
-// instabilidade de infraestrutura.
+// Análise roda em várias chamadas de IA sequenciais: identificação
+// (Fase A) + detalhamento por cláusula em lotes de 6 (Fase B) — contratos
+// com mais cláusulas de risco precisam de mais lotes. Faixa aproximada em
+// vez de número fixo, que na prática variava bastante e não refletia
+// contratos maiores nem retries em caso de instabilidade de infraestrutura.
 function estimateAnalysisDuration(wordCount: number | null | undefined): string {
-  if (!wordCount || wordCount < 1500) return "30 segundos a 1 minuto";
-  if (wordCount < 5000) return "1 a 2 minutos";
-  return "2 a 3 minutos";
+  if (!wordCount || wordCount < 1500) return "1 a 2 minutos";
+  if (wordCount < 5000) return "2 a 4 minutos";
+  return "3 a 6 minutos";
 }
 import type { FullContract, ContractContent } from "@/hooks/useContractAnalysis";
 import {
