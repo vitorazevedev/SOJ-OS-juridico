@@ -145,60 +145,91 @@ export function useContractAnalysis(contractId: string | undefined) {
   // status 4xx e não devem ser retried — tentar de novo não muda o resultado.
   const ANALYSIS_MAX_ATTEMPTS = 3; // 1 tentativa original + 2 retries
 
+  // A análise roda em duas fases (identificação de cláusulas, depois
+  // detalhamento) como invocações HTTP separadas — cada uma com seu próprio
+  // orçamento de 150s de idle timeout da Edge Function. A Fase B, além
+  // disso, roda em lotes de cláusulas (PHASE_B_BATCH_SIZE no backend): o
+  // detalhamento de todas as cláusulas numa única chamada chegou a estourar
+  // tanto o tempo quanto o max_tokens em contratos com muitas cláusulas.
+  // Retry acontece por fase/lote, não pelo fluxo inteiro.
+  const invokePhase = useCallback(async (
+    phase: 'A' | 'B',
+    body: Record<string, unknown>,
+  ): Promise<{ error?: string; data?: { needs_phase_b?: boolean; has_more?: boolean } }> => {
+    let lastMessage = 'Erro desconhecido';
+    for (let attempt = 1; attempt <= ANALYSIS_MAX_ATTEMPTS; attempt++) {
+      if (attempt > 1) setRetrying(true);
+      // Timeout no cliente (acima do idle timeout de 150s da Edge Function) —
+      // sem isso, uma requisição que trava sem nunca responder (rede) deixava
+      // o usuário preso em "Analisando..." indefinidamente, sem erro nem retry.
+      const { data, error } = await supabase.functions.invoke('analyze-contract', {
+        body: { ...body, phase },
+        timeout: 160000,
+      });
+
+      if (!error) {
+        return { data: data as { needs_phase_b?: boolean; has_more?: boolean } };
+      }
+
+      // FunctionsHttpError.message é um texto genérico "non-2xx status code" —
+      // o erro de verdade está no corpo da resposta, acessível via error.context
+      // (só existe um Response de verdade nesse tipo específico de erro).
+      let message = error.message ?? String(error);
+      const context = (error as { context?: Response }).context;
+      const isHttpError = error.name === 'FunctionsHttpError';
+      if (isHttpError && context && typeof context.json === 'function') {
+        try {
+          const responseBody = await context.json();
+          if (responseBody?.error) message = responseBody.error;
+        } catch {
+          // corpo da resposta não era JSON — mantém a mensagem genérica
+        }
+      }
+      lastMessage = message;
+
+      // FunctionsFetchError/FunctionsRelayError (nome, não status) = a
+      // requisição nem chegou a ter resposta HTTP — rede, timeout do
+      // cliente, ou o relay do Supabase não alcançou a function. Sempre
+      // falha de infra. Em FunctionsHttpError, só é infra se status 5xx —
+      // 4xx é erro de negócio (rate limit, texto não extraído) e não deve
+      // ser retried.
+      const isInfraFailure = !isHttpError || (context?.status ?? 0) >= 500;
+      if (!isInfraFailure || attempt === ANALYSIS_MAX_ATTEMPTS) {
+        return { error: message };
+      }
+      await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
+    }
+    return { error: lastMessage };
+  }, []);
+
   const triggerAnalysis = useCallback(async (parteRepresentada?: string): Promise<{ error?: string }> => {
     if (!contractId) return { error: 'No contract ID' };
-    let lastMessage = 'Erro desconhecido';
     setRetrying(false);
 
     try {
-      for (let attempt = 1; attempt <= ANALYSIS_MAX_ATTEMPTS; attempt++) {
-        if (attempt > 1) setRetrying(true);
-        // Timeout no cliente (acima do idle timeout de 150s da Edge Function) —
-        // sem isso, uma requisição que trava sem nunca responder (rede) deixava
-        // o usuário preso em "Analisando..." indefinidamente, sem erro nem retry.
-        const { error } = await supabase.functions.invoke('analyze-contract', {
-          body: { contract_id: contractId, ...(parteRepresentada ? { parte_representada: parteRepresentada } : {}) },
-          timeout: 160000,
-        });
+      const body = { contract_id: contractId, ...(parteRepresentada ? { parte_representada: parteRepresentada } : {}) };
 
-        if (!error) {
-          await fetchAll();
-          return {};
-        }
+      const resultA = await invokePhase('A', body);
+      if (resultA.error) return { error: resultA.error };
 
-        // FunctionsHttpError.message é um texto genérico "non-2xx status code" —
-        // o erro de verdade está no corpo da resposta, acessível via error.context
-        // (só existe um Response de verdade nesse tipo específico de erro).
-        let message = error.message ?? String(error);
-        const context = (error as { context?: Response }).context;
-        const isHttpError = error.name === 'FunctionsHttpError';
-        if (isHttpError && context && typeof context.json === 'function') {
-          try {
-            const body = await context.json();
-            if (body?.error) message = body.error;
-          } catch {
-            // corpo da resposta não era JSON — mantém a mensagem genérica
-          }
+      if (resultA.data?.needs_phase_b) {
+        let batchIndex = 0;
+        let hasMore = true;
+        while (hasMore) {
+          setRetrying(false); // cada lote começa sua própria contagem de tentativas
+          const resultB = await invokePhase('B', { contract_id: contractId, batch_index: batchIndex });
+          if (resultB.error) return { error: resultB.error };
+          hasMore = resultB.data?.has_more === true;
+          batchIndex++;
         }
-        lastMessage = message;
-
-        // FunctionsFetchError/FunctionsRelayError (nome, não status) = a
-        // requisição nem chegou a ter resposta HTTP — rede, timeout do
-        // cliente, ou o relay do Supabase não alcançou a function. Sempre
-        // falha de infra. Em FunctionsHttpError, só é infra se status 5xx —
-        // 4xx é erro de negócio (rate limit, texto não extraído) e não deve
-        // ser retried.
-        const isInfraFailure = !isHttpError || (context?.status ?? 0) >= 500;
-        if (!isInfraFailure || attempt === ANALYSIS_MAX_ATTEMPTS) {
-          return { error: message };
-        }
-        await new Promise((resolve) => setTimeout(resolve, attempt * 1500));
       }
-      return { error: lastMessage };
+
+      await fetchAll();
+      return {};
     } finally {
       setRetrying(false);
     }
-  }, [contractId, fetchAll]);
+  }, [contractId, fetchAll, invokePhase]);
 
   const updateClauseReview = useCallback(async (clauseId: string, status: ReviewStatus): Promise<void> => {
     await supabase
