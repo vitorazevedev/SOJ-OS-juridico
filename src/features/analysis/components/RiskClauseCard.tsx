@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { AlertTriangle, CheckCircle2, Copy, ExternalLink, Pencil } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Copy, ExternalLink, Info, Pencil } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { gravidadeFaixa, POLARIDADE_CALIBRADA, stripMarkdown } from "@/lib/analysisFormat";
+import { gravidadeFaixa, stripMarkdown } from "@/lib/analysisFormat";
 import type { ClauseRisk, ReviewStatus } from "@/hooks/useContractAnalysis";
 
 const REVIEW_LABELS: Record<ReviewStatus, string> = {
@@ -38,7 +38,8 @@ export function ClauseListItem({
   selected: boolean;
   onSelect: () => void;
 }) {
-  const faixa = clause.gravidade != null ? gravidadeFaixa(clause.gravidade) : null;
+  const isQualitative = clause.finding_type === "qualitative_unmapped";
+  const faixa = !isQualitative && clause.gravidade != null ? gravidadeFaixa(clause.gravidade) : null;
 
   return (
     <button
@@ -50,10 +51,16 @@ export function ClauseListItem({
       style={{ minHeight: 44 }}
     >
       <div className="text-center shrink-0 w-10">
-        <p className={cn("text-xl font-semibold tabular-nums leading-none", faixa?.text ?? "text-foreground")}>
-          {clause.gravidade != null ? Math.round(clause.gravidade) : "—"}
-        </p>
-        <p className="text-[11px] text-muted-foreground mt-0.5">de 100</p>
+        {isQualitative ? (
+          <Info className="h-5 w-5 text-info mx-auto" />
+        ) : (
+          <>
+            <p className={cn("text-xl font-semibold tabular-nums leading-none", faixa?.text ?? "text-foreground")}>
+              {clause.gravidade != null ? Math.round(clause.gravidade) : "—"}
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">de 100</p>
+          </>
+        )}
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[13px] leading-snug">{clause.title}</p>
@@ -61,7 +68,11 @@ export function ClauseListItem({
           <p className="text-[11px] text-muted-foreground mt-0.5">{clause.category}</p>
         )}
         <div className="flex items-center gap-1.5 mt-1">
-          {faixa && (
+          {isQualitative ? (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-medium bg-info/15 text-info">
+              Alerta qualitativo
+            </span>
+          ) : faixa && (
             <span className={cn("inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-medium", faixa.bg, faixa.text)}>
               {faixa.label}
             </span>
@@ -92,8 +103,9 @@ export function ClauseDetailPanel({
   const [draftSuggestion, setDraftSuggestion] = useState(clause.suggestion ?? "");
   const [copied, setCopied] = useState(false);
 
+  const isQualitative = clause.finding_type === "qualitative_unmapped";
   const gravidade = clause.gravidade;
-  const faixa = gravidade != null ? gravidadeFaixa(gravidade) : null;
+  const faixa = !isQualitative && gravidade != null ? gravidadeFaixa(gravidade) : null;
 
   const handleCopy = async () => {
     if (!clause.suggestion) return;
@@ -116,7 +128,16 @@ export function ClauseDetailPanel({
         <h3 className="text-lg md:text-xl font-medium mt-0.5">{clause.title}</h3>
       </div>
 
-      {faixa && (
+      {isQualitative ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[13px] font-medium bg-info/15 text-info">
+            <Info className="h-3.5 w-3.5" /> Alerta qualitativo
+          </span>
+          <span className="text-[11px] text-muted-foreground">
+            {clause.review_status ? REVIEW_LABELS[clause.review_status] : "Ainda não revisado"}
+          </span>
+        </div>
+      ) : faixa && (
         <div className="flex flex-wrap items-center gap-2">
           <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[13px] font-medium", faixa.bg, faixa.text)}>
             {faixa.label}
@@ -128,7 +149,14 @@ export function ClauseDetailPanel({
         </div>
       )}
 
-      {gravidade != null && (
+      {isQualitative && clause.gating_reason && (
+        <div className="rounded-lg border border-info/20 bg-info/10 p-3 md:p-4">
+          <p className="text-[12px] font-medium text-info uppercase tracking-wider mb-1.5">Por que não entra no índice</p>
+          <p className="text-[13px] md:text-sm text-foreground/90">{clause.gating_reason}</p>
+        </div>
+      )}
+
+      {!isQualitative && gravidade != null && (
         <div className="rounded-lg border border-border p-3 md:p-4">
           <p className="text-[12px] font-medium text-muted-foreground uppercase tracking-wider mb-2">Índice de Desequilíbrio</p>
           <div className="text-center mb-2">
@@ -146,11 +174,8 @@ export function ClauseDetailPanel({
             return (
               <div>
                 <p className="text-[12px] md:text-[13px] text-foreground/90">
-                  A cláusula pende <span className="font-semibold">{Math.round(voce)}%</span> para você e{" "}
+                  Distribuição estimada do impacto: <span className="font-semibold">{Math.round(voce)}%</span> para você e{" "}
                   <span className="font-semibold">{Math.round(contraparte)}%</span> para a contraparte.
-                  {!POLARIDADE_CALIBRADA && (
-                    <span className="ml-1.5 text-[11px] text-muted-foreground/70">(Pré-calibração)</span>
-                  )}
                 </p>
 
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground mt-2.5 mb-1.5">

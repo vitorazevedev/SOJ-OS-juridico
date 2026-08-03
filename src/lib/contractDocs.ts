@@ -202,6 +202,21 @@ function fmtDatePdf(iso: string | null | undefined): string {
   return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
 }
 
+// Validação de saída do relatório (seção 22 do hotfix de calibração) — o PDF
+// não pode ser liberado ao cliente com rótulos internos, placeholders
+// quebrados ou caracteres de encoding corrompido. Roda sobre o texto dinâmico
+// que efetivamente entra no documento, logo antes de fechar o Blob.
+const FORBIDDEN_REPORT_TERMS = [
+  "Pré-calibração", "Pré calibração", "Pós-calibração",
+  "[%Í]", "[%I]", "%Í", "[Í]", "�",
+  "{{", "}}", "${", "<%",
+  "undefined", "NaN", "R$ NaN",
+];
+
+function validateReportOutput(text: string): string[] {
+  return FORBIDDEN_REPORT_TERMS.filter((term) => text.includes(term));
+}
+
 export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> {
   const { contract, analysis, clauses } = data;
   const pdf = new jsPDF({ unit: "mm", format: "a4" });
@@ -243,10 +258,10 @@ export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> 
     const lines = pdf.splitTextToSize(text, maxW) as string[];
     const lineH = sz * 0.5;
     check(lines.length * lineH);
-    // Um único pdf.text com maxWidth+align:"justify" (em vez do loop linha a
-    // linha) — é assim que o jsPDF justifica; a última linha do parágrafo não
-    // é esticada, seguindo a convenção tipográfica padrão.
-    pdf.text(text, ml, y, { maxWidth: maxW, align: "justify" });
+    // Alinhado à esquerda, linha a linha — align:"justify" do jsPDF estica o
+    // espaçamento de forma desproporcional em linhas curtas (texto "explodido"
+    // no PDF final), então evitamos a opção nativa de justificar.
+    lines.forEach((line, i) => pdf.text(line, ml, y + i * lineH));
     y += lines.length * lineH;
   };
 
@@ -267,7 +282,7 @@ export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> 
     pdf.setFillColor(...PC.light);
     pdf.roundedRect(ml, y, cw, boxH, 2, 2, "F");
     pdf.setFontSize(9); pdf.setFont("helvetica", "normal"); pdf.setTextColor(...PC.navy);
-    pdf.text(analysis.summary, ml + 5, y + 6, { maxWidth: cw - 10, align: "justify" });
+    summaryLines.forEach((line, i) => pdf.text(line, ml + 5, y + 6 + i * 4.5));
     y += boxH + 6;
   }
 
@@ -303,7 +318,7 @@ export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> 
       const zonaRgb: [number, number, number] = zona ? SEV_RGB[zona.zone] : (SEV_RGB[cl.severity] ?? [100, 100, 100]);
       const zonaLabel = zona ? SEV_LABEL[zona.zone] : (SEV_LABEL[cl.severity] ?? cl.severity.toUpperCase());
       const sev = zonaRgb;
-      const hasExp = cl.exposure_likely != null;
+      const hasExp = cl.exposure_likely != null && cl.exposure_likely > 0;
       const titleW = cw - 35 - (hasExp ? 32 : 5);
       const titleLines = (pdf.splitTextToSize(cl.title, titleW) as string[]).slice(0, 2);
       const hdrH = Math.max(10, titleLines.length * 5 + 5);
@@ -327,15 +342,19 @@ export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> 
       }
       y += hdrH + 7;
 
-      // Índice / seu padrão / desvio
-      if (cl.gravidade != null && cl.ancoras?.gravidade_referencia != null) {
+      // Índice / seu padrão / desvio — "seu padrão" e "desvio" dependem da
+      // calibração de polaridade (DEC-047, ver POLARIDADE_CALIBRADA); enquanto
+      // não aprovados pelo Fellipe, mostra só o índice da cláusula.
+      if (cl.gravidade != null) {
         check(6);
-        const desvio = cl.gravidade - cl.ancoras.gravidade_referencia;
         pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor(...PC.mid);
-        pdf.text(
-          `Índice: ${cl.gravidade.toFixed(0)}  ·  Seu padrão: ${cl.ancoras.gravidade_referencia.toFixed(0)}  ·  Desvio: ${desvio >= 0 ? "+" : ""}${desvio.toFixed(0)}`,
-          ml + 6, y
-        );
+        const txt = POLARIDADE_CALIBRADA && cl.ancoras?.gravidade_referencia != null
+          ? (() => {
+              const desvio = cl.gravidade! - cl.ancoras!.gravidade_referencia!;
+              return `Índice: ${cl.gravidade!.toFixed(0)}  ·  Seu padrão: ${cl.ancoras!.gravidade_referencia!.toFixed(0)}  ·  Desvio: ${desvio >= 0 ? "+" : ""}${desvio.toFixed(0)}`;
+            })()
+          : `Índice: ${cl.gravidade.toFixed(0)}`;
+        pdf.text(txt, ml + 6, y);
         y += 5;
       }
 
@@ -345,8 +364,7 @@ export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> 
         const voce = cl.polaridade_parte_representada;
         const contraparte = 100 - voce;
         pdf.setFont("helvetica", "normal"); pdf.setFontSize(8); pdf.setTextColor(...PC.navy);
-        const txt = `A cláusula pende ${voce.toFixed(0)}% para você e ${contraparte.toFixed(0)}% para a contraparte.`
-          + (!POLARIDADE_CALIBRADA ? "  (Pré-calibração)" : "");
+        const txt = `Distribuição estimada do impacto: ${voce.toFixed(0)}% para você e ${contraparte.toFixed(0)}% para a contraparte.`;
         pdf.text(txt, ml + 6, y);
         y += 5;
       }
@@ -423,7 +441,7 @@ export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> 
   check(avisoBoxH);
   pdf.roundedRect(ml, y, cw, avisoBoxH, 2, 2, "F");
   pdf.setFont("helvetica", "normal"); pdf.setFontSize(7); pdf.setTextColor(...PC.mid);
-  pdf.text(avisoLegal, ml + 5, y + 5, { maxWidth: cw - 10, align: "justify" });
+  avisoLines.forEach((line, i) => pdf.text(line, ml + 5, y + 5 + i * 3.8));
   y += avisoBoxH + 6;
 
   drawReportFooters(
@@ -432,6 +450,16 @@ export async function generateAnalysisPdf(data: AnalysisPdfData): Promise<Blob> 
       ? "Ponderum · Relatório de Análise Contratual · cálculo legado"
       : "Ponderum · Relatório de Análise Contratual",
   );
+
+  const dynamicText = [
+    analysis.summary,
+    ...clauses.flatMap((cl) => [cl.title, cl.conclusao, cl.mitigacao, cl.suggestion]),
+  ].filter((s): s is string => !!s).join("\n");
+  const violations = validateReportOutput(dynamicText);
+  if (violations.length > 0) {
+    throw new Error(`Relatório bloqueado: termos não permitidos encontrados (${violations.join(", ")}). Gere a análise novamente.`);
+  }
+
   return new Blob([pdf.output("arraybuffer")], { type: PDF_MIME });
 }
 

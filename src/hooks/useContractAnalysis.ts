@@ -77,6 +77,9 @@ export type ClauseRisk = {
   review_status: ReviewStatus | null;
   reviewed_at: string | null;
   ancoras: { gravidade_referencia: number | null; titulo: string | null } | null;
+  finding_type: "anchored" | "qualitative_unmapped" | "no_finding";
+  qualitative_level: "informativo" | "atencao" | "relevante" | null;
+  gating_reason: string | null;
 };
 
 export function useContractAnalysis(contractId: string | undefined) {
@@ -118,7 +121,7 @@ export function useContractAnalysis(contractId: string | undefined) {
     if (anal?.id) {
       const { data: clauseData } = await supabase
         .from("clause_risks")
-        .select("id,title,severity,category,original_text,suggestion,exposure_likely,exposure_min,exposure_max,sort_order,gravidade,ancora_id,onera_parte_representada,justificativa_gravidade,confianca,polaridade_parte_representada,score_simetria,score_valor_exposto,score_prazo_reversibilidade,score_foro_execucao,conclusao,impacto_identificado,mitigacao,review_status,reviewed_at,ancoras(gravidade_referencia,titulo)")
+        .select("id,title,severity,category,original_text,suggestion,exposure_likely,exposure_min,exposure_max,sort_order,gravidade,ancora_id,onera_parte_representada,justificativa_gravidade,confianca,polaridade_parte_representada,score_simetria,score_valor_exposto,score_prazo_reversibilidade,score_foro_execucao,conclusao,impacto_identificado,mitigacao,review_status,reviewed_at,finding_type,qualitative_level,gating_reason,ancoras(gravidade_referencia,titulo)")
         .eq("analysis_id", anal.id)
         .order("sort_order", { ascending: true });
       setClauses((clauseData ?? []) as ClauseRisk[]);

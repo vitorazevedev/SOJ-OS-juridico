@@ -453,6 +453,8 @@ export type Database = {
           exposure_likely: number | null
           exposure_max: number | null
           exposure_min: number | null
+          finding_type: string
+          gating_reason: string | null
           gravidade: number | null
           id: string
           impacto_identificado: Json | null
@@ -460,7 +462,10 @@ export type Database = {
           mitigacao: string | null
           onera_parte_representada: boolean | null
           original_text: string | null
+          phase_a_ancora_id: string | null
+          phase_a_gravidade: number | null
           polaridade_parte_representada: number | null
+          qualitative_level: string | null
           review_status: string | null
           reviewed_at: string | null
           score_foro_execucao: number | null
@@ -482,6 +487,8 @@ export type Database = {
           exposure_likely?: number | null
           exposure_max?: number | null
           exposure_min?: number | null
+          finding_type?: string
+          gating_reason?: string | null
           gravidade?: number | null
           id?: string
           impacto_identificado?: Json | null
@@ -489,7 +496,10 @@ export type Database = {
           mitigacao?: string | null
           onera_parte_representada?: boolean | null
           original_text?: string | null
+          phase_a_ancora_id?: string | null
+          phase_a_gravidade?: number | null
           polaridade_parte_representada?: number | null
+          qualitative_level?: string | null
           review_status?: string | null
           reviewed_at?: string | null
           score_foro_execucao?: number | null
@@ -511,6 +521,8 @@ export type Database = {
           exposure_likely?: number | null
           exposure_max?: number | null
           exposure_min?: number | null
+          finding_type?: string
+          gating_reason?: string | null
           gravidade?: number | null
           id?: string
           impacto_identificado?: Json | null
@@ -518,7 +530,10 @@ export type Database = {
           mitigacao?: string | null
           onera_parte_representada?: boolean | null
           original_text?: string | null
+          phase_a_ancora_id?: string | null
+          phase_a_gravidade?: number | null
           polaridade_parte_representada?: number | null
+          qualitative_level?: string | null
           review_status?: string | null
           reviewed_at?: string | null
           score_foro_execucao?: number | null
@@ -552,14 +567,24 @@ export type Database = {
             referencedRelation: "ancoras"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "clause_risks_phase_a_ancora_id_fkey"
+            columns: ["phase_a_ancora_id"]
+            isOneToOne: false
+            referencedRelation: "ancoras"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contract_analyses: {
         Row: {
           analyzed_at: string | null
+          anchor_gating_v1_enabled: boolean
+          completeness_review: Json | null
           contract_id: string
           cost_usd: number | null
           created_at: string | null
+          family_aggregation_shadow: Json | null
           financial_impact: Json | null
           financial_total: number | null
           id: string
@@ -576,9 +601,12 @@ export type Database = {
         }
         Insert: {
           analyzed_at?: string | null
+          anchor_gating_v1_enabled?: boolean
+          completeness_review?: Json | null
           contract_id: string
           cost_usd?: number | null
           created_at?: string | null
+          family_aggregation_shadow?: Json | null
           financial_impact?: Json | null
           financial_total?: number | null
           id?: string
@@ -595,9 +623,12 @@ export type Database = {
         }
         Update: {
           analyzed_at?: string | null
+          anchor_gating_v1_enabled?: boolean
+          completeness_review?: Json | null
           contract_id?: string
           cost_usd?: number | null
           created_at?: string | null
+          family_aggregation_shadow?: Json | null
           financial_impact?: Json | null
           financial_total?: number | null
           id?: string

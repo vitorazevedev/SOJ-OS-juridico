@@ -31,9 +31,12 @@ export function JuridicaTab({
   const { value: indexValue, legacy: isLegacyIndex } = resolvedIndex(analysis);
   const riskScore = indexValue ?? 0;
   const [leftTab, setLeftTab] = useState<"achados" | "documento">("achados");
+  // Achados qualitativos (sem âncora quantitativa aprovada pelo gating) não
+  // entram na contagem por faixa — não têm gravidade real, só ficariam
+  // empilhados artificialmente em "Baixo" (gravidade=0).
   const zonaCount = { critico: 0, alto: 0, medio: 0, baixo: 0 };
   clauses.forEach((c) => {
-    if (c.gravidade == null) return;
+    if (c.gravidade == null || c.finding_type === "qualitative_unmapped") return;
     zonaCount[gravidadeFaixa(c.gravidade).zone]++;
   });
 
