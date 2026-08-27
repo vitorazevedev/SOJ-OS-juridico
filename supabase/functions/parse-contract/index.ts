@@ -23,6 +23,45 @@ function jsonResponse(body: unknown, status = 200) {
   })
 }
 
+// Scan de antivírus (Cloudmersive) — roda depois do download do Storage e
+// ANTES de qualquer processamento (OCR/parsing) ou envio a um provedor de IA
+// terceiro. validateMagicBytes (frontend) só confirma que o tipo do arquivo
+// bate com a extensão; isso aqui detecta payload malicioso DENTRO de um
+// arquivo genuinamente válido (macro, JS embutido em PDF, etc.).
+async function scanForViruses(bytes: Uint8Array, fileName: string): Promise<{ clean: boolean; viruses: string[] }> {
+  const apiKey = Deno.env.get('CLOUDMERSIVE_API_KEY')
+  if (!apiKey) {
+    // Sem a chave configurada, falha aberta seria pior que não escanear —
+    // mas também não podemos travar todo upload por uma dependência externa
+    // ausente. Loga alto e deixa passar; ver SECURITY_DEBT.md.
+    console.error('CLOUDMERSIVE_API_KEY não configurada — scan de antivírus pulado')
+    return { clean: true, viruses: [] }
+  }
+
+  const form = new FormData()
+  form.append('inputFile', new Blob([bytes]), fileName)
+
+  try {
+    const res = await fetch('https://api.cloudmersive.com/virus/scan/file', {
+      method: 'POST',
+      headers: { Apikey: apiKey },
+      body: form,
+    })
+    if (!res.ok) {
+      console.error(`Cloudmersive scan failed: HTTP ${res.status}`)
+      return { clean: true, viruses: [] } // indisponibilidade do provedor não deve travar todo upload
+    }
+    const result = await res.json() as { CleanResult?: boolean; FoundViruses?: { VirusName?: string }[] }
+    if (result.CleanResult === false) {
+      return { clean: false, viruses: (result.FoundViruses ?? []).map((v) => v.VirusName ?? 'desconhecido') }
+    }
+    return { clean: true, viruses: [] }
+  } catch (err) {
+    console.error('Cloudmersive scan error:', err)
+    return { clean: true, viruses: [] }
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS })
 
@@ -131,6 +170,26 @@ Deno.serve(async (req) => {
 
   const arrayBuffer = await blob.arrayBuffer()
   const bytes = new Uint8Array(arrayBuffer)
+
+  // Scan de antivírus — antes de qualquer parsing ou envio a um provedor de
+  // IA. Se infectado, rejeita o upload por completo (remove arquivo do
+  // Storage e a linha do contrato) em vez de deixá-lo preso em "Aguardando".
+  const scanResult = await scanForViruses(bytes, contract.file_name ?? 'contrato')
+  if (!scanResult.clean) {
+    await serviceClient.storage.from('contracts').remove([contract.file_path])
+    await serviceClient.from('audit_logs').insert({
+      org_id: contract.org_id,
+      action: 'virus_detected',
+      entity_type: 'contracts',
+      entity_id: contract_id,
+      metadata: { file_name: contract.file_name, viruses: scanResult.viruses },
+    })
+    await serviceClient.from('contracts').delete().eq('id', contract_id)
+    return jsonResponse(
+      { error: `Arquivo rejeitado: ameaça de segurança detectada (${scanResult.viruses.join(', ') || 'malware'}). Envie um arquivo diferente.` },
+      422
+    )
+  }
   const filePath = (contract.file_path ?? '').toLowerCase()
   const mimeType = (contract.file_type ?? '').toLowerCase()
 

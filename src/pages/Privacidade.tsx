@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 const OPERADORES = [
   { servico: "Supabase", empresa: "Supabase Inc. (EUA)", finalidade: "Banco de dados, autenticação e armazenamento de arquivos", dados: "Todos os dados da Plataforma" },
   { servico: "Anthropic / Claude API", empresa: "Anthropic PBC (EUA)", finalidade: "Análise de contratos por IA (extração de texto e identificação de riscos)", dados: "Conteúdo dos contratos enviados para análise" },
+  { servico: "Cloudmersive", empresa: "Cloudmersive, LLC (EUA)", finalidade: "Verificação antivírus/antimalware dos arquivos enviados, antes de qualquer processamento", dados: "Conteúdo binário do arquivo enviado (contrato)" },
   { servico: "Resend", empresa: "Resend Inc. (EUA)", finalidade: "Envio de e-mails transacionais (alertas e confirmações)", dados: "Nome e e-mail do destinatário" },
   { servico: "Vercel", empresa: "Vercel Inc. (EUA)", finalidade: "Hospedagem da interface web", dados: "IPs de acesso e logs de requisição" },
   { servico: "Sentry", empresa: "Functional Software Inc. (EUA)", finalidade: "Monitoramento de erros em produção", dados: "Dados técnicos de erros, sem dados pessoais identificáveis" },
