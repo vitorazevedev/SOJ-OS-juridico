@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   graphql_public: {
     Tables: {
@@ -567,13 +567,6 @@ export type Database = {
             referencedRelation: "ancoras"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "clause_risks_phase_a_ancora_id_fkey"
-            columns: ["phase_a_ancora_id"]
-            isOneToOne: false
-            referencedRelation: "ancoras"
-            referencedColumns: ["id"]
-          },
         ]
       }
       contract_analyses: {
@@ -583,6 +576,7 @@ export type Database = {
           completeness_review: Json | null
           contract_id: string
           cost_usd: number | null
+          courtesy_unlock: boolean
           created_at: string | null
           family_aggregation_shadow: Json | null
           financial_impact: Json | null
@@ -605,6 +599,7 @@ export type Database = {
           completeness_review?: Json | null
           contract_id: string
           cost_usd?: number | null
+          courtesy_unlock?: boolean
           created_at?: string | null
           family_aggregation_shadow?: Json | null
           financial_impact?: Json | null
@@ -627,6 +622,7 @@ export type Database = {
           completeness_review?: Json | null
           contract_id?: string
           cost_usd?: number | null
+          courtesy_unlock?: boolean
           created_at?: string | null
           family_aggregation_shadow?: Json | null
           financial_impact?: Json | null
@@ -1434,6 +1430,10 @@ export type Database = {
       list_contracts: { Args: never; Returns: Json }
       list_ponderum_staff: { Args: never; Returns: Json }
       list_recent_contracts: { Args: { p_limit?: number }; Returns: Json }
+      list_staff_contracts: {
+        Args: { p_page?: number; p_page_size?: number; p_search?: string }
+        Returns: Json
+      }
       list_staff_organizations: {
         Args: { p_page?: number; p_page_size?: number; p_search?: string }
         Returns: Json
@@ -1454,6 +1454,10 @@ export type Database = {
       }
       staff_renew_org_subscription: {
         Args: { p_org_id: string }
+        Returns: undefined
+      }
+      staff_set_courtesy_unlock: {
+        Args: { p_analysis_id: string; p_unlock: boolean }
         Returns: undefined
       }
       staff_set_org_blocked: {

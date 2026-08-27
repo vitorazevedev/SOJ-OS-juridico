@@ -15,7 +15,7 @@ import { FeedbacksList } from "@/components/admin/FeedbacksList";
 import { PonderumStaffManagement } from "@/components/admin/PonderumStaffManagement";
 import { SupportChannelCard } from "@/components/admin/SupportChannelCard";
 import type {
-  Stats, WaitlistEntry, Feedback, Org, DayCount, Contract, CronJob,
+  Stats, WaitlistEntry, Feedback, Org, DayCount, CronJob,
 } from "@/lib/adminDashboard";
 
 export default function Admin() {
@@ -26,7 +26,6 @@ export default function Admin() {
   const [feedbacks, setFeedbacks]         = useState<Feedback[]>([]);
   const [orgs, setOrgs]                   = useState<Org[]>([]);
   const [analysesPerDay, setAnalysesPerDay] = useState<DayCount[]>([]);
-  const [recentContracts, setRecentContracts] = useState<Contract[]>([]);
   const [cronHealth, setCronHealth]         = useState<CronJob[]>([]);
   const [waitlist, setWaitlist]             = useState<WaitlistEntry[]>([]);
 
@@ -36,14 +35,13 @@ export default function Admin() {
       if (error || !data) { setLoading(false); return; }
       const d = data as {
         stats: Stats; feedbacks: Feedback[]; organizations: Org[];
-        analyses_per_day: DayCount[]; recent_contracts: Contract[]; cron_health: CronJob[];
+        analyses_per_day: DayCount[]; cron_health: CronJob[];
         waitlist: WaitlistEntry[];
       };
       setStats(d.stats);
       setFeedbacks(d.feedbacks ?? []);
       setOrgs(d.organizations ?? []);
       setAnalysesPerDay(d.analyses_per_day ?? []);
-      setRecentContracts(d.recent_contracts ?? []);
       setWaitlist(d.waitlist ?? []);
       setCronHealth(d.cron_health ?? []);
       setLoading(false);
@@ -103,7 +101,7 @@ export default function Admin() {
 
       <WaitlistTable waitlist={waitlist} />
 
-      <RecentActivityFeed recentContracts={recentContracts} />
+      <RecentActivityFeed />
 
       <SupportChannelCard />
 

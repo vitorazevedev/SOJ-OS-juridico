@@ -6,7 +6,6 @@ import { GaugeChart } from "@/components/layout/Charts";
 import { ClauseListItem, ClauseDetailPanel } from "@/features/analysis/components/RiskClauseCard";
 import { findClauseSentence } from "@/features/analysis/components/HighlightedText";
 import { fmtBRLExposicao, resolvedIndex, gravidadeFaixa, GRAVIDADE_HIGHLIGHT, stripMarkdown } from "@/lib/analysisFormat";
-import { useOrganization } from "@/hooks/useOrganization";
 import type { ContractAnalysis, ClauseRisk, ContractContent, ReviewStatus } from "@/hooks/useContractAnalysis";
 
 export function JuridicaTab({
@@ -26,10 +25,14 @@ export function JuridicaTab({
   updateClauseReview: (clauseId: string, status: ReviewStatus) => Promise<void>;
   updateClauseSuggestion: (clauseId: string, suggestion: string) => Promise<void>;
 }) {
-  const { org } = useOrganization();
-  const isStarter = org?.plan_status === "active";
   const { value: indexValue, legacy: isLegacyIndex } = resolvedIndex(analysis);
   const riskScore = indexValue ?? 0;
+  // contract_analyses_gated ja e a unica fonte de verdade sobre visibilidade
+  // (plan_status='active' OU courtesy_unlock daquela analise especifica) --
+  // risk_score/indice_desequilibrio so vem preenchido quando a liberacao
+  // deve mesmo aparecer. Checar de novo aqui contra o plano da organizacao
+  // (como antes) ignorava a liberacao de cortesia por analise.
+  const isUnlocked = indexValue != null;
   const [leftTab, setLeftTab] = useState<"achados" | "documento">("achados");
   // Achados qualitativos (sem âncora quantitativa aprovada pelo gating) não
   // entram na contagem por faixa — não têm gravidade real, só ficariam
@@ -72,7 +75,7 @@ export function JuridicaTab({
       <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-4">
         <SojCard className="flex flex-col items-center text-center">
           <span className="text-[10px] md:text-xs text-muted-foreground uppercase tracking-wider mb-2">Índice de Desequilíbrio</span>
-          {isStarter ? (
+          {isUnlocked ? (
             <>
               <div className="md:hidden"><GaugeChart score={riskScore} compact /></div>
               <div className="hidden md:block"><GaugeChart score={riskScore} /></div>
