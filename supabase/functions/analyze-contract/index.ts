@@ -19,6 +19,12 @@ const ANCHOR_BANK_VERSION = 'anchor-bank-v1.0.0'
 // bem abaixo dos dois limites.
 const PHASE_B_BATCH_SIZE = 6
 
+// Espelhado em src/hooks/useContractAnalysis.ts e src/pages/Analysis.tsx —
+// depois desse tempo sem nenhuma chamada renovar o lock, nenhuma aba/processo
+// está de fato trabalhando na análise, então é seguro reclamar o lock de
+// novo (retomada manual, automática ao abrir a página, ou pelo vigia de cron).
+const STALE_LOCK_MS = 5 * 60 * 1000
+
 // Gating deixa de ser shadow-only e passa a governar ancora_id/gravidade
 // final da cláusula (hotfix de calibração, ver migration
 // 20260803010000_gating_autoritativo_v1.sql). false = comportamento legado
@@ -488,7 +494,6 @@ async function runPhaseA(
   // outra aba/requisição analisando agora) ou se o lock estiver obsoleto
   // (> 5min — function anterior travou/caiu sem chegar no catch). UPDATE com
   // WHERE check-and-set numa única query evita corrida entre checar e marcar.
-  const STALE_LOCK_MS = 5 * 60 * 1000
   const staleThreshold = new Date(Date.now() - STALE_LOCK_MS).toISOString()
   const { data: lockedContract, error: lockErr } = await serviceClient
     .from('contracts')
@@ -755,8 +760,33 @@ async function runPhaseB(
   contract_id: string,
   elapsed: () => string,
   batchIndex: number,
+  claimLock: boolean,
 ) {
   try {
+    // claimLock só é true na PRIMEIRA chamada de uma retomada (manual,
+    // automática ao abrir a página, ou pelo vigia de cron) — nunca nos lotes
+    // subsequentes de um fluxo contínuo (esses já têm o lock fresco da Fase
+    // A, reclamar de novo seria redundante). Reclama atomicamente só se
+    // ninguém mais estiver com o lock agora; se outra retomada (outra aba, o
+    // cron) já pegou primeiro, não há nada a fazer aqui — devolve um "ok,
+    // sem novidade" silencioso em vez de erro, o Realtime atualiza a tela
+    // quando quem está processando de fato terminar.
+    if (claimLock) {
+      const staleThreshold = new Date(Date.now() - STALE_LOCK_MS).toISOString()
+      const { data: claimed } = await serviceClient
+        .from('contracts')
+        .update({ analysis_started_at: new Date().toISOString() })
+        .eq('id', contract_id)
+        .or(`analysis_started_at.is.null,analysis_started_at.lt.${staleThreshold}`)
+        .select('id')
+        .maybeSingle()
+
+      if (!claimed) {
+        console.log(`[timing] fase B resume: lock já em uso por outro processo (t=${elapsed()})`)
+        return jsonResponse({ success: true, phase: 'B', already_in_progress: true })
+      }
+    }
+
     const { data: analysis, error: analysisErr } = await serviceClient
       .from('contract_analyses')
       .select('id, parte_representada, tokens_input, tokens_output')
@@ -1152,12 +1182,19 @@ Deno.serve(async (req) => {
   console.log(`[timing] invocation started`)
 
   const authHeader = req.headers.get('Authorization')
-  if (!authHeader) return jsonResponse({ error: 'Unauthorized' }, 401)
+  // Recuperação operacional: continuar uma Fase B travada (cliente fechou a
+  // aba, falha de rede) sem precisar do login do dono do contrato — reusa o
+  // segredo de cron já existente. Nunca cria trabalho novo (Fase A não é
+  // permitida por esta via) nem contorna limite de org; só retoma um lote
+  // pendente que já existia e já foi autorizado quando a Fase A rodou.
+  const opsSecret = req.headers.get('x-cron-secret')
+  const isOpsRecovery = !!opsSecret && opsSecret === Deno.env.get('CRON_SECRET')
+  if (!authHeader && !isOpsRecovery) return jsonResponse({ error: 'Unauthorized' }, 401)
 
   const userClient = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_ANON_KEY')!,
-    { global: { headers: { Authorization: authHeader } } }
+    { global: { headers: { Authorization: authHeader ?? '' } } }
   )
   const serviceClient = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -1168,6 +1205,7 @@ Deno.serve(async (req) => {
   let parte_representada: string | null
   let phase: 'A' | 'B'
   let batchIndex: number
+  let resume: boolean
   try {
     const body = await req.json()
     contract_id = body.contract_id
@@ -1176,9 +1214,14 @@ Deno.serve(async (req) => {
       : null
     phase = body.phase === 'B' ? 'B' : 'A'
     batchIndex = typeof body.batch_index === 'number' && body.batch_index >= 0 ? body.batch_index : 0
+    resume = body.resume === true
     if (!contract_id) throw new Error('missing contract_id')
   } catch {
     return jsonResponse({ error: 'contract_id is required' }, 400)
+  }
+
+  if (phase === 'B' && isOpsRecovery) {
+    return await runPhaseB(serviceClient, contract_id, elapsed, batchIndex, resume)
   }
 
   // RLS auth check — validates contract belongs to user's org
@@ -1193,7 +1236,7 @@ Deno.serve(async (req) => {
   }
 
   if (phase === 'B') {
-    return await runPhaseB(serviceClient, contract_id, elapsed, batchIndex)
+    return await runPhaseB(serviceClient, contract_id, elapsed, batchIndex, resume)
   }
   return await runPhaseA(serviceClient, contract, contract_id, parte_representada, elapsed)
 })

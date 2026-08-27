@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CheckCircle2, FileText, Info, Loader2 } from "lucide-react";
+import { AlertTriangle, CheckCircle2, FileText, Info, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SojCard } from "@/components/layout/Primitives";
 import { ParsedDataSummary } from "@/features/contracts/components/ParsedDataSummary";
@@ -15,7 +15,7 @@ function estimateAnalysisDuration(wordCount: number | null | undefined): string 
   if (wordCount < 5000) return "2 a 4 minutos";
   return "3 a 6 minutos";
 }
-import type { FullContract, ContractContent } from "@/hooks/useContractAnalysis";
+import type { FullContract, ContractContent, AnalysisProgress } from "@/hooks/useContractAnalysis";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,58 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
+// A barra mostra segmentos diferentes dependendo da etapa: na leitura (Fase
+// A) não há lotes ainda, então é 1 segmento indeterminado; no detalhamento
+// (Fase B) os segmentos são os LOTES de verdade (um por lote, não um número
+// fixo de 3) — segmento cheio = lote concluído, piscando = lote em
+// andamento, apagado = ainda não começou. Isso bate com o texto "lote X de
+// Y" em vez de mostrar 3 marcas fixas que não têm relação com os lotes reais.
+function AnalysisProgressBar({ progress }: { progress: AnalysisProgress | null | undefined }) {
+  if (!progress) return null;
+
+  if (progress.step === "lendo") {
+    return (
+      <div className="mt-3 flex flex-col gap-2">
+        <div className="h-1.5 rounded-full bg-primary/15 overflow-hidden">
+          <div className="h-full w-1/3 rounded-full bg-primary animate-pulse" />
+        </div>
+        <p className="text-[11px] text-muted-foreground">Lendo o contrato</p>
+      </div>
+    );
+  }
+
+  if (progress.step === "detalhando") {
+    const { batchIndex, totalBatches } = progress;
+    return (
+      <div className="mt-3 flex flex-col gap-2">
+        <div className="flex items-center gap-1.5">
+          {Array.from({ length: totalBatches }).map((_, i) => (
+            <div
+              key={i}
+              className={cn(
+                "h-1.5 flex-1 rounded-full transition-colors duration-500",
+                i < batchIndex ? "bg-primary" : i === batchIndex ? "bg-primary animate-pulse" : "bg-primary/15"
+              )}
+            />
+          ))}
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          Identificando e detalhando riscos — lote {batchIndex + 1} de {totalBatches}
+        </p>
+      </div>
+    );
+  }
+
+  // finalizando — etapa curta (fecha o índice depois da última resposta),
+  // barra cheia como flourish de conclusão antes de trocar pra tela de resultado.
+  return (
+    <div className="mt-3 flex flex-col gap-2">
+      <div className="h-1.5 rounded-full bg-primary" />
+      <p className="text-[11px] text-muted-foreground">Calculando índice de desequilíbrio</p>
+    </div>
+  );
+}
+
 export function InAnaliseView({
   contract,
   content,
@@ -34,6 +86,9 @@ export function InAnaliseView({
   onAnalyze,
   analyzing,
   retrying,
+  progress,
+  needsResume,
+  onResume,
 }: {
   contract: FullContract;
   content: ContractContent | null;
@@ -42,6 +97,9 @@ export function InAnaliseView({
   onAnalyze: (parteRepresentada?: string) => void;
   analyzing: boolean;
   retrying?: boolean;
+  progress?: AnalysisProgress | null;
+  needsResume?: boolean;
+  onResume?: () => void;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedParty, setSelectedParty] = useState("");
@@ -63,37 +121,58 @@ export function InAnaliseView({
     setDialogOpen(false);
   };
 
+  const showResumeBanner = needsResume && !analyzing;
+
   return (
     <>
-      <div className="rounded-lg border border-primary/30 bg-primary-dim px-4 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3">
+      <div
+        className={cn(
+          "rounded-lg border px-4 py-3.5 flex flex-col sm:flex-row sm:items-start gap-3",
+          showResumeBanner ? "border-risk-medium/30 bg-risk-medium-dim" : "border-primary/30 bg-primary-dim"
+        )}
+      >
         <div className="flex items-start gap-3 flex-1">
           {analyzing
             ? <Loader2 className="h-4 w-4 text-primary shrink-0 mt-0.5 animate-spin" />
-            : <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            : showResumeBanner
+              ? <AlertTriangle className="h-4 w-4 text-risk-medium shrink-0 mt-0.5" />
+              : <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
           }
-          <div>
-            <p className="text-sm font-medium text-primary">
-              {analyzing ? "Análise em andamento..." : "Texto extraído — pronto para análise"}
+          <div className="flex-1 min-w-0">
+            <p className={cn("text-sm font-medium", showResumeBanner ? "text-risk-medium" : "text-primary")}>
+              {analyzing ? "Análise em andamento..." : showResumeBanner ? "Análise interrompida" : "Texto extraído — pronto para análise"}
             </p>
             <p className="text-xs text-muted-foreground mt-0.5">
               {analyzing
                 ? retrying
                   ? "Tivemos uma instabilidade momentânea e estamos tentando novamente automaticamente."
                   : `A IA está lendo o contrato. Costuma levar ${estimateAnalysisDuration(content?.word_count)}.`
-                : content?.word_count
-                  ? `${content.word_count.toLocaleString("pt-BR")} palavras extraídas. Clique em Analisar para iniciar a análise jurídica.`
-                  : "Clique em Analisar para iniciar a análise jurídica com IA."}
+                : showResumeBanner
+                  ? "A identificação das cláusulas já terminou, mas o detalhamento foi interrompido antes de concluir. Continue de onde parou, sem perder o que já foi processado."
+                  : content?.word_count
+                    ? `${content.word_count.toLocaleString("pt-BR")} palavras extraídas. Clique em Analisar para iniciar a análise jurídica.`
+                    : "Clique em Analisar para iniciar a análise jurídica com IA."}
             </p>
+            {analyzing && !retrying && <AnalysisProgressBar progress={progress} />}
           </div>
         </div>
-        <button
-          onClick={handleAnalyzeClick}
-          disabled={analyzing}
-          className="shrink-0 inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-60 transition-opacity"
-        >
-          {analyzing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Loader2 className="h-3.5 w-3.5 hidden" />}
-          {analyzing ? "Analisando..." : "Analisar Contrato"}
-        </button>
+        {showResumeBanner ? (
+          <button
+            onClick={onResume}
+            className="shrink-0 inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-risk-medium text-white text-sm font-medium hover:opacity-90 transition-opacity"
+          >
+            Continuar Análise
+          </button>
+        ) : (
+          <button
+            onClick={handleAnalyzeClick}
+            disabled={analyzing}
+            className="shrink-0 inline-flex items-center gap-2 h-9 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 disabled:opacity-60 transition-opacity"
+          >
+            {analyzing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Loader2 className="h-3.5 w-3.5 hidden" />}
+            {analyzing ? "Analisando..." : "Analisar Contrato"}
+          </button>
+        )}
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

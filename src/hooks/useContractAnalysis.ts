@@ -50,6 +50,11 @@ export type ContractAnalysis = {
 
 export type ReviewStatus = "revisado" | "ajustado" | "descartado" | "mantido_pelo_usuario";
 
+export type AnalysisProgress =
+  | { step: "lendo" }
+  | { step: "detalhando"; batchIndex: number; totalBatches: number }
+  | { step: "finalizando" };
+
 export type ClauseRisk = {
   id: string;
   title: string;
@@ -90,6 +95,7 @@ export function useContractAnalysis(contractId: string | undefined) {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [retrying, setRetrying] = useState(false);
+  const [progress, setProgress] = useState<AnalysisProgress | null>(null);
 
   const fetchAll = useCallback(async () => {
     if (!contractId) { setLoading(false); return; }
@@ -148,6 +154,19 @@ export function useContractAnalysis(contractId: string | undefined) {
   // status 4xx e não devem ser retried — tentar de novo não muda o resultado.
   const ANALYSIS_MAX_ATTEMPTS = 3; // 1 tentativa original + 2 retries
 
+  // Espelha PHASE_B_BATCH_SIZE em supabase/functions/analyze-contract/index.ts —
+  // só para estimar quantos lotes a Fase B vai ter e mostrar progresso ao
+  // usuário; o servidor é quem decide de fato quando parar (via has_more).
+  const PHASE_B_BATCH_SIZE = 6;
+
+  // Espelha STALE_LOCK_MS em runPhaseA (supabase/functions/analyze-contract) e
+  // ANALYSIS_LOCK_STALE_MS em src/pages/Analysis.tsx — depois desse tempo sem
+  // atividade, nenhuma aba está de fato trabalhando na análise, então é
+  // seguro oferecer retomada em vez de mostrar "em andamento" pra sempre.
+  const ANALYSIS_LOCK_STALE_MS = 5 * 60 * 1000;
+  const isLockStale = (startedAt: string | null): boolean =>
+    !startedAt || Date.now() - new Date(startedAt).getTime() >= ANALYSIS_LOCK_STALE_MS;
+
   // A análise roda em duas fases (identificação de cláusulas, depois
   // detalhamento) como invocações HTTP separadas — cada uma com seu próprio
   // orçamento de 150s de idle timeout da Edge Function. A Fase B, além
@@ -158,7 +177,7 @@ export function useContractAnalysis(contractId: string | undefined) {
   const invokePhase = useCallback(async (
     phase: 'A' | 'B',
     body: Record<string, unknown>,
-  ): Promise<{ error?: string; data?: { needs_phase_b?: boolean; has_more?: boolean } }> => {
+  ): Promise<{ error?: string; data?: { needs_phase_b?: boolean; has_more?: boolean; clauses_found?: number; already_in_progress?: boolean } }> => {
     let lastMessage = 'Erro desconhecido';
     for (let attempt = 1; attempt <= ANALYSIS_MAX_ATTEMPTS; attempt++) {
       if (attempt > 1) setRetrying(true);
@@ -171,7 +190,7 @@ export function useContractAnalysis(contractId: string | undefined) {
       });
 
       if (!error) {
-        return { data: data as { needs_phase_b?: boolean; has_more?: boolean } };
+        return { data: data as { needs_phase_b?: boolean; has_more?: boolean; clauses_found?: number; already_in_progress?: boolean } };
       }
 
       // FunctionsHttpError.message é um texto genérico "non-2xx status code" —
@@ -208,6 +227,7 @@ export function useContractAnalysis(contractId: string | undefined) {
   const triggerAnalysis = useCallback(async (parteRepresentada?: string): Promise<{ error?: string }> => {
     if (!contractId) return { error: 'No contract ID' };
     setRetrying(false);
+    setProgress({ step: 'lendo' });
 
     try {
       const body = { contract_id: contractId, ...(parteRepresentada ? { parte_representada: parteRepresentada } : {}) };
@@ -216,10 +236,12 @@ export function useContractAnalysis(contractId: string | undefined) {
       if (resultA.error) return { error: resultA.error };
 
       if (resultA.data?.needs_phase_b) {
+        const totalBatches = Math.max(1, Math.ceil((resultA.data.clauses_found ?? PHASE_B_BATCH_SIZE) / PHASE_B_BATCH_SIZE));
         let batchIndex = 0;
         let hasMore = true;
         while (hasMore) {
           setRetrying(false); // cada lote começa sua própria contagem de tentativas
+          setProgress({ step: 'detalhando', batchIndex, totalBatches });
           const resultB = await invokePhase('B', { contract_id: contractId, batch_index: batchIndex });
           if (resultB.error) return { error: resultB.error };
           hasMore = resultB.data?.has_more === true;
@@ -227,12 +249,74 @@ export function useContractAnalysis(contractId: string | undefined) {
         }
       }
 
+      // Pausa curta e proposital: assim que a última chamada volta, o servidor
+      // já marcou a análise como concluída — fetchAll() troca a tela pra visão
+      // de resultado quase instantaneamente. Sem essa pausa, a 3ª etapa nunca
+      // chega a ser visível antes da troca de tela.
+      setProgress({ step: 'finalizando' });
+      await new Promise((resolve) => setTimeout(resolve, 600));
       await fetchAll();
       return {};
     } finally {
       setRetrying(false);
+      setProgress(null);
     }
   }, [contractId, fetchAll, invokePhase]);
+
+  // Retoma uma Fase B interrompida (aba fechada, rede caiu, celular pausou o
+  // navegador em segundo plano) sem refazer a Fase A — evita desperdiçar o
+  // que já foi processado e cobrado, e não deixa o contrato preso esperando
+  // alguém perceber manualmente (caso real: cliente Matrix, 2026-08-24).
+  const resumePhaseB = useCallback(async (): Promise<{ error?: string }> => {
+    if (!contractId || !analysis?.id) return { error: 'Nada para retomar' };
+    setRetrying(false);
+
+    try {
+      // Descobre em que lote parou pelas cláusulas já detalhadas — evita
+      // reprocessar lotes que já tinham terminado antes da interrupção.
+      const { data: clauseRows } = await supabase
+        .from('clause_risks')
+        .select('id, conclusao')
+        .eq('analysis_id', analysis.id)
+        .order('sort_order', { ascending: true });
+      const rows = clauseRows ?? [];
+      const enrichedCount = rows.filter((r) => r.conclusao != null).length;
+      const totalBatches = Math.max(1, Math.ceil(rows.length / PHASE_B_BATCH_SIZE));
+      let batchIndex = Math.floor(enrichedCount / PHASE_B_BATCH_SIZE);
+      let hasMore = true;
+      let firstCall = true;
+      while (hasMore) {
+        setRetrying(false);
+        setProgress({ step: 'detalhando', batchIndex, totalBatches });
+        // resume:true só na primeira chamada dessa retomada — é o que reclama
+        // o lock atomicamente no servidor. Se outra retomada (outra aba, o
+        // vigia de cron) já pegou primeiro, para em silêncio: não é erro, o
+        // Realtime atualiza a tela quando quem estiver processando terminar.
+        const resultB = await invokePhase('B', { contract_id: contractId, batch_index: batchIndex, resume: firstCall });
+        firstCall = false;
+        if (resultB.error) return { error: resultB.error };
+        if (resultB.data?.already_in_progress) return {};
+        hasMore = resultB.data?.has_more === true;
+        batchIndex++;
+      }
+
+      setProgress({ step: 'finalizando' });
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      await fetchAll();
+      return {};
+    } finally {
+      setRetrying(false);
+      setProgress(null);
+    }
+  }, [contractId, analysis?.id, fetchAll, invokePhase]);
+
+  // A Fase A já terminou (existe contract_analyses com status
+  // pending_enrichment) mas nenhuma aba está de fato processando a Fase B
+  // agora (lock obsoleto) — oferece retomada em vez de deixar preso.
+  const needsResume =
+    contract?.status === 'em_analise' &&
+    analysis?.status === 'pending_enrichment' &&
+    isLockStale(contract.analysis_started_at);
 
   const updateClauseReview = useCallback(async (clauseId: string, status: ReviewStatus): Promise<void> => {
     await supabase
@@ -259,5 +343,5 @@ export function useContractAnalysis(contractId: string | undefined) {
     await fetchAll();
   }, [contractId, fetchAll]);
 
-  return { contract, content, analysis, clauses, loading, notFound, retrying, refetch: fetchAll, triggerAnalysis, saveContractValue, updateClauseReview, updateClauseSuggestion };
+  return { contract, content, analysis, clauses, loading, notFound, retrying, progress, needsResume, refetch: fetchAll, triggerAnalysis, resumePhaseB, saveContractValue, updateClauseReview, updateClauseSuggestion };
 }

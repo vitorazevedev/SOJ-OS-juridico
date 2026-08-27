@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useContractAnalysis } from "@/hooks/useContractAnalysis";
 import { useEconomicIndexes } from "@/hooks/useEconomicIndexes";
@@ -68,7 +68,7 @@ export default function Analysis() {
 
 function AnalysisView({ id }: { id: string }) {
   const navigate = useNavigate();
-  const { contract, content, analysis, clauses, loading, notFound, retrying, refetch, triggerAnalysis, saveContractValue, updateClauseReview, updateClauseSuggestion } = useContractAnalysis(id);
+  const { contract, content, analysis, clauses, loading, notFound, retrying, progress, needsResume, refetch, triggerAnalysis, resumePhaseB, saveContractValue, updateClauseReview, updateClauseSuggestion } = useContractAnalysis(id);
   const { indexes } = useEconomicIndexes();
 
   const [inAnaliseTab, setInAnaliseTab] = useState<"info" | "texto">("info");
@@ -97,6 +97,34 @@ function AnalysisView({ id }: { id: string }) {
       }
     }
   };
+
+  const handleResume = async () => {
+    setAnalyzing(true);
+    const { error } = await resumePhaseB();
+    setAnalyzing(false);
+    if (error) {
+      const { toast } = await import("sonner");
+      toast.error(`Erro ao retomar a análise: ${error}`);
+    }
+  };
+
+  // Auto-retomada: assim que a página detecta uma Fase B interrompida,
+  // continua sozinha sem esperar clique — o botão "Continuar Análise"
+  // continua disponível como respaldo (ex: se isso falhar silenciosamente).
+  // O ref evita disparar de novo a cada re-render enquanto needsResume
+  // seguir true seja o mesmo contrato (não é indexado por id porque o
+  // componente inteiro remonta ao trocar de contrato via useParams).
+  const autoResumeFired = useRef(false);
+  useEffect(() => {
+    if (needsResume && !analyzing && !autoResumeFired.current) {
+      autoResumeFired.current = true;
+      handleResume();
+    }
+    if (!needsResume) {
+      autoResumeFired.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [needsResume]);
 
   if (loading) {
     return (
@@ -178,6 +206,9 @@ function AnalysisView({ id }: { id: string }) {
           onAnalyze={handleAnalyze}
           analyzing={analyzing || isAnalysisLocked(contract.analysis_started_at)}
           retrying={retrying}
+          progress={progress}
+          needsResume={needsResume}
+          onResume={handleResume}
         />
       )}
 
