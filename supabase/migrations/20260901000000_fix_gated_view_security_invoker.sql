@@ -1,0 +1,14 @@
+-- contract_analyses_gated foi criada sem security_invoker, o que no Postgres
+-- significa que a view roda com o privilegio de quem a CRIOU (dono/postgres),
+-- ignorando as policies de RLS de contract_analyses/contracts/organizations
+-- para quem esta CONSULTANDO. Na pratica isso vazava dados entre
+-- organizacoes: select("*") na view (usado na exportacao LGPD em
+-- dataExport.ts) devolvia analises de TODAS as orgs, e useContractAnalysis.ts
+-- so filtra por contract_id no cliente, entao um contract_id de outra org
+-- tambem vazava resumo/valores financeiros.
+--
+-- security_invoker=true (Postgres 15+) faz a view rodar com o privilegio de
+-- quem consulta, respeitando as policies de RLS ja existentes nas tabelas
+-- base (analyses_select/contracts_select/org_select, todas restritas a
+-- org_id = get_org_id()) -- sem precisar reescrever a view.
+alter view public.contract_analyses_gated set (security_invoker = true);
