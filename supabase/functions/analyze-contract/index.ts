@@ -463,6 +463,7 @@ async function runPhaseA(
   contract_id: string,
   parte_representada: string | null,
   elapsed: () => string,
+  concise: boolean,
 ) {
   // Rate limit: max 10 analyses per hour per organization
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString()
@@ -564,6 +565,17 @@ GRAVIDADE (0-100, contínua):
 - justificativa_gravidade: até 20 palavras explicando a nota atribuída.
 - confianca: "alta" quando a cláusula se encaixa claramente numa âncora ou padrão conhecido; "media"/"baixa" quando for julgamento mais livre.${ancorasPrompt}${parteRepresentadaPrompt}`
 
+  // Se uma tentativa anterior veio truncada (stop_reason='max_tokens'), o
+  // CLIENTE (useContractAnalysis.ts) reinvoca esta function numa chamada
+  // HTTP nova com concise=true, pedindo uma resposta mais compacta — isso
+  // tem que ser uma invocação separada, com orçamento de 150s próprio: uma
+  // resposta que já truncou em 8192 tokens consumiu quase todo o orçamento
+  // da invocação atual, então tentar de novo NA MESMA invocação estouraria o
+  // idle timeout no meio do retry (mesma razão pela qual Fase B e a
+  // extração de PDF viraram lotes em chamadas separadas, não retries
+  // inline).
+  const conciseRetryInstruction = '\n\nATENÇÃO: uma tentativa anterior excedeu o limite de tamanho da resposta. Responda de forma MAIS COMPACTA desta vez: limite original_text a ~250 caracteres por cláusula, justificativa_gravidade a até 8 palavras, e reporte no máximo as 35 cláusulas de maior risco (priorize críticas e altas; corte achados de baixo risco/formais primeiro, se precisar).'
+
   async function callAnthropicA() {
     return anthropic.messages.create({
       model: MODEL,
@@ -611,13 +623,19 @@ GRAVIDADE (0-100, contínua):
           },
         },
       ],
-      messages: [{ role: 'user', content: userPromptA }],
+      messages: [{ role: 'user', content: concise ? userPromptA + conciseRetryInstruction : userPromptA }],
     })
   }
 
+  // Capturado fora do try pra ficar disponível no catch — sinaliza ao
+  // cliente que vale a pena reinvocar com concise=true numa chamada nova,
+  // em vez de simplesmente desistir depois de um erro de truncamento.
+  let stopReasonA: string | null = null
+
   try {
-    console.log(`[timing] fase A start (t=${elapsed()})`)
+    console.log(`[timing] fase A start (t=${elapsed()}, concise=${concise})`)
     const resA = await callAnthropicA()
+    stopReasonA = resA.stop_reason
     console.log(`[timing] fase A done (t=${elapsed()}, stop_reason=${resA.stop_reason}, in=${resA.usage.input_tokens}, out=${resA.usage.output_tokens})`)
     const toolUseA = resA.content.find((block) => block.type === 'tool_use')
     if (!toolUseA || toolUseA.type !== 'tool_use') throw new Error('Claude did not return a tool_use block (fase A)')
@@ -748,7 +766,13 @@ GRAVIDADE (0-100, contínua):
       .from('contracts')
       .update({ status: 'em_analise', analysis_started_at: null, updated_at: new Date().toISOString() })
       .eq('id', contract_id)
-    return jsonResponse({ error: String(err) }, 500)
+    // analysis_started_at volta a null (acima), então uma reinvocação com
+    // concise=true adquire o lock normalmente, numa chamada HTTP nova com
+    // orçamento de 150s próprio.
+    return jsonResponse({
+      error: String(err),
+      needs_concise_retry: stopReasonA === 'max_tokens' && !concise,
+    }, 500)
   }
 }
 
@@ -1210,6 +1234,7 @@ Deno.serve(async (req) => {
   let phase: 'A' | 'B'
   let batchIndex: number
   let resume: boolean
+  let concise: boolean
   try {
     const body = await req.json()
     contract_id = body.contract_id
@@ -1219,6 +1244,7 @@ Deno.serve(async (req) => {
     phase = body.phase === 'B' ? 'B' : 'A'
     batchIndex = typeof body.batch_index === 'number' && body.batch_index >= 0 ? body.batch_index : 0
     resume = body.resume === true
+    concise = body.concise === true
     if (!contract_id) throw new Error('missing contract_id')
   } catch {
     return jsonResponse({ error: 'contract_id is required' }, 400)
@@ -1242,5 +1268,5 @@ Deno.serve(async (req) => {
   if (phase === 'B') {
     return await runPhaseB(serviceClient, contract_id, elapsed, batchIndex, resume)
   }
-  return await runPhaseA(serviceClient, contract, contract_id, parte_representada, elapsed)
+  return await runPhaseA(serviceClient, contract, contract_id, parte_representada, elapsed, concise)
 })

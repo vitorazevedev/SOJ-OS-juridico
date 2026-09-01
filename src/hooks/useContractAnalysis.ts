@@ -179,13 +179,19 @@ export function useContractAnalysis(contractId: string | undefined) {
     body: Record<string, unknown>,
   ): Promise<{ error?: string; data?: { needs_phase_b?: boolean; has_more?: boolean; clauses_found?: number; already_in_progress?: boolean } }> => {
     let lastMessage = 'Erro desconhecido';
+    // Fase A: se a resposta anterior veio truncada (contrato com muitas
+    // cláusulas), a própria function sinaliza needs_concise_retry=true — a
+    // tentativa seguinte (já uma invocação HTTP nova, com orçamento de 150s
+    // próprio) pede uma resposta mais compacta em vez de repetir a mesma
+    // chamada que já sabemos que vai truncar de novo.
+    let extraBody: Record<string, unknown> = {};
     for (let attempt = 1; attempt <= ANALYSIS_MAX_ATTEMPTS; attempt++) {
       if (attempt > 1) setRetrying(true);
       // Timeout no cliente (acima do idle timeout de 150s da Edge Function) —
       // sem isso, uma requisição que trava sem nunca responder (rede) deixava
       // o usuário preso em "Analisando..." indefinidamente, sem erro nem retry.
       const { data, error } = await supabase.functions.invoke('analyze-contract', {
-        body: { ...body, phase },
+        body: { ...body, phase, ...extraBody },
         timeout: 160000,
       });
 
@@ -203,6 +209,7 @@ export function useContractAnalysis(contractId: string | undefined) {
         try {
           const responseBody = await context.json();
           if (responseBody?.error) message = responseBody.error;
+          if (responseBody?.needs_concise_retry === true) extraBody = { concise: true };
         } catch {
           // corpo da resposta não era JSON — mantém a mensagem genérica
         }
