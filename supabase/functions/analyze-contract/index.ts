@@ -511,7 +511,10 @@ async function runPhaseA(
   }
 
   const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') })
-  const contractText = content.raw_text.slice(0, 80000)
+  // Sem corte artificial de tamanho: o modelo aceita contexto de sobra
+  // (1M tokens) e o gargalo real é tokens de SAÍDA por chamada, não
+  // entrada — cortar aqui só perdia cláusulas de contratos longos.
+  const contractText = content.raw_text
 
   // Banco de âncoras ativo — régua de referência pra IA interpolar gravidade
   // contínua em vez de inventar do zero (Fase 1 do Índice de Desequilíbrio).
@@ -828,7 +831,8 @@ async function runPhaseB(
       .select('raw_text')
       .eq('contract_id', contract_id)
       .maybeSingle()
-    const fullContractText = (rawContractContent?.raw_text ?? '').slice(0, 80000)
+    // Mesmo raciocínio do corte removido em runPhaseA — sem limite artificial.
+    const fullContractText = rawContractContent?.raw_text ?? ''
     const { document_context: docCtx, information_flow: infoFlow } = await ensureDocumentContext(
       anthropic, serviceClient, analysis.id, fullContractText, parte_representada,
     )

@@ -23,6 +23,46 @@ function jsonResponse(body: unknown, status = 200) {
   })
 }
 
+// Extração de PDF em Markdown, um "lote" por vez. A entrada (o PDF inteiro)
+// cabe numa chamada só sem problema — o Claude processa documentos de até
+// 100 páginas de uma vez. O gargalo é a SAÍDA: max_tokens=8192 por chamada
+// não cobre a transcrição de um contrato longo (~30-40 páginas já preenche
+// isso). Em vez de truncar silenciosamente, detecta quando a resposta foi
+// cortada (stop_reason='max_tokens') e permite continuar num lote seguinte
+// — mesmo padrão usado na Fase B do analyze-contract pro mesmo tipo de
+// limite (saída grande demais pra uma chamada só).
+async function extractPdfChunk(
+  anthropic: Anthropic,
+  base64: string,
+  previousText: string,
+): Promise<{ text: string; truncated: boolean; tokensInput: number; tokensOutput: number }> {
+  const isContinuation = previousText.length > 0
+  const promptText = isContinuation
+    ? `Continue a extração deste documento em Markdown EXATAMENTE de onde parou. O texto já extraído termina assim (últimos trechos, só pra você saber onde retomar — não repita nada disso):\n\n"...${previousText.slice(-800)}"\n\nContinue a partir daí, na mesma formatação (títulos com #, listas, tabelas). Retorne APENAS a continuação do Markdown, sem comentários nem repetir o que já foi extraído.`
+    : 'Extraia o conteúdo completo deste documento em Markdown: títulos com #, listas com - ou números, tabelas em sintaxe de tabela Markdown, negrito/itálico quando aparente no original. Preserve a ordem e a estrutura de cláusulas/seções. Retorne APENAS o Markdown, sem comentários.'
+
+  const res = await anthropic.messages.create({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 8192,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } },
+          { type: 'text', text: promptText },
+        ],
+      },
+    ],
+  })
+  const text = res.content[0].type === 'text' ? res.content[0].text : ''
+  return {
+    text,
+    truncated: res.stop_reason === 'max_tokens',
+    tokensInput: res.usage.input_tokens,
+    tokensOutput: res.usage.output_tokens,
+  }
+}
+
 // Scan de antivírus (Cloudmersive) — roda depois do download do Storage e
 // ANTES de qualquer processamento (OCR/parsing) ou envio a um provedor de IA
 // terceiro. validateMagicBytes (frontend) só confirma que o tipo do arquivo
@@ -82,8 +122,11 @@ Deno.serve(async (req) => {
   )
 
   let contract_id: string
+  let continueExtraction: boolean
   try {
-    ;({ contract_id } = await req.json())
+    const body = await req.json()
+    contract_id = body.contract_id
+    continueExtraction = body.continue === true
     if (!contract_id) throw new Error('missing contract_id')
   } catch {
     return jsonResponse({ error: 'contract_id is required' }, 400)
@@ -210,33 +253,58 @@ Deno.serve(async (req) => {
 
   try {
     if (isPDF) {
-      // Extração em Markdown (não texto cru): mesma chamada, mesmo custo, mas
-      // títulos/listas/tabelas viram sintaxe compacta em vez de texto solto
-      // desalinhado — reduz o volume de tokens que o analyze-contract reenvia
-      // depois (Fase A/B leem esse texto por completo a cada análise).
+      // Extração em Markdown, em lotes — contratos longos (~30-40+ páginas)
+      // não cabem na saída de uma chamada só (max_tokens=8192). Se a
+      // resposta vier cortada, salva o progresso parcial e devolve
+      // needs_continuation:true; o cliente chama de novo com continue:true
+      // pra continuar exatamente de onde parou, até a extração terminar de
+      // verdade — mesmo padrão da Fase B do analyze-contract.
+      let previousText = ''
+      if (continueExtraction) {
+        const { data: existingContent } = await serviceClient
+          .from('contract_contents')
+          .select('raw_text, tokens_input, tokens_output')
+          .eq('contract_id', contract_id)
+          .maybeSingle()
+        if (!existingContent?.raw_text) {
+          return jsonResponse({ error: 'Nenhuma extração parcial encontrada para continuar. Envie o arquivo novamente.' }, 422)
+        }
+        previousText = existingContent.raw_text
+        tokensInput += existingContent.tokens_input ?? 0
+        tokensOutput += existingContent.tokens_output ?? 0
+      }
+
       const base64 = toBase64(bytes)
-      const res = await anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 8192,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'document',
-                source: { type: 'base64', media_type: 'application/pdf', data: base64 },
-              },
-              {
-                type: 'text',
-                text: 'Extraia o conteúdo completo deste documento em Markdown: títulos com #, listas com - ou números, tabelas em sintaxe de tabela Markdown, negrito/itálico quando aparente no original. Preserve a ordem e a estrutura de cláusulas/seções. Retorne APENAS o Markdown, sem comentários.',
-              },
-            ],
-          },
-        ],
-      })
-      rawText = res.content[0].type === 'text' ? res.content[0].text : ''
-      tokensInput += res.usage.input_tokens
-      tokensOutput += res.usage.output_tokens
+      const chunk = await extractPdfChunk(anthropic, base64, previousText)
+      rawText = previousText + chunk.text
+      tokensInput += chunk.tokensInput
+      tokensOutput += chunk.tokensOutput
+
+      if (chunk.truncated) {
+        // Ainda não terminou — salva o progresso parcial (upsert) e devolve
+        // sem tocar no status do contrato nem rodar metadados/obrigações,
+        // que só fazem sentido sobre o texto completo.
+        const { data: existing } = await serviceClient
+          .from('contract_contents')
+          .select('id')
+          .eq('contract_id', contract_id)
+          .maybeSingle()
+        const partialRow = {
+          contract_id,
+          raw_text: rawText,
+          word_count: rawText.split(/\s+/).filter(Boolean).length,
+          ocr_applied: false,
+          parsed_at: new Date().toISOString(),
+          tokens_input: tokensInput,
+          tokens_output: tokensOutput,
+        }
+        if (existing) {
+          await serviceClient.from('contract_contents').update(partialRow).eq('contract_id', contract_id)
+        } else {
+          await serviceClient.from('contract_contents').insert(partialRow)
+        }
+        return jsonResponse({ success: true, needs_continuation: true, word_count: partialRow.word_count })
+      }
     } else if (isDOCX) {
       // @ts-expect-error — mammoth works via npm compat layer in Deno
       const mammoth = (await import('npm:mammoth')).default
