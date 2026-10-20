@@ -54,6 +54,12 @@ export type WaitlistEntry = {
   company: string | null;
   role: string | null;
   message: string | null;
+  source: string | null;
+  contracts_per_month: string | null;
+  consent: boolean;
+  utm_medium: string | null;
+  utm_campaign: string | null;
+  utm_content: string | null;
   created_at: string;
 };
 export type Feedback = { id: string; category: string; message: string; page_url: string | null; created_at: string };

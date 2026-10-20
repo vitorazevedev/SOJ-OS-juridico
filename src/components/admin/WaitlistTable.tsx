@@ -18,22 +18,26 @@ export function WaitlistTable({ waitlist }: { waitlist: WaitlistEntry[] }) {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border text-left">
-                {["Nome", "Email", "WhatsApp", "Empresa", "Perfil", "Data"].map((h, i) => (
-                  <th key={h} className={cn("pb-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground", i >= 4 && "text-right")}>{h}</th>
+                {["Nome", "Email", "WhatsApp", "Perfil", "Contratos/mês", "Origem", "Data"].map((h, i) => (
+                  <th key={h} className={cn("pb-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground", i >= 5 && "text-right")}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {waitlist.map((w) => (
-                <tr key={w.id}>
-                  <td className="py-2.5 font-medium text-sm">{w.name}</td>
-                  <td className="py-2.5 text-xs text-muted-foreground">{w.email}</td>
-                  <td className="py-2.5 text-xs text-muted-foreground">{w.phone ?? "—"}</td>
-                  <td className="py-2.5 text-xs text-muted-foreground">{w.company ?? "—"}</td>
-                  <td className="py-2.5 text-right text-xs text-muted-foreground">{w.role ?? "—"}</td>
-                  <td className="py-2.5 text-right text-xs text-muted-foreground">{fmtDate(w.created_at)}</td>
-                </tr>
-              ))}
+              {waitlist.map((w) => {
+                const origin = [w.source, w.utm_medium, w.utm_campaign].filter(Boolean).join(" · ");
+                return (
+                  <tr key={w.id}>
+                    <td className="py-2.5 font-medium text-sm">{w.name}</td>
+                    <td className="py-2.5 text-xs text-muted-foreground">{w.email}</td>
+                    <td className="py-2.5 text-xs text-muted-foreground">{w.phone ?? "—"}</td>
+                    <td className="py-2.5 text-xs text-muted-foreground">{w.role ?? "—"}</td>
+                    <td className="py-2.5 text-xs text-muted-foreground">{w.contracts_per_month ?? "—"}</td>
+                    <td className="py-2.5 text-right text-xs text-muted-foreground">{origin || "—"}</td>
+                    <td className="py-2.5 text-right text-xs text-muted-foreground">{fmtDate(w.created_at)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

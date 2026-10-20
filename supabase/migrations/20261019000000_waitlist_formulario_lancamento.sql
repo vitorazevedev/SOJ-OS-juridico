@@ -1,0 +1,143 @@
+-- Página oculta de captação de leads da nova campanha (landing/formulario/)
+-- reaproveita a tabela waitlist já existente (inserção pública via RLS já
+-- liberada em 20260703000000_create_waitlist.sql) em vez de criar uma
+-- tabela nova -- mesmo dado (lead de landing page), só com mais campos.
+alter table public.waitlist
+  add column if not exists contracts_per_month text,
+  add column if not exists consent boolean not null default false,
+  add column if not exists utm_medium text,
+  add column if not exists utm_campaign text,
+  add column if not exists utm_content text;
+
+comment on column public.waitlist.source is
+  'Origem do lead -- utm_source quando presente na URL, senão um rótulo fixo por formulário (ex: landing_page, newsletter, formulario_lancamento).';
+comment on column public.waitlist.contracts_per_month is
+  'Faixa de volume mensal de contratos analisados, resposta livre do formulário (ex: "Até 5", "6 a 15").';
+comment on column public.waitlist.consent is
+  'Consentimento explícito para receber comunicações por e-mail (checkbox obrigatório no formulário).';
+
+-- get_admin_dashboard() -- MUDANÇA MÍNIMA: só o bloco 'waitlist' ganha os
+-- campos novos (contracts_per_month, consent, utm_medium, utm_campaign,
+-- utm_content). Todo o resto é cópia exata da definição viva em produção
+-- (puxada via pg_get_functiondef antes de escrever esta migration, pra não
+-- reconstruir de memória e arriscar derrubar algum campo -- quase aconteceu
+-- aqui: a primeira tentativa desta migration tinha esquecido
+-- contracts_this_month, os 4 campos de tokens, recent_contracts e
+-- cron_health inteiros).
+create or replace function public.get_admin_dashboard()
+returns json
+language plpgsql
+security definer
+set search_path to 'public'
+as $function$
+declare
+  v_result json;
+begin
+  if not exists (
+    select 1 from public.users
+    where id = auth.uid() and role = 'admin'
+  ) then
+    raise exception 'Acesso negado' using errcode = '42501';
+  end if;
+
+  select json_build_object(
+
+    'stats', json_build_object(
+      'total_orgs',              (select count(*)::int from organizations),
+      'total_contracts',         (select count(*)::int from contracts),
+      'contracts_this_month',    (select count(*)::int from contracts
+                                  where created_at >= date_trunc('month', now())),
+      'total_analyses',          (select count(*)::int from contract_analyses),
+      'analyses_this_month',     (select count(*)::int from contract_analyses
+                                  where created_at >= date_trunc('month', now())),
+      'total_feedbacks',         (select count(*)::int from user_feedback),
+      'total_waitlist',          (select count(*)::int from waitlist),
+      'parse_tokens_input_month',    (select coalesce(sum(cc.tokens_input), 0)::bigint
+                                       from contract_contents cc
+                                       where cc.parsed_at >= date_trunc('month', now())),
+      'parse_tokens_output_month',   (select coalesce(sum(cc.tokens_output), 0)::bigint
+                                       from contract_contents cc
+                                       where cc.parsed_at >= date_trunc('month', now())),
+      'analysis_tokens_input_month',  (select coalesce(sum(ca.tokens_input), 0)::bigint
+                                        from contract_analyses ca
+                                        where ca.created_at >= date_trunc('month', now())),
+      'analysis_tokens_output_month', (select coalesce(sum(ca.tokens_output), 0)::bigint
+                                        from contract_analyses ca
+                                        where ca.created_at >= date_trunc('month', now()))
+    ),
+
+    'feedbacks', (
+      select coalesce(json_agg(row order by row.created_at desc), '[]'::json)
+      from (
+        select id, category, message, page_url, created_at
+        from user_feedback
+        order by created_at desc limit 50
+      ) row
+    ),
+
+    'organizations', (
+      select coalesce(json_agg(row order by row.created_at desc), '[]'::json)
+      from (
+        select
+          o.id, o.name, o.plan_id, o.created_at,
+          (select count(*)::int from contracts c where c.org_id = o.id) as contract_count,
+          (select count(*)::int from contracts c
+           join contract_analyses ca on ca.contract_id = c.id
+           where c.org_id = o.id) as analysis_count
+        from organizations o
+        order by o.created_at desc
+      ) row
+    ),
+
+    'analyses_per_day', (
+      select coalesce(json_agg(row order by row.day), '[]'::json)
+      from (
+        select
+          to_char(d.day, 'DD/MM') as day,
+          coalesce(
+            (select count(*)::int from contract_analyses ca
+             where ca.created_at::date = d.day), 0
+          ) as count
+        from generate_series(
+          current_date - interval '6 days', current_date, interval '1 day'
+        ) as d(day)
+      ) row
+    ),
+
+    'recent_contracts', (
+      select coalesce(json_agg(row order by row.created_at desc), '[]'::json)
+      from (
+        select c.id, c.name, c.status, c.created_at, o.name as org_name
+        from contracts c
+        join organizations o on o.id = c.org_id
+        order by c.created_at desc limit 10
+      ) row
+    ),
+
+    'cron_health', (
+      select coalesce(json_agg(row order by row.jobname), '[]'::json)
+      from (
+        select distinct on (j.jobname)
+          j.jobname, j.schedule, r.status, r.start_time, r.return_message
+        from cron.job j
+        left join cron.job_run_details r on r.jobid = j.jobid
+        order by j.jobname, r.start_time desc nulls last
+      ) row
+    ),
+
+    'waitlist', (
+      select coalesce(json_agg(row order by row.created_at desc), '[]'::json)
+      from (
+        select id, name, email, phone, company, role, message, source,
+               contracts_per_month, consent, utm_medium, utm_campaign, utm_content,
+               created_at
+        from waitlist
+        order by created_at desc limit 100
+      ) row
+    )
+
+  ) into v_result;
+
+  return v_result;
+end;
+$function$;

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Em breve, uma nova fase da Ponderum</title>
+<link rel="icon" type="image/png" href="/ponderum-icon-dark.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #16233F; --esmeralda: #067173; --teal: #2EC4A9;
+  --cinza: #F4F6F8; --mid: #8A9BB0; --line: #E3E7EC;
+  --display: 'Cormorant Garamond', Georgia, serif;
+  --body: 'Inter', -apple-system, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: var(--body); color: var(--navy); background: var(--cinza);
+  line-height: 1.55; -webkit-font-smoothing: antialiased;
+  min-height: 100vh; display: flex; flex-direction: column;
+}
+.wrap { max-width: 480px; margin: 0 auto; padding: 0 20px; width: 100%; }
+header { padding: 20px 0; }
+.brand { display: flex; align-items: center; gap: 10px; text-decoration: none; justify-content: center; }
+.brand img { width: 26px; height: 26px; object-fit: contain; }
+.brand span { font-family: var(--display); font-size: 19px; font-weight: 600; color: var(--navy); }
+main { flex: 1; display: flex; align-items: center; padding: 16px 0 48px; }
+.card {
+  background: #fff; border: 1px solid var(--line); border-radius: 16px;
+  padding: 32px 24px; width: 100%; box-shadow: 0 1px 3px rgba(10,22,40,.04);
+}
+h1 {
+  font-family: var(--display); font-weight: 400; letter-spacing: -.012em; text-align: center;
+  font-size: clamp(26px, 6vw, 32px); line-height: 1.2; margin-bottom: 10px;
+}
+.sub { text-align: center; font-size: 14.5px; color: #4C5A6E; margin-bottom: 26px; }
+.field { margin-bottom: 14px; }
+label { display: block; font-size: 12.5px; font-weight: 600; color: var(--navy); margin-bottom: 5px; }
+label .opt { font-weight: 400; color: var(--mid); }
+input:not([type="checkbox"]), select {
+  width: 100%; font-family: var(--body); font-size: 15px; color: var(--navy);
+  background: #fff; border: 1px solid var(--line); border-radius: 9px;
+  padding: 11px 13px; appearance: none;
+}
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238A9BB0' stroke-width='2.5'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 13px center; padding-right: 36px;
+}
+input:focus, select:focus { outline: none; border-color: var(--teal); box-shadow: 0 0 0 3px rgba(46,196,169,.18); }
+.consent {
+  display: flex; align-items: flex-start; gap: 9px; margin: 18px 0 20px;
+}
+.consent input { width: 17px; height: 17px; flex: 0 0 17px; margin-top: 1px; accent-color: var(--esmeralda); }
+.consent label { font-size: 12.5px; font-weight: 400; color: #4C5A6E; line-height: 1.5; margin: 0; }
+.consent a { color: var(--esmeralda); }
+button[type="submit"] {
+  width: 100%; font-family: var(--body); font-weight: 700; font-size: 15px;
+  letter-spacing: .02em; color: var(--navy); background: var(--teal);
+  border: none; border-radius: 9px; padding: 14px; cursor: pointer;
+  transition: background .15s, transform .15s;
+}
+button[type="submit"]:hover { background: #4AD3BB; transform: translateY(-1px); }
+button[type="submit"]:disabled { opacity: .6; cursor: default; transform: none; }
+.err { font-size: 12.5px; color: #C0392B; margin-top: 10px; text-align: center; display: none; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* estado de sucesso */
+#success { display: none; text-align: center; }
+#success .check {
+  width: 48px; height: 48px; border-radius: 50%; background: rgba(46,196,169,.15);
+  display: flex; align-items: center; justify-content: center; margin: 0 auto 18px;
+}
+#success h1 { margin-bottom: 8px; }
+#success .sub { margin-bottom: 26px; }
+.cta {
+  display: inline-block; width: 100%; text-align: center; text-decoration: none;
+  font-family: var(--body); font-weight: 700; font-size: 15px; color: #fff;
+  background: var(--navy); border-radius: 9px; padding: 14px; transition: background .15s;
+}
+.cta:hover { background: var(--esmeralda); }
+</style>
+</head>
+<body>
+
+<header><a href="https://ponderum.com" class="brand">
+  <img src="/ponderum-icon-dark.png" alt="">
+  <span>Ponderum</span>
+</a></header>
+
+<main>
+  <div class="wrap">
+    <div class="card">
+
+      <!-- ---------- formulário ---------- -->
+      <form id="lead-form" novalidate>
+        <h1>Seja um dos primeiros a conhecer a nova fase da Ponderum.</h1>
+        <p class="sub">Deixe seus dados e receba as novidades do lançamento em primeira mão.</p>
+
+        <!-- honeypot anti-spam: invisível para pessoas, bots costumam preencher -->
+        <div class="hp" aria-hidden="true">
+          <label for="website">Não preencha este campo</label>
+          <input type="text" id="website" name="website" tabindex="-1" autocomplete="off">
+        </div>
+
+        <div class="field">
+          <label for="name">Nome</label>
+          <input type="text" id="name" name="name" autocomplete="name" required>
+        </div>
+
+        <div class="field">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" name="email" autocomplete="email" required>
+        </div>
+
+        <div class="field">
+          <label for="role">Como você atua hoje?</label>
+          <select id="role" name="role" required>
+            <option value="" disabled selected>Selecione uma opção</option>
+            <option>Advogado(a) autônomo(a)</option>
+            <option>Sócio(a) de escritório</option>
+            <option>Advogado(a) em escritório</option>
+            <option>Jurídico interno / departamento jurídico</option>
+            <option>Legal Ops / Compliance / Contratos</option>
+            <option>Empresário(a) / gestor(a)</option>
+            <option>Outro</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="contracts">Quantos contratos você costuma analisar por mês?</label>
+          <select id="contracts" name="contracts" required>
+            <option value="" disabled selected>Selecione uma opção</option>
+            <option>Até 5</option>
+            <option>6 a 15</option>
+            <option>16 a 40</option>
+            <option>41 a 100</option>
+            <option>Mais de 100</option>
+            <option>Não sei / varia muito</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="phone">WhatsApp <span class="opt">(opcional)</span></label>
+          <input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="(11) 99999-9999">
+        </div>
+
+        <div class="consent">
+          <input type="checkbox" id="consent" name="consent" required>
+          <label for="consent">Quero receber por e-mail novidades sobre o lançamento e comunicações da Ponderum. Ver <a href="/privacidade" target="_blank" rel="noopener">Política de Privacidade</a>.</label>
+        </div>
+
+        <button type="submit" id="submit-btn">QUERO SABER PRIMEIRO</button>
+        <p class="err" id="err-msg">Não foi possível enviar. Tente novamente em instantes.</p>
+      </form>
+
+      <!-- ---------- sucesso ---------- -->
+      <div id="success">
+        <div class="check">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#067173" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h1>Você está dentro.</h1>
+        <p class="sub">Vamos te avisar quando a nova fase da Ponderum for lançada.</p>
+        <a class="cta" href="https://ponderum.com">CONHECER A PONDERUM</a>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var SUPABASE_URL = 'https://igolxkyahbavripvfeak.supabase.co';
+  var SUPABASE_ANON = 'sb_publishable_oujMak_Co0OnlJ30JeLZaw_Qnl85crO';
+
+  var form = document.getElementById('lead-form');
+  var btn = document.getElementById('submit-btn');
+  var errMsg = document.getElementById('err-msg');
+
+  // origem do lead via UTM, quando presente na URL
+  var params = new URLSearchParams(window.location.search);
+  var utmSource = params.get('utm_source');
+  var utmMedium = params.get('utm_medium');
+  var utmCampaign = params.get('utm_campaign');
+  var utmContent = params.get('utm_content');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    errMsg.style.display = 'none';
+
+    // honeypot: se um bot preencheu o campo invisível, finge sucesso e não envia nada
+    if (document.getElementById('website').value) {
+      showSuccess();
+      return;
+    }
+
+    var payload = {
+      name: document.getElementById('name').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      role: document.getElementById('role').value,
+      contracts_per_month: document.getElementById('contracts').value,
+      phone: document.getElementById('phone').value.trim() || null,
+      consent: document.getElementById('consent').checked,
+      source: utmSource || 'formulario_lancamento',
+      utm_medium: utmMedium,
+      utm_campaign: utmCampaign,
+      utm_content: utmContent
+    };
+
+    if (!payload.name || !payload.email || !payload.role || !payload.contracts_per_month || !payload.consent) {
+      errMsg.textContent = 'Preencha todos os campos obrigatórios.';
+      errMsg.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Enviando...';
+
+    fetch(SUPABASE_URL + '/rest/v1/waitlist', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON,
+        'Authorization': 'Bearer ' + SUPABASE_ANON,
+        'Prefer': 'return=minimal'
+      },
+      body: JSON.stringify(payload)
+    }).then(function (res) {
+      // 409 = e-mail já cadastrado antes (newsletter, outro formulário) --
+      // trata como sucesso, não faz sentido mostrar erro pra quem já demonstrou interesse.
+      if (!res.ok && res.status !== 409) throw new Error('Erro ao enviar');
+      showSuccess();
+    }).catch(function () {
+      btn.disabled = false;
+      btn.textContent = 'QUERO SABER PRIMEIRO';
+      errMsg.style.display = 'block';
+    });
+  });
+
+  function showSuccess() {
+    form.style.display = 'none';
+    document.getElementById('success').style.display = 'block';
+  }
+})();
+</script>
+
+</body>
+</html>
