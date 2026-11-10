@@ -272,6 +272,11 @@ export class MercadoPagoProvider implements PaymentProvider {
         external_reference: input.externalReference,
         payer_email: input.payerEmail,
         card_token_id: input.cardToken,
+        // Obrigatorio pro MP mesmo quando a assinatura ja nasce "authorized"
+        // via card_token_id (sem redirecionar o usuario pra lugar nenhum) --
+        // confirmado ao vivo: POST /preapproval sem isso devolve 400
+        // "back_url is required".
+        back_url: 'https://app.ponderum.com/settings?tab=plan',
         auto_recurring: {
           frequency: input.frequency,
           frequency_type: input.frequencyType,
