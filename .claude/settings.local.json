@@ -5,7 +5,30 @@
       "Bash(supabase *)",
       "Bash(node *)",
       "PowerShell(npm *)",
-      "PowerShell(supabase *)"
+      "PowerShell(supabase *)",
+      "Bash(netstat -ano)",
+      "Bash(supabase gen *)",
+      "Bash(npm run *)",
+      "Bash(NODE_PATH=\"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\npm-cache\\\\_npx\\\\e41f203b7505f1fb\\\\node_modules\" node \"C:\\\\TEMP\\\\claude\\\\c--Users-User-Desktop-Vitor-ClauseGuard-Git-SOJ-OS-juridico\\\\7b3cb6b7-c669-4558-ac5c-8032fa8369ac\\\\scratchpad\\\\smoke.js\")",
+      "Bash(supabase db query ' *)",
+      "Bash(node -e \"const fs=require\\('fs'\\); const d=JSON.parse\\(fs.readFileSync\\('C:\\\\\\\\\\\\\\\\TEMP\\\\\\\\\\\\\\\\claude\\\\\\\\\\\\\\\\c--Users-User-Desktop-Vitor-ClauseGuard-Git-SOJ-OS-juridico\\\\\\\\\\\\\\\\7b3cb6b7-c669-4558-ac5c-8032fa8369ac\\\\\\\\\\\\\\\\scratchpad\\\\\\\\\\\\\\\\rawtext.json','utf8'\\)\\); console.log\\(d.rows[0].raw_text.length\\)\")",
+      "Bash(node -e 'const fs=require\\('\\\\''fs'\\\\''\\); const d=JSON.parse\\(fs.readFileSync\\('\\\\''C:/TEMP/claude/c--Users-User-Desktop-Vitor-ClauseGuard-Git-SOJ-OS-juridico/7b3cb6b7-c669-4558-ac5c-8032fa8369ac/scratchpad/rawtext.json'\\\\'','\\\\''utf8'\\\\''\\)\\); console.log\\(d.rows[0].raw_text.length\\)')",
+      "Bash(node C:/TEMP/claude/c--Users-User-Desktop-Vitor-ClauseGuard-Git-SOJ-OS-juridico/7b3cb6b7-c669-4558-ac5c-8032fa8369ac/scratchpad/test-sentence.js C:/TEMP/claude/c--Users-User-Desktop-Vitor-ClauseGuard-Git-SOJ-OS-juridico/7b3cb6b7-c669-4558-ac5c-8032fa8369ac/scratchpad/rawtext.json)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(node -e ' *)",
+      "Bash(cp \"C:\\\\Users\\\\User\\\\Desktop\\\\Vitor\\\\ClauseGuard\\\\Ponderum_Biblioteca_54_Modelos\\\\01_Prestacao_de_Servicos\\\\PS-01_Contrato_de_Prestacao_de_Servicos_B2B_por_Escopo_e_Ordem_de_Servico.docx\" ./ps01.docx)",
+      "Bash(rm -rf ps01)",
+      "Bash(unzip -o ps01.docx -d ps01)",
+      "Bash(cp \"C:\\\\Users\\\\User\\\\Desktop\\\\Vitor\\\\ClauseGuard\\\\Ponderum_Biblioteca_54_Modelos\\\\04_Licenciamento_SaaS\\\\SA-06_Contrato_SaaS_com_Inteligencia_Artificial_Generativa_e_Modelos_de_Terceiros.docx\" ./sa06.docx)",
+      "Bash(rm -rf sa06)",
+      "Bash(unzip -o sa06.docx -d sa06)",
+      "Bash(mkdir -p src/assets/contract-templates/prestacao-de-servicos)",
+      "Bash(cp \"C:\\\\Users\\\\User\\\\Desktop\\\\Vitor\\\\ClauseGuard\\\\Ponderum_Biblioteca_54_Modelos\\\\01_Prestacao_de_Servicos\"/*.docx src/assets/contract-templates/prestacao-de-servicos/)",
+      "Bash(grep -o \"Prestacao de servicos de consultoria em TI\\\\|12 meses\\\\|R\\\\\\\\\\\\$ 10.000,00 mensais\\\\|Sao Paulo/SP\\\\|\\\\[PENDENTE: [A-Z_]*\\\\]\" ps01-filled-test.txt)",
+      "Bash(grep -o \"Prestacao de servicos de consultoria em TI\\\\|12 meses\\\\|R\\\\\\\\\\\\$ 10.000,00 mensais\\\\|Sao Paulo/SP\\\\|\\\\[PENDENTE: [A-Z_]*\\\\]\" \"C:\\\\TEMP\\\\claude\\\\c--Users-User-Desktop-Vitor-ClauseGuard-Git-SOJ-OS-juridico\\\\7b3cb6b7-c669-4558-ac5c-8032fa8369ac\\\\scratchpad\\\\ps01-filled-test.txt\")",
+      "Bash(cat ~/.supabase/access-token 2>/dev/null | head -c 5 *)",
+      "Read(//c//**)",
+      "Bash(find 'C:\\\\Users\\\\User' -maxdepth 3 -iname *supabase*)"
     ]
   }
 }

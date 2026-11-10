@@ -394,31 +394,32 @@ ul,ol{ margin:0; padding:0; list-style:none }
 /* =========================================================
    PLANOS
    ========================================================= */
-.plans{ display:grid; grid-template-columns:repeat(2,1fr); gap:1.25rem; margin-top:3.25rem }
+.planos-wrap{ max-width:1180px; margin-inline:auto; margin-top:3.25rem }
+.plans{ display:grid; grid-template-columns:repeat(5,1fr); align-items:stretch; gap:1rem }
 .plan{
-  display:flex; flex-direction:column; padding:2.1rem;
+  display:flex; flex-direction:column; padding:1.5rem 1.25rem; height:100%;
   border:1px solid var(--ink-14); border-radius:var(--r); background:var(--paper);
 }
 .plan__k{
-  display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; margin:0;
+  display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; margin:0; min-height:1.75rem;
   font-family:var(--mono); font-size:.6875rem; letter-spacing:.16em; text-transform:uppercase;
   color:var(--ink-55);
 }
 .chip{
-  font-size:.5625rem; letter-spacing:.12em; padding:.28rem .5rem; border-radius:2px;
+  font-size:.5625rem; line-height:1; letter-spacing:.12em; padding:.28rem .5rem; border-radius:2px;
   color:var(--emerald); background:rgba(6,113,115,.09); border:1px solid rgba(6,113,115,.22);
 }
-.plan__p{ margin:1.1rem 0 0; display:flex; align-items:baseline; gap:.35rem }
-.plan__price{ font-family:var(--serif); font-size:clamp(2.5rem,4vw,3.25rem); font-weight:300; line-height:1 }
+.plan__p{ margin:1.1rem 0 0; display:flex; align-items:flex-end; gap:.35rem; min-height:2.9rem }
+.plan__price{ font-family:var(--serif); font-size:clamp(1.85rem,2.6vw,2.6rem); font-weight:300; line-height:1 }
 .plan__per{ font-size:.9375rem; color:var(--ink-55) }
 .plan__d{ margin-top:.9rem; font-size:.9375rem; line-height:1.65; color:var(--ink-70) }
-.plan__f{ margin:1.6rem 0 0; border-top:1px solid var(--ink-08) }
+.plan__f{ flex:1 0 auto; margin:1.6rem 0 0; border-top:1px solid var(--ink-08) }
 .plan__f li{
   padding:.8rem 0; border-bottom:1px solid var(--ink-08);
   font-size:.9375rem; line-height:1.55;
 }
 .plan__cta{ margin-top:1.75rem; width:100% }
-.plan__note{ margin:.8rem 0 0; font-size:.75rem; color:var(--ink-40) }
+.plan__note{ margin:.8rem 0 0; min-height:1.1em; font-size:.75rem; color:var(--ink-40) }
 
 .plan--hi{ background:var(--ink); border-color:var(--ink); color:var(--lt-92) }
 .plan--hi .plan__k{ color:var(--lt-55) }
