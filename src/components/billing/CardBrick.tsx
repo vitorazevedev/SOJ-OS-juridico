@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { initMercadoPago, CardPayment } from "@mercadopago/sdk-react";
 import { env } from "@/config/env";
 
@@ -29,6 +29,17 @@ export function CardBrick({ onToken, amount, payerEmail }: CardBrickProps) {
     mpInitialized = true;
   }, []);
 
+  // O wrapper React do Brick reinicializa o iframe interno sempre que a
+  // prop "initialization"/"customization" muda de REFERÊNCIA -- um objeto
+  // literal novo a cada render (mesmo com os mesmos valores) derruba o
+  // Brick no meio da digitação do usuário. Memoiza pra só mudar quando o
+  // valor de verdade muda.
+  const initialization = useMemo(
+    () => ({ amount, payer: payerEmail ? { email: payerEmail } : undefined }),
+    [amount, payerEmail]
+  );
+  const customization = useMemo(() => ({ paymentMethods: { maxInstallments: 1 } }), []);
+
   if (!env.mpPublicKey) {
     return (
       <p className="text-xs text-destructive rounded-lg border border-destructive/30 p-3">
@@ -40,8 +51,8 @@ export function CardBrick({ onToken, amount, payerEmail }: CardBrickProps) {
   return (
     <div className="rounded-lg border border-border p-2">
       <CardPayment
-        initialization={{ amount, payer: payerEmail ? { email: payerEmail } : undefined }}
-        customization={{ paymentMethods: { maxInstallments: 1 } }}
+        initialization={initialization}
+        customization={customization}
         onSubmit={(formData) => {
           const token = (formData as { token?: string } | undefined)?.token;
           if (token) onTokenRef.current(token);
