@@ -1,4 +1,5 @@
 import { Download, FileText, Lock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { SojCard } from "@/components/layout/Primitives";
 import { HighlightedText } from "@/features/analysis/components/HighlightedText";
@@ -8,9 +9,6 @@ import { fmtDate, GRAVIDADE_HIGHLIGHT, type GravidadeZona } from "@/lib/analysis
 import { useEconomicIndexes } from "@/hooks/useEconomicIndexes";
 import { useOrganization } from "@/hooks/useOrganization";
 import type { FullContract, ContractContent, ContractAnalysis, ClauseRisk, ReviewStatus } from "@/hooks/useContractAnalysis";
-
-// Mesmo numero de WhatsApp comercial usado nos fluxos de upgrade/renovacao.
-const SALES_WHATSAPP = "5511964889002";
 
 export function AnalisadoView({
   contract,
@@ -39,13 +37,13 @@ export function AnalisadoView({
   updateClauseReview: (clauseId: string, status: ReviewStatus) => Promise<void>;
   updateClauseSuggestion: (clauseId: string, suggestion: string) => Promise<void>;
 }) {
-  const { org } = useOrganization();
-  const isStarter = org?.plan_status === "active";
+  const { org, loading: orgLoading } = useOrganization();
+  const isStarter = orgLoading || org?.plan_status === "active";
+  const navigate = useNavigate();
 
   const handleDownloadPdf = async () => {
     if (!isStarter) {
-      const message = `Olá! Sou da organização "${org?.name ?? ""}" e quero fazer upgrade para o plano Starter da Ponderum para exportar relatórios em PDF.`;
-      window.open(`https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(message)}`, "_blank");
+      navigate("/settings?tab=plan");
       return;
     }
     const { generateAnalysisPdf, downloadBlob } = await import("@/lib/contractDocs");
@@ -83,7 +81,7 @@ export function AnalisadoView({
         <button
           onClick={handleDownloadPdf}
           className="shrink-0 inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors mb-px"
-          title={isStarter ? "Exportar PDF" : "Exportar PDF é exclusivo do plano Starter"}
+          title={isStarter ? "Exportar PDF" : "Exportar PDF é exclusivo dos planos pagos"}
         >
           {isStarter ? <Download className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />} PDF
         </button>

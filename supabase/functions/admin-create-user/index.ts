@@ -134,10 +134,18 @@ Deno.serve(async (req) => {
 
   // Só quem tem acesso ao menu "Equipe Ponderum" (can_view_ponderum_team)
   // pode chamar esta função — checado de novo aqui porque o service role
-  // abaixo ignora RLS por completo.
+  // abaixo ignora RLS por completo. Filtra por id explicitamente -- a
+  // policy de RLS (org_id = get_org_id()) sozinha devolve TODAS as linhas
+  // da organização do chamador, não só a dele, e quebra .maybeSingle()
+  // assim que a organização (inclusive a da própria Equipe Ponderum) tem
+  // mais de 1 usuário.
+  const { data: authData } = await userClient.auth.getUser()
+  if (!authData.user) return jsonResponse({ error: 'Acesso negado' }, 403)
+
   const { data: caller, error: callerErr } = await userClient
     .from('users')
     .select('can_view_ponderum_team')
+    .eq('id', authData.user.id)
     .maybeSingle()
   if (callerErr || !caller?.can_view_ponderum_team) {
     return jsonResponse({ error: 'Acesso negado' }, 403)

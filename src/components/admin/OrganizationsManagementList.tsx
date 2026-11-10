@@ -16,6 +16,7 @@ type StaffOrg = {
   plan_id: string;
   plan_status: string;
   blocked: boolean;
+  risk_flagged: boolean;
   created_at: string;
   plan_renews_at: string | null;
   admin_name: string | null;
@@ -136,6 +137,24 @@ export function OrganizationsManagementList() {
     }
   };
 
+  // Fase 5a -- libera/bloqueia pagamento com cartão depois de um
+  // chargeback (spec Peça 8: "não pode reassinar com cartão sem
+  // liberação do admin, só Pix").
+  const setRiskFlag = async (org: StaffOrg, riskFlagged: boolean) => {
+    setActingId(org.id);
+    try {
+      const { error } = await supabase.rpc("staff_set_org_risk_flag", { p_org_id: org.id, p_risk_flagged: riskFlagged });
+      if (error) {
+        toast.error("Erro ao atualizar sinalização de risco");
+        return;
+      }
+      toast.success(riskFlagged ? "Cartão bloqueado para esta organização" : "Cartão liberado");
+      fetchOrgs(page, search);
+    } finally {
+      setActingId(null);
+    }
+  };
+
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
@@ -170,6 +189,11 @@ export function OrganizationsManagementList() {
                     {org.blocked && (
                       <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-destructive/10 text-destructive">
                         Bloqueada
+                      </span>
+                    )}
+                    {org.risk_flagged && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-risk-high-dim text-risk-high">
+                        Cartão bloqueado (risco)
                       </span>
                     )}
                   </div>
@@ -209,6 +233,9 @@ export function OrganizationsManagementList() {
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setBlocked(org, !org.blocked)}>
                       {org.blocked ? "Desbloquear" : "Bloquear"}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setRiskFlag(org, !org.risk_flagged)}>
+                      {org.risk_flagged ? "Liberar cartão" : "Bloquear cartão (risco)"}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -282,6 +309,11 @@ export function OrganizationsManagementList() {
                           Bloqueada
                         </span>
                       )}
+                      {org.risk_flagged && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-medium bg-risk-high-dim text-risk-high">
+                          Cartão bloqueado (risco)
+                        </span>
+                      )}
                     </div>
                   </td>
                   <td className="py-2.5 text-right text-muted-foreground text-xs">
@@ -324,6 +356,9 @@ export function OrganizationsManagementList() {
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => setBlocked(org, !org.blocked)}>
                           {org.blocked ? "Desbloquear" : "Bloquear"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setRiskFlag(org, !org.risk_flagged)}>
+                          {org.risk_flagged ? "Liberar cartão" : "Bloquear cartão (risco)"}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>

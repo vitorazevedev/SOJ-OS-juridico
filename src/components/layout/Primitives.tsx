@@ -51,14 +51,14 @@ export function KPICard({
   );
 }
 
-// Índice de Desequilíbrio (antigo "Score de risco") — exclusivo do
-// plano Starter pago. Chamadores passam locked=true pro Freemium em vez
+// Índice de Desequilíbrio (antigo "Score de risco") — exclusivo dos
+// planos pagos. Chamadores passam locked=true pro Freemium em vez
 // de renderizar o número.
 export function RiskBadge({ score, locked }: { score: number; locked?: boolean }) {
   if (locked) {
     return (
       <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium bg-muted text-muted-foreground">
-        <Lock className="h-3 w-3" /> Starter
+        <Lock className="h-3 w-3" /> Pago
       </span>
     );
   }

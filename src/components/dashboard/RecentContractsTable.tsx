@@ -8,8 +8,8 @@ import { useOrganization } from "@/hooks/useOrganization";
 
 export function RecentContractsTable({ loading, recentContracts }: { loading: boolean; recentContracts: RecentContract[] }) {
   const navigate = useNavigate();
-  const { org } = useOrganization();
-  const isStarter = org?.plan_status === "active";
+  const { org, loading: orgLoading } = useOrganization();
+  const isStarter = orgLoading || org?.plan_status === "active";
 
   return (
     <SojCard padding={false}>

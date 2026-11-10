@@ -41,8 +41,8 @@ export function ContractsList({
   onRename: (c: DbContract) => void;
 }) {
   const navigate = useNavigate();
-  const { org } = useOrganization();
-  const isStarter = org?.plan_status === "active";
+  const { org, loading: orgLoading } = useOrganization();
+  const isStarter = orgLoading || org?.plan_status === "active";
 
   if (loading) {
     return (

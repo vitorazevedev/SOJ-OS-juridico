@@ -7,6 +7,7 @@ import { useOrganization } from "@/hooks/useOrganization";
 import { cn } from "@/lib/utils";
 import { AlertTriangle } from "lucide-react";
 import { WelcomeHero } from "@/components/dashboard/WelcomeHero";
+import { SuspendedAccessBanner } from "@/components/dashboard/SuspendedAccessBanner";
 import { KpiCard } from "@/components/dashboard/KpiCard";
 import { TopRisksCard } from "@/components/dashboard/TopRisksCard";
 import { UpcomingObligationsCard } from "@/components/dashboard/UpcomingObligationsCard";
@@ -17,8 +18,10 @@ import { gravidadeFaixa } from "@/lib/analysisFormat";
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { org } = useOrganization();
-  const isStarter = org?.plan_status === "active";
+  const { org, loading: orgLoading } = useOrganization();
+  // Enquanto "org" ainda carrega, assume pago -- evita o KPI mostrar
+  // "indisponível" e depois corrigir pra quem realmente tem acesso.
+  const isStarter = orgLoading || org?.plan_status === "active";
   const { summary, recentContracts, topRisks, upcoming, loading } = useDashboard();
 
   const firstName =
@@ -29,6 +32,8 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-4 md:gap-6 max-w-[1400px] mx-auto animate-fade-in">
+
+      <SuspendedAccessBanner orgId={org?.id} />
 
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -84,7 +89,7 @@ export default function Dashboard() {
           <KpiCard
             label="Índice médio de Desequilíbrio"
             value={isStarter ? (summary.avg_risk_score > 0 ? String(Math.round(summary.avg_risk_score)) : "—") : "—"}
-            hint={isStarter ? "Contratos analisados" : "Disponível no Starter"}
+            hint={isStarter ? "Contratos analisados" : "Disponível nos planos pagos"}
             highlight={isStarter && gravidadeFaixa(summary.avg_risk_score).zone === "critico"}
           />
           <KpiCard

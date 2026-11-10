@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 
 export type Organization = {
@@ -36,7 +36,39 @@ async function getOrgId(): Promise<string | null> {
   return data?.org_id ?? null;
 }
 
-export function useOrganization() {
+type OrganizationCtx = {
+  org: Organization | null;
+  loading: boolean;
+  logoUrl: string | null;
+  refresh: () => Promise<void>;
+  updateOrg: (patch: Partial<Pick<Organization, "name" | "cnpj" | "sector" | "logo_url">>) => Promise<void>;
+  uploadLogo: (file: File) => Promise<void>;
+  removeLogo: () => Promise<void>;
+};
+
+// Contexto compartilhado -- antes cada componente que chamava
+// useOrganization() disparava sua PRÓPRIA busca independente (16 lugares
+// no app), causando corridas visíveis (um já carregado, outro ainda
+// "Carregando…" na mesma tela). Agora a busca roda uma vez só, no
+// AppLayout (useOrganizationProvider), e todo o resto só lê daqui -- mesmo
+// padrão já usado em useUrgentObligations.ts.
+const OrganizationContext = createContext<OrganizationCtx>({
+  org: null,
+  loading: true,
+  logoUrl: null,
+  refresh: async () => {},
+  updateOrg: async () => {},
+  uploadLogo: async () => {},
+  removeLogo: async () => {},
+});
+
+export function useOrganization(): OrganizationCtx {
+  return useContext(OrganizationContext);
+}
+
+export { OrganizationContext };
+
+export function useOrganizationProvider(): OrganizationCtx {
   const [org, setOrg] = useState<Organization | null>(null);
   const [loading, setLoading] = useState(true);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);

@@ -74,7 +74,7 @@ export default function Obligations() {
     return (
       <PlanFeatureLock
         feature="A Gestão de Obrigações"
-        description="Acompanhe prazos, vencimentos e obrigações contratuais em um só lugar. Disponível para quem tem o plano Starter."
+        description="Acompanhe prazos, vencimentos e obrigações contratuais em um só lugar. Disponível nos planos pagos."
       />
     );
   }

@@ -27,9 +27,14 @@ export function FeedbackButton() {
     if (!category || !message.trim() || !user) return;
     setSending(true);
 
+    // Filtra por id explicitamente -- a policy de RLS (org_id = get_org_id())
+    // sozinha devolve TODAS as linhas da organização do usuário, não só a
+    // dele, e quebra .maybeSingle() assim que a organização tem mais de 1
+    // usuário.
     const { data: userRow } = await supabase
       .from("users")
       .select("org_id")
+      .eq("id", user.id)
       .maybeSingle();
 
     const { error } = await supabase

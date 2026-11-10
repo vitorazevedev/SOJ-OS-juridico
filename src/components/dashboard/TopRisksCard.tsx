@@ -7,8 +7,8 @@ import { useOrganization } from "@/hooks/useOrganization";
 
 export function TopRisksCard({ loading, topRisks }: { loading: boolean; topRisks: RecentContract[] }) {
   const navigate = useNavigate();
-  const { org } = useOrganization();
-  const isStarter = org?.plan_status === "active";
+  const { org, loading: orgLoading } = useOrganization();
+  const isStarter = orgLoading || org?.plan_status === "active";
 
   return (
     <SojCard>

@@ -96,6 +96,12 @@ export function OnboardingUIProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (loading) return;
+    // Não aparece por cima do checkout — alguém se cadastrando pela
+    // landing pode cair direto ali, antes de completar o onboarding.
+    if (location.pathname.startsWith("/checkout")) {
+      setOpen(false);
+      return;
+    }
     if (completed) {
       setOpen(false);
       return;
@@ -103,7 +109,7 @@ export function OnboardingUIProvider({ children }: { children: ReactNode }) {
     // Sempre volta a aparecer quando os passos são concluídos, mesmo que
     // tenha sido fechado antes — pra mostrar a tela de conclusão.
     if (allDone || !dismissed) setOpen(true);
-  }, [loading, completed, dismissed, allDone]);
+  }, [loading, completed, dismissed, allDone, location.pathname]);
 
   const reopen = () => {
     setDismissed(false);

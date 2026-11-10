@@ -90,7 +90,7 @@ export function JuridicaTab({
                 <Lock className="h-5 w-5 text-muted-foreground" />
               </div>
               <p className="text-xs text-muted-foreground max-w-[200px]">
-                Disponível no plano Starter
+                Disponível nos planos pagos
               </p>
             </div>
           )}

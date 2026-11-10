@@ -119,7 +119,7 @@ export default function Generator() {
     return (
       <PlanFeatureLock
         feature="O Gerador de Contrato"
-        description="Crie contratos equilibrados e juridicamente seguros com os modelos da biblioteca jurídica Ponderum. Disponível para quem tem o plano Starter."
+        description="Crie contratos equilibrados e juridicamente seguros com os modelos da biblioteca jurídica Ponderum. Disponível nos planos pagos."
       />
     );
   }

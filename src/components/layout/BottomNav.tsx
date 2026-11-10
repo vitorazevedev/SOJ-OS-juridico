@@ -15,10 +15,12 @@ const items: Item[] = [
 
 export default function BottomNav() {
   const { count: urgentCount } = useUrgentObligations();
-  const { org } = useOrganization();
-  // Gerador de Contrato e Gestao de Obrigacoes sao exclusivos do Starter
-  // pago -- Freemium nem ve os itens no menu.
-  const isStarter = org?.plan_status === "active";
+  const { org, loading: orgLoading } = useOrganization();
+  // Gerador de Contrato e Gestao de Obrigacoes sao exclusivos de plano
+  // pago -- Freemium nem ve os itens no menu. Enquanto "org" ainda
+  // carrega, assume pago -- evita os itens sumirem e reaparecerem pra
+  // quem realmente tem acesso.
+  const isStarter = orgLoading || org?.plan_status === "active";
   const visibleItems = isStarter ? items : items.filter((i) => i.to !== "/obligations" && i.to !== "/generator");
 
   return (

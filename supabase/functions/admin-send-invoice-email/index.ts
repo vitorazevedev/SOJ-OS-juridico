@@ -44,9 +44,17 @@ Deno.serve(async (req) => {
     { global: { headers: { Authorization: authHeader } } }
   )
 
+  // Filtra por id explicitamente -- a policy de RLS (org_id = get_org_id())
+  // sozinha devolve TODAS as linhas da organização do chamador, não só a
+  // dele, e quebra .maybeSingle() assim que a organização (inclusive a da
+  // própria Equipe Ponderum) tem mais de 1 usuário.
+  const { data: authData } = await userClient.auth.getUser()
+  if (!authData.user) return jsonResponse({ error: 'Acesso negado' }, 403)
+
   const { data: caller, error: callerErr } = await userClient
     .from('users')
     .select('can_view_ponderum_team')
+    .eq('id', authData.user.id)
     .maybeSingle()
   if (callerErr || !caller?.can_view_ponderum_team) {
     return jsonResponse({ error: 'Acesso negado' }, 403)
@@ -82,12 +90,17 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Falha ao gerar o link de download da nota fiscal' }, 500)
   }
 
-  const { data: admin } = await serviceClient
+  // Uma organização pode ter mais de um admin (convite de equipe) -- pega
+  // o mais antigo (o que criou a organização) em vez de .maybeSingle(),
+  // que quebraria com mais de uma linha batendo no filtro.
+  const { data: admins } = await serviceClient
     .from('users')
     .select('name, social_name, email')
     .eq('org_id', invoice.org_id)
     .eq('role', 'admin')
-    .maybeSingle()
+    .order('created_at', { ascending: true })
+    .limit(1)
+  const admin = admins?.[0]
 
   if (!admin?.email) {
     return jsonResponse({ error: 'Administrador da organização não encontrado' }, 404)
