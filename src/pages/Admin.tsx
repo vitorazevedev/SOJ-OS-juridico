@@ -14,6 +14,8 @@ import { OrganizationsTable } from "@/components/admin/OrganizationsTable";
 import { FeedbacksList } from "@/components/admin/FeedbacksList";
 import { PonderumStaffManagement } from "@/components/admin/PonderumStaffManagement";
 import { SupportChannelCard } from "@/components/admin/SupportChannelCard";
+import { BillingDevSimulator } from "@/components/admin/BillingDevSimulator";
+import { ChargebacksCard } from "@/components/admin/ChargebacksCard";
 import type {
   Stats, WaitlistEntry, Feedback, Org, DayCount, CronJob,
 } from "@/lib/adminDashboard";
@@ -108,6 +110,10 @@ export default function Admin() {
       <OrganizationsTable orgs={orgs} />
 
       <PonderumStaffManagement />
+
+      <ChargebacksCard />
+
+      <BillingDevSimulator />
 
       <FeedbacksList feedbacks={feedbacks} />
 

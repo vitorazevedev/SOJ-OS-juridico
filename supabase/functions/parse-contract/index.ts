@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import Anthropic from 'npm:@anthropic-ai/sdk'
 import { extractObligationsFromText } from '../_shared/extract-obligations.ts'
+import { PAID_PLANS } from '../_shared/mercadopago-plans.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -147,11 +148,17 @@ Deno.serve(async (req) => {
   // it's the right place to enforce the per-plan contract limit (Freemium/trial:
   // 1/month, Starter pago: 15/month, Pro/Enterprise: unlimited) rather than at upload time.
   // Mirrors FREEMIUM_MONTHLY_ANALYSIS_LIMIT / STARTER_MONTHLY_ANALYSIS_LIMIT em src/lib/pricing.ts.
+  // Os 4 tiers pagos via Mercado Pago (individual/escritorio/juridico/corporativo)
+  // vêm de PAID_PLANS (_shared/mercadopago-plans.ts) -- fonte única, não duplica os números aqui.
   const FREEMIUM_MONTHLY_LIMIT = 1
   const PLAN_MONTHLY_LIMIT: Record<string, number | null> = {
     starter: 15,
     pro: null,
     enterprise: null,
+    individual: PAID_PLANS.individual.monthlyAnalysisLimit,
+    escritorio: PAID_PLANS.escritorio.monthlyAnalysisLimit,
+    juridico: PAID_PLANS.juridico.monthlyAnalysisLimit,
+    corporativo: PAID_PLANS.corporativo.monthlyAnalysisLimit,
   }
 
   const { data: org } = await serviceClient
@@ -173,8 +180,9 @@ Deno.serve(async (req) => {
     )
   }
 
+  const isSuspended = org?.plan_status === 'suspended'
   const isFreemium = org?.plan_status === 'trial'
-  const planLimit = isFreemium ? FREEMIUM_MONTHLY_LIMIT : PLAN_MONTHLY_LIMIT[org?.plan_id ?? 'starter'] ?? null
+  const planLimit = (isFreemium || isSuspended) ? FREEMIUM_MONTHLY_LIMIT : PLAN_MONTHLY_LIMIT[org?.plan_id ?? 'starter'] ?? null
   if (planLimit !== null) {
     const startOfMonth = new Date()
     startOfMonth.setUTCDate(1)
@@ -191,11 +199,14 @@ Deno.serve(async (req) => {
         .from('contracts')
         .update({ status: 'aguardando', updated_at: new Date().toISOString() })
         .eq('id', contract_id)
+
       return jsonResponse(
         {
-          error: isFreemium
-            ? `Limite de ${planLimit} análise gratuita por mês atingido. Faça upgrade para o plano Starter para mais análises.`
-            : `Limite de ${planLimit} contratos/mês do plano atingido. Entre em contato com nosso time para aumentar seu limite.`,
+          error: isSuspended
+            ? `Sua assinatura foi suspensa por falta de pagamento. Renove em Configurações > Plano para voltar a analisar normalmente.`
+            : isFreemium
+              ? `Limite de ${planLimit} análise gratuita por mês atingido. Faça upgrade para continuar analisando mais contratos.`
+              : `Limite de ${planLimit} contratos/mês do plano atingido. Entre em contato com nosso time para aumentar seu limite.`,
         },
         402
       )

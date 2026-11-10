@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { useTheme } from "@/hooks/useTheme";
@@ -9,11 +9,24 @@ import { CheckEmailView } from "@/components/auth/CheckEmailView";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
 import { RecoveryCodeForm } from "@/components/auth/RecoveryCodeForm";
 import { LoginSignupForm } from "@/components/auth/LoginSignupForm";
-import { loginSchema, signupSchema, forgotSchema, recoveryCodeSchema, translateAuthError, type Mode, type FormErrors } from "@/lib/authForm";
+import { loginSchema, signupSchema, inviteSignupSchema, forgotSchema, recoveryCodeSchema, translateAuthError, type Mode, type FormErrors } from "@/lib/authForm";
+
+const POST_AUTH_REDIRECT_KEY = "ponderum:post_auth_redirect";
+
+function consumePostAuthRedirect(): string | null {
+  try {
+    const value = localStorage.getItem(POST_AUTH_REDIRECT_KEY);
+    if (value) localStorage.removeItem(POST_AUTH_REDIRECT_KEY);
+    return value;
+  } catch {
+    return null;
+  }
+}
 
 export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { session, loading: authLoading } = useAuth();
   const { theme } = useTheme();
   const [mode, setMode] = useState<Mode>("login");
@@ -32,13 +45,44 @@ export default function Login() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [recoveryCode, setRecoveryCode] = useState("");
 
+  const inviteToken = searchParams.get("invite");
+  const [inviteInfo, setInviteInfo] = useState<{ valid: boolean; email?: string; organization_name?: string } | null>(null);
+
   const clearErrors = () => setFieldErrors({});
 
-  const from = (location.state as { from?: { pathname: string } } | null)?.from?.pathname || "/";
+  const from = (location.state as { from?: { pathname: string; search: string } } | null)?.from;
+  const fromPath = from ? `${from.pathname}${from.search ?? ""}` : "/";
 
   useEffect(() => {
-    if (!authLoading && session) navigate(from, { replace: true });
-  }, [session, authLoading, navigate, from]);
+    // Link de plano vindo da landing (?plan=X) ou redirecionamento de rota
+    // protegida -- grava a intenção ANTES de autenticar, pra sobreviver a
+    // um desvio de página inteira (confirmação por e-mail, OAuth do Google).
+    const plan = searchParams.get("plan");
+    try {
+      if (plan) {
+        localStorage.setItem(POST_AUTH_REDIRECT_KEY, `/checkout?plan=${encodeURIComponent(plan)}`);
+      } else if (from) {
+        localStorage.setItem(POST_AUTH_REDIRECT_KEY, fromPath);
+      }
+    } catch {
+      // localStorage indisponível -- segue sem persistir
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!inviteToken) return;
+    setMode("signup");
+    supabase.functions.invoke("org-invite-info", { body: { token: inviteToken } }).then(({ data }) => {
+      const info = data as { valid: boolean; email?: string; organization_name?: string } | null;
+      setInviteInfo(info ?? { valid: false });
+      if (info?.valid && info.email) setEmail(info.email);
+    });
+  }, [inviteToken]);
+
+  useEffect(() => {
+    if (!authLoading && session) navigate(consumePostAuthRedirect() ?? fromPath, { replace: true });
+  }, [session, authLoading, navigate, fromPath]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,15 +102,19 @@ export default function Login() {
         return;
       }
       toast.success("Bem-vindo de volta!");
-      navigate(from, { replace: true });
+      navigate(consumePostAuthRedirect() ?? fromPath, { replace: true });
     } finally {
       setLoading(false);
     }
   };
 
+  const isInviteSignup = !!inviteToken && inviteInfo?.valid === true;
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = signupSchema.safeParse({ email, password, name, orgName, phone, cnpj });
+    const result = isInviteSignup
+      ? inviteSignupSchema.safeParse({ email, password, name, phone })
+      : signupSchema.safeParse({ email, password, name, orgName, phone, cnpj });
     if (!result.success) {
       const errs: FormErrors = {};
       result.error.issues.forEach((i) => { const f = i.path[0] as keyof FormErrors; if (!errs[f]) errs[f] = i.message; });
@@ -85,7 +133,9 @@ export default function Login() {
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
-          data: { name: name.trim(), social_name: socialName.trim() || null, org_name: orgName.trim(), phone: `${ddi.trim()} ${phone.trim()}`, cnpj: cnpj.trim() || null, terms_accepted: true },
+          data: isInviteSignup
+            ? { name: name.trim(), social_name: socialName.trim() || null, phone: `${ddi.trim()} ${phone.trim()}`, terms_accepted: true, invite_token: inviteToken }
+            : { name: name.trim(), social_name: socialName.trim() || null, org_name: orgName.trim(), phone: `${ddi.trim()} ${phone.trim()}`, cnpj: cnpj.trim() || null, terms_accepted: true },
         },
       });
       if (error) {
@@ -94,7 +144,7 @@ export default function Login() {
       }
       if (data.session) {
         toast.success("Conta criada com sucesso!");
-        navigate("/", { replace: true });
+        navigate(consumePostAuthRedirect() ?? fromPath, { replace: true });
       } else {
         setMode("check_email");
       }
@@ -175,7 +225,7 @@ export default function Login() {
 
   const subtitle: Record<Mode, string> = {
     login: "Entre na sua conta",
-    signup: "Crie sua organização",
+    signup: isInviteSignup ? `Você foi convidado para ${inviteInfo?.organization_name ?? "uma organização"}` : "Crie sua organização",
     forgot: "Recuperar senha",
     check_email: "Verifique seu email",
     recovery_code: "Digite o código recebido",
@@ -227,9 +277,17 @@ export default function Login() {
             />
           )}
 
+          {mode === "signup" && inviteToken && inviteInfo && !inviteInfo.valid && (
+            <p className="text-xs text-risk-critical mb-4 text-center">
+              Esse link de convite não é mais válido. Peça um novo link a quem te convidou, ou crie sua própria organização abaixo.
+            </p>
+          )}
+
           {(mode === "login" || mode === "signup") && (
             <LoginSignupForm
               mode={mode}
+              hideOrgFields={isInviteSignup}
+              emailLocked={isInviteSignup}
               name={name}
               setName={setName}
               socialName={socialName}

@@ -12,7 +12,7 @@ import { Bell, CalendarClock, CreditCard, Search, ShieldCheck, TerminalSquare, U
 import { UrgentObligationsContext, useUrgentObligationsProvider } from "@/hooks/useUrgentObligations";
 import { OnboardingUIProvider } from "@/hooks/useOnboardingUI";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
-import { useOrganization } from "@/hooks/useOrganization";
+import { OrganizationContext, useOrganizationProvider } from "@/hooks/useOrganization";
 import { useTheme } from "@/hooks/useTheme";
 import { usePonderumPermissions } from "@/hooks/usePonderumPermissions";
 import { SUBSCRIPTION_RENEWAL_WARNING_DAYS } from "@/lib/pricing";
@@ -160,7 +160,8 @@ function StaffMenuDropdown({
 export default function AppLayout() {
   const navigate = useNavigate();
   const urgentCtx = useUrgentObligationsProvider();
-  const { org } = useOrganization();
+  const orgCtx = useOrganizationProvider();
+  const { org } = orgCtx;
   const { theme } = useTheme();
   const { canViewDev, canViewPonderumTeam } = usePonderumPermissions();
   const [panelOpen, setPanelOpen] = useState(false);
@@ -252,6 +253,7 @@ export default function AppLayout() {
   const goObligations = () => { navigate("/obligations"); setPanelOpen(false); };
 
   return (
+    <OrganizationContext.Provider value={orgCtx}>
     <UrgentObligationsContext.Provider value={urgentCtx}>
     <OnboardingUIProvider>
     <SidebarProvider>
@@ -423,8 +425,8 @@ export default function AppLayout() {
                 <CreditCard className="h-4 w-4 shrink-0" />
                 <span className="font-medium">
                   {renewalDaysLeft! <= 0
-                    ? "Sua assinatura Starter venceu"
-                    : `Sua assinatura Starter vence em ${renewalDaysLeft} ${renewalDaysLeft === 1 ? "dia" : "dias"}`}
+                    ? "Sua assinatura venceu"
+                    : `Sua assinatura vence em ${renewalDaysLeft} ${renewalDaysLeft === 1 ? "dia" : "dias"}`}
                 </span>
                 <button
                   onClick={() => navigate("/settings?tab=plan")}
@@ -455,5 +457,6 @@ export default function AppLayout() {
     </SidebarProvider>
     </OnboardingUIProvider>
     </UrgentObligationsContext.Provider>
+    </OrganizationContext.Provider>
   );
 }

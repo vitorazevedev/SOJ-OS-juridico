@@ -30,3 +30,33 @@ verify_jwt = false
 
 [functions.enforce-data-retention]
 verify_jwt = false
+
+# billing-webhook: chamado pelo gateway de pagamento (Mercado Pago) sem
+# Authorization header -- Modulo de Pagamentos, Fase 2.
+[functions.billing-webhook]
+verify_jwt = false
+
+# close-canceled: chamado pelo pg_cron, mesmo padrao das outras funcoes de
+# cron acima -- Modulo de Pagamentos, Fase 4a.
+[functions.close-canceled]
+verify_jwt = false
+
+# dunning: chamado pelo pg_cron -- Modulo de Pagamentos, Fase 4b.
+[functions.dunning]
+verify_jwt = false
+
+# release-funds e reconcile: chamados pelo pg_cron -- Modulo de Pagamentos, Fase 5b.
+[functions.release-funds]
+verify_jwt = false
+
+[functions.reconcile]
+verify_jwt = false
+
+# issue-invoices: chamado pelo pg_cron -- Modulo de Pagamentos, Fase 5c.
+[functions.issue-invoices]
+verify_jwt = false
+
+# org-invite-info: consultado pela tela de cadastro ANTES de haver sessao
+# (quem recebeu o convite ainda nao tem conta) -- Modulo "Equipe".
+[functions.org-invite-info]
+verify_jwt = false

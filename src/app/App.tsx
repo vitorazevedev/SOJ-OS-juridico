@@ -25,6 +25,9 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const Admin = lazy(() => import("@/pages/Admin"));
 const PonderumTeam = lazy(() => import("@/pages/PonderumTeam"));
+const Checkout = lazy(() => import("@/pages/Checkout"));
+const PixPayment = lazy(() => import("@/pages/PixPayment"));
+const AdminFinance = lazy(() => import("@/pages/AdminFinance"));
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -64,6 +67,9 @@ export default function App() {
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/admin" element={<Admin />} />
                   <Route path="/equipe-ponderum" element={<PonderumTeam />} />
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/checkout/pix/:paymentId" element={<PixPayment />} />
+                  <Route path="/financeiro" element={<AdminFinance />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

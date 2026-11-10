@@ -13,7 +13,7 @@ const VALID_TABS = ["organization", "users", "plan", "profile", "notifications",
 export default function Settings() {
   const [searchParams, setSearchParams] = useSearchParams();
   const tabParam = searchParams.get("tab");
-  const initialTab = tabParam && VALID_TABS.includes(tabParam) ? tabParam : "organization";
+  const activeTab = tabParam && VALID_TABS.includes(tabParam) ? tabParam : "organization";
 
   return (
     <div className="flex flex-col gap-4 md:gap-6 max-w-[1200px] mx-auto animate-fade-in">
@@ -25,7 +25,7 @@ export default function Settings() {
       </div>
 
       <Tabs
-        defaultValue={initialTab}
+        value={activeTab}
         onValueChange={(v) => setSearchParams(v === "organization" ? {} : { tab: v })}
         className="w-full"
       >

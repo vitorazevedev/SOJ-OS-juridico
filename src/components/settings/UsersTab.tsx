@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { SojCard } from "@/components/layout/Primitives";
-import { UserPlus, Shield, Trash2, Mail, X, Pencil } from "lucide-react";
+import { UserPlus, Shield, Trash2, Mail, X, Pencil, Copy } from "lucide-react";
 import { toast } from "sonner";
+import { getEdgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
+import { PAID_PLANS, FREEMIUM_MAX_USERS, STARTER_MAX_USERS } from "@/lib/pricing";
 import {
   Dialog,
   DialogContent,
@@ -24,9 +27,6 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { useOrgUsers, useOrganization, type OrgUser } from "@/hooks/useOrganization";
 
-// Mesmo numero de WhatsApp comercial usado nos fluxos de upgrade/renovacao.
-const SALES_WHATSAPP = "5511964889002";
-
 const inviteSchema = z.object({
   email: z.string().email("Email inválido"),
 });
@@ -39,30 +39,63 @@ const ROLE_LABELS: Record<string, string> = {
   member: "Membro",
 };
 
+type PendingInvite = { id: string; email: string; role: string; created_at: string; token: string };
+
+// Mirrors billing_plans.features.max_users e supabase/functions/
+// org-invite-user/index.ts -- fonte unica em src/lib/pricing.ts pro que
+// pode rodar no frontend (Edge Function roda em runtime separado).
+const MAX_USERS: Record<string, number> = {
+  starter: STARTER_MAX_USERS,
+  individual: PAID_PLANS.individual.maxUsers,
+  escritorio: PAID_PLANS.escritorio.maxUsers,
+  juridico: PAID_PLANS.juridico.maxUsers,
+  corporativo: PAID_PLANS.corporativo.maxUsers,
+};
+
 export function UsersTab() {
   const { user } = useAuth();
-  const { org } = useOrganization();
+  const { org, loading: orgLoading } = useOrganization();
   const { users, updateRole, removeUser, refresh } = useOrgUsers();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<OrgUser | null>(null);
   const [inviteForm, setInviteForm] = useState({ email: "", role: "member" });
   const [inviteErrors, setInviteErrors] = useState<InviteErrors>({});
+  const [inviteSubmitting, setInviteSubmitting] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState({ name: "", socialName: "", phone: "" });
   const [savingEdit, setSavingEdit] = useState(false);
+  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>([]);
 
   const myUser = users.find((u) => u.id === user?.id);
   const myRole = myUser?.role ?? "member";
   const canManage = myRole === "owner" || myRole === "admin";
-  // Freemium so tem 1 usuario na organizacao; adicionar mais e exclusivo
-  // do Starter pago.
-  const isStarter = org?.plan_status === "active";
-  const reachedFreeUserLimit = !isStarter && users.length >= 1;
 
-  const handleUpgradeForMoreUsers = () => {
-    const message = `Olá! Sou da organização "${org?.name ?? ""}" e quero fazer upgrade para o plano Starter da Ponderum para adicionar mais usuários.`;
-    window.open(`https://wa.me/${SALES_WHATSAPP}?text=${encodeURIComponent(message)}`, "_blank");
+  const fetchPendingInvites = async () => {
+    if (!org?.id) return;
+    const { data } = await supabase
+      .from("org_invites")
+      .select("id, email, role, created_at, token")
+      .eq("organization_id", org.id)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+    setPendingInvites((data as PendingInvite[]) ?? []);
   };
+
+  useEffect(() => {
+    fetchPendingInvites();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [org?.id]);
+
+  // Limite real de usuarios do plano (1/3/5/10) -- conta tambem convites
+  // pendentes, pra nao deixar convidar alem do que o plano permite mesmo
+  // antes do aceite.
+  const isTrial = org?.plan_status === "trial";
+  const isSuspended = org?.plan_status === "suspended";
+  const effectiveMaxUsers = (isTrial || isSuspended) ? FREEMIUM_MAX_USERS : (MAX_USERS[org?.plan_id ?? "starter"] ?? 1);
+  const reachedFreeUserLimit = users.length + pendingInvites.length >= effectiveMaxUsers;
+
+  const navigate = useNavigate();
+  const handleUpgradeForMoreUsers = () => navigate("/settings?tab=plan");
 
   const handleRoleChange = async (u: OrgUser, role: string) => {
     try {
@@ -125,18 +158,52 @@ export function UsersTab() {
     }
   };
 
-  const handleSendInvite = () => {
+  const handleSendInvite = async () => {
     const result = inviteSchema.safeParse(inviteForm);
     if (!result.success) {
       setInviteErrors({ email: result.error.issues[0]?.message });
       return;
     }
     setInviteErrors({});
-    toast.success("Convite registrado", {
-      description: `Compartilhe o link de cadastro com ${inviteForm.email}. O envio automático por email será habilitado em breve.`,
-    });
-    setInviteForm({ email: "", role: "member" });
-    setInviteOpen(false);
+    setInviteSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("org-invite-user", {
+        body: { action: "create", email: inviteForm.email, role: inviteForm.role },
+      });
+      if (error || data?.error) {
+        const message = data?.error ?? (error ? await getEdgeFunctionErrorMessage(error, "Erro ao criar convite.") : "Erro ao criar convite.");
+        toast.error(message);
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(data.invite_url);
+        toast.success("Convite enviado!", { description: `E-mail disparado para ${inviteForm.email} (link também copiado, caso precise compartilhar manualmente). Válido por 14 dias.` });
+      } catch {
+        toast.success("Convite enviado!", { description: `E-mail disparado para ${inviteForm.email}. Link: ${data.invite_url}` });
+      }
+      setInviteForm({ email: "", role: "member" });
+      setInviteOpen(false);
+      await fetchPendingInvites();
+    } finally {
+      setInviteSubmitting(false);
+    }
+  };
+
+  const handleRevokeInvite = async (invite: PendingInvite) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("org-invite-user", {
+        body: { action: "revoke", invite_id: invite.id },
+      });
+      if (error || data?.error) {
+        const message = data?.error ?? (error ? await getEdgeFunctionErrorMessage(error, "Erro ao cancelar convite.") : "Erro ao cancelar convite.");
+        toast.error(message);
+        return;
+      }
+      toast.success("Convite cancelado");
+      await fetchPendingInvites();
+    } catch (e) {
+      toast.error("Erro ao cancelar convite", { description: e instanceof Error ? e.message : undefined });
+    }
   };
 
   return (
@@ -145,14 +212,16 @@ export function UsersTab() {
         <div className="flex items-center justify-between gap-2">
           <div>
             <h3 className="font-medium text-sm md:text-base">Usuários da Organização</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">{users.length} no total</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {orgLoading ? "Carregando…" : `${users.length} de ${effectiveMaxUsers} ${effectiveMaxUsers === 1 ? "usuário" : "usuários"} do plano`}
+            </p>
           </div>
-          {canManage && (
+          {canManage && !orgLoading && (
             reachedFreeUserLimit ? (
               <button
                 onClick={handleUpgradeForMoreUsers}
                 className="inline-flex items-center gap-2 h-10 px-4 rounded-lg border border-primary/30 text-primary text-sm font-medium hover:bg-primary-dim"
-                title="Plano Freemium permite só 1 usuário na organização"
+                title={`Seu plano permite até ${effectiveMaxUsers} ${effectiveMaxUsers === 1 ? "usuário" : "usuários"} na organização`}
               >
                 <UserPlus className="h-3.5 w-3.5" /> Fazer upgrade para adicionar mais usuários
               </button>
@@ -234,12 +303,54 @@ export function UsersTab() {
         </div>
       </SojCard>
 
+      {canManage && pendingInvites.length > 0 && (
+        <SojCard className="flex flex-col gap-3">
+          <h3 className="font-medium text-sm md:text-base">Convites pendentes</h3>
+          <div className="flex flex-col divide-y divide-border">
+            {pendingInvites.map((inv) => (
+              <div key={inv.id} className="flex items-center gap-3 py-3">
+                <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{inv.email}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {ROLE_LABELS[inv.role] ?? inv.role} · enviado em{" "}
+                    {new Date(inv.created_at).toLocaleDateString("pt-BR")}
+                  </p>
+                </div>
+                <button
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(`https://app.ponderum.com/login?invite=${inv.token}`);
+                    } catch {
+                      // clipboard indisponível -- segue sem copiar
+                    }
+                  }}
+                  className="h-9 w-9 rounded-md border border-border flex items-center justify-center text-muted-foreground hover:bg-muted/40 shrink-0"
+                  aria-label="Copiar link do convite"
+                  title="Copiar link do convite"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => handleRevokeInvite(inv)}
+                  className="h-9 w-9 rounded-md border border-border flex items-center justify-center text-destructive hover:bg-muted/40 shrink-0"
+                  aria-label="Cancelar convite"
+                  title="Cancelar convite"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </SojCard>
+      )}
+
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Convidar usuário</DialogTitle>
             <DialogDescription>
-              O usuário receberá acesso à sua organização ao se cadastrar com o email informado.
+              Enviamos um e-mail de convite pra essa pessoa (você também recebe o link, caso prefira compartilhar manualmente). Ela entra na sua organização ao se cadastrar com esse e-mail.
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-3 py-2">
@@ -272,8 +383,12 @@ export function UsersTab() {
             <button onClick={() => setInviteOpen(false)} className="h-10 px-5 rounded-lg border border-border text-sm hover:bg-muted/40">
               Cancelar
             </button>
-            <button onClick={handleSendInvite} className="h-10 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 inline-flex items-center gap-2">
-              <Mail className="h-3.5 w-3.5" /> Enviar convite
+            <button
+              onClick={handleSendInvite}
+              disabled={inviteSubmitting}
+              className="h-10 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 inline-flex items-center gap-2 disabled:opacity-50"
+            >
+              <Mail className="h-3.5 w-3.5" /> {inviteSubmitting ? "Gerando convite…" : "Gerar convite"}
             </button>
           </DialogFooter>
         </DialogContent>
