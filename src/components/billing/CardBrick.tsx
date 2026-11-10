@@ -1,75 +1,58 @@
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { CreditCard } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { initMercadoPago, CardPayment } from "@mercadopago/sdk-react";
+import { env } from "@/config/env";
 
-// Modulo de Pagamentos, Fase 3 -- wrapper mock do Card Payment Brick (spec
-// peça 0/seção 7). Em PAYMENT_PROVIDER=mock não existe tokenização real:
-// o "número do cartão" aqui só escolhe o cenário de teste pelos últimos 4
-// dígitos (0000 aprova, 0001 recusa, 0002 fica em processamento — mesmas
-// regras do MockProvider). NENHUM dado de cartão sai deste componente;
-// onToken só recebe um cardToken sintético, nunca número/CVV completos
-// (Princípio 0/1 da spec). Na Fase 6, troca por @mercadopago/sdk-react
-// sem mudar quem consome (mesma prop onToken).
+// Modulo de Pagamentos, Fase 6 -- Card Payment Brick real do Mercado Pago
+// (spec peça 0/seção 7). O Brick tokeniza o cartão dentro de um iframe do
+// próprio MP; nenhum número, CVV ou validade completa passa pelo nosso
+// código ou pelo nosso backend (Princípio 0/1 da spec) -- só recebemos
+// `formData.token`, de uso único. maxInstallments=1 porque assinatura
+// recorrente (preapproval) não usa parcelamento. Mesma prop onToken de
+// antes (versão mock) -- quem consome (Checkout.tsx, UpdateCardModal.tsx)
+// não precisou mudar nada além de passar o novo prop "amount".
+
+let mpInitialized = false;
 
 type CardBrickProps = {
   onToken: (cardToken: string) => void;
+  amount: number; // em reais (unidade real, não centavos -- é o que o Brick espera)
 };
 
-export function CardBrick({ onToken }: CardBrickProps) {
-  const [number, setNumber] = useState("");
-  const [expiry, setExpiry] = useState("");
-  const [cvv, setCvv] = useState("");
+export function CardBrick({ onToken, amount }: CardBrickProps) {
+  const onTokenRef = useRef(onToken);
+  onTokenRef.current = onToken;
 
-  const digits = number.replace(/\D/g, "");
-  const last4 = digits.slice(-4);
+  useEffect(() => {
+    if (mpInitialized || !env.mpPublicKey) return;
+    initMercadoPago(env.mpPublicKey, { locale: "pt-BR" });
+    mpInitialized = true;
+  }, []);
 
-  const handleExpiryChange = (value: string) => {
-    const clean = value.replace(/\D/g, "").slice(0, 4);
-    setExpiry(clean.length > 2 ? `${clean.slice(0, 2)}/${clean.slice(2)}` : clean);
-  };
-
-  const handleNumberChange = (value: string) => {
-    const clean = value.replace(/\D/g, "").slice(0, 16);
-    setNumber(clean.replace(/(\d{4})(?=\d)/g, "$1 "));
-    if (clean.length === 16) onToken(`mock_card_${clean.slice(-4)}`);
-  };
+  if (!env.mpPublicKey) {
+    return (
+      <p className="text-xs text-destructive rounded-lg border border-destructive/30 p-3">
+        VITE_MP_PUBLIC_KEY não configurado -- o formulário de cartão não pode carregar.
+      </p>
+    );
+  }
 
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border p-4">
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <CreditCard className="h-3.5 w-3.5" />
-        Ambiente de teste — nenhum dado de cartão sai do seu navegador.
-      </div>
-
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="card-number" className="text-xs">Número do cartão</Label>
-        <Input
-          id="card-number"
-          placeholder="4000 0000 0000 0000"
-          value={number}
-          onChange={(e) => handleNumberChange(e.target.value)}
-          className="font-mono"
-        />
-        <p className="text-[11px] text-muted-foreground">
-          Final <span className="font-mono">0000</span> aprova · <span className="font-mono">0001</span> recusa · <span className="font-mono">0002</span> fica em processamento
-        </p>
-      </div>
-
-      <div className="flex gap-2">
-        <div className="flex flex-col gap-1.5 flex-1">
-          <Label htmlFor="card-expiry" className="text-xs">Validade</Label>
-          <Input id="card-expiry" placeholder="MM/AA" value={expiry} onChange={(e) => handleExpiryChange(e.target.value)} className="font-mono" />
-        </div>
-        <div className="flex flex-col gap-1.5 w-24">
-          <Label htmlFor="card-cvv" className="text-xs">CVV</Label>
-          <Input id="card-cvv" placeholder="123" value={cvv} onChange={(e) => setCvv(e.target.value.replace(/\D/g, "").slice(0, 4))} className="font-mono" />
-        </div>
-      </div>
-
-      {last4.length === 4 && digits.length < 16 && (
-        <p className="text-[11px] text-muted-foreground">Continue digitando — faltam {16 - digits.length} dígitos.</p>
-      )}
+    <div className="rounded-lg border border-border p-2">
+      <CardPayment
+        initialization={{ amount }}
+        customization={{ paymentMethods: { maxInstallments: 1 } }}
+        onSubmit={(formData) => {
+          const token = (formData as { token?: string } | undefined)?.token;
+          if (token) onTokenRef.current(token);
+          // Nunca enviamos isto pra nenhum endpoint -- o Brick ja fez a
+          // cobranca/tokenizacao sozinho. Devolver uma Promise resolvida
+          // so evita o Brick mostrar um erro de envio que nao existe.
+          return Promise.resolve();
+        }}
+        onError={(error) => {
+          console.error("CardBrick: erro no Payment Brick do Mercado Pago:", error);
+        }}
+      />
     </div>
   );
 }
