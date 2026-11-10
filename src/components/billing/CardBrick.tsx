@@ -16,9 +16,10 @@ let mpInitialized = false;
 type CardBrickProps = {
   onToken: (cardToken: string) => void;
   amount: number; // em reais (unidade real, não centavos -- é o que o Brick espera)
+  payerEmail?: string; // pré-preenche o campo de e-mail do próprio Brick, evitando pedir de novo
 };
 
-export function CardBrick({ onToken, amount }: CardBrickProps) {
+export function CardBrick({ onToken, amount, payerEmail }: CardBrickProps) {
   const onTokenRef = useRef(onToken);
   onTokenRef.current = onToken;
 
@@ -39,7 +40,7 @@ export function CardBrick({ onToken, amount }: CardBrickProps) {
   return (
     <div className="rounded-lg border border-border p-2">
       <CardPayment
-        initialization={{ amount }}
+        initialization={{ amount, payer: payerEmail ? { email: payerEmail } : undefined }}
         customization={{ paymentMethods: { maxInstallments: 1 } }}
         onSubmit={(formData) => {
           const token = (formData as { token?: string } | undefined)?.token;

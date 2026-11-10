@@ -24,10 +24,12 @@ export function UpdateCardModal({ open, onOpenChange, onUpdated }: UpdateCardMod
   const [cardToken, setCardToken] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [amountReais, setAmountReais] = useState<number | null>(null);
+  const [payerEmail, setPayerEmail] = useState<string | undefined>(undefined);
 
   // O Brick real precisa saber o valor pra mostrar (nao e usado pra
   // cobrar aqui -- essa chamada so troca o cartao, a nova tentativa de
-  // cobranca chega depois via webhook).
+  // cobranca chega depois via webhook). O e-mail pre-preenche o campo do
+  // proprio Brick, evitando pedir de novo o que ja temos cadastrado.
   useEffect(() => {
     if (!open || !org?.id) return;
     supabase
@@ -40,6 +42,12 @@ export function UpdateCardModal({ open, onOpenChange, onUpdated }: UpdateCardMod
         const priceCents = (data?.billing_plans as { price_cents: number } | null)?.price_cents;
         setAmountReais(priceCents ? priceCents / 100 : null);
       });
+    supabase
+      .from("billing_customers")
+      .select("email")
+      .eq("organization_id", org.id)
+      .maybeSingle()
+      .then(({ data }) => setPayerEmail(data?.email ?? undefined));
   }, [open, org?.id]);
 
   const retry = async (method: "card" | "pix") => {
@@ -75,7 +83,7 @@ export function UpdateCardModal({ open, onOpenChange, onUpdated }: UpdateCardMod
           </DialogDescription>
         </DialogHeader>
 
-        {amountReais != null && <CardBrick onToken={setCardToken} amount={amountReais} />}
+        {amountReais != null && <CardBrick onToken={setCardToken} amount={amountReais} payerEmail={payerEmail} />}
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
           <Button variant="outline" onClick={() => retry("pix")} disabled={submitting} className="w-full sm:w-auto">

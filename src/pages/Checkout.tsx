@@ -312,7 +312,7 @@ export default function Checkout() {
           </button>
         </div>
 
-        {paymentMethod === "card" && plan && <CardBrick onToken={setCardToken} amount={plan.price_cents / 100} />}
+        {paymentMethod === "card" && plan && <CardBrick onToken={setCardToken} amount={plan.price_cents / 100} payerEmail={email} />}
       </SojCard>
 
       <label className="flex items-start gap-2 text-xs text-muted-foreground">
