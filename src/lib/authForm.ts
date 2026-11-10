@@ -19,6 +19,16 @@ export const signupSchema = loginSchema.extend({
   ),
 });
 
+// Cadastro de quem está aceitando um convite pra uma organização já
+// existente -- sem nome da empresa nem CPF/CNPJ (já preenchidos por quem
+// criou a organização).
+export const inviteSignupSchema = loginSchema.extend({
+  name:  z.string().trim().min(2, "Nome deve ter pelo menos 2 caracteres"),
+  phone: z.string().trim().refine(
+    (v) => v.replace(/\D/g, "").length >= 8, "Informe um WhatsApp/celular válido, com DDD"
+  ),
+});
+
 export const forgotSchema = z.object({
   email: z.string().email("Email inválido"),
 });

@@ -68,6 +68,8 @@ export function LoginSignupForm({
   onForgotClick,
   onGoogleClick,
   onToggleMode,
+  hideOrgFields = false,
+  emailLocked = false,
 }: {
   mode: Extract<Mode, "login" | "signup">;
   name: string;
@@ -96,6 +98,8 @@ export function LoginSignupForm({
   onForgotClick: () => void;
   onGoogleClick: () => void;
   onToggleMode: () => void;
+  hideOrgFields?: boolean;
+  emailLocked?: boolean;
 }) {
   return (
     <>
@@ -116,14 +120,16 @@ export function LoginSignupForm({
                 onChange={(e) => setSocialName(e.target.value)} autoComplete="off"
               />
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="orgName">Nome da organização</Label>
-              <Input id="orgName" type="text" placeholder="Acme Advocacia" value={orgName}
-                onChange={(e) => setOrgName(e.target.value)} autoComplete="organization"
-                className={fieldErrors.orgName ? "border-destructive/70" : ""}
-              />
-              {fieldErrors.orgName && <p className="text-[11px] text-destructive">{fieldErrors.orgName}</p>}
-            </div>
+            {!hideOrgFields && (
+              <div className="space-y-1">
+                <Label htmlFor="orgName">Nome da organização</Label>
+                <Input id="orgName" type="text" placeholder="Acme Advocacia" value={orgName}
+                  onChange={(e) => setOrgName(e.target.value)} autoComplete="organization"
+                  className={fieldErrors.orgName ? "border-destructive/70" : ""}
+                />
+                {fieldErrors.orgName && <p className="text-[11px] text-destructive">{fieldErrors.orgName}</p>}
+              </div>
+            )}
             <div className="space-y-1">
               <Label htmlFor="phone">WhatsApp / Celular</Label>
               <div className="flex gap-2">
@@ -142,21 +148,23 @@ export function LoginSignupForm({
               </div>
               {fieldErrors.phone && <p className="text-[11px] text-destructive">{fieldErrors.phone}</p>}
             </div>
-            <div className="space-y-1">
-              <Label htmlFor="cnpj">CPF ou CNPJ</Label>
-              <Input id="cnpj" type="text" placeholder="000.000.000-00 ou 00.000.000/0000-00" value={cnpj}
-                onChange={(e) => setCnpj(formatDocument(e.target.value))} autoComplete="off" maxLength={18}
-                className={fieldErrors.cnpj ? "border-destructive/70" : ""}
-              />
-              {fieldErrors.cnpj && <p className="text-[11px] text-destructive">{fieldErrors.cnpj}</p>}
-            </div>
+            {!hideOrgFields && (
+              <div className="space-y-1">
+                <Label htmlFor="cnpj">CPF ou CNPJ</Label>
+                <Input id="cnpj" type="text" placeholder="000.000.000-00 ou 00.000.000/0000-00" value={cnpj}
+                  onChange={(e) => setCnpj(formatDocument(e.target.value))} autoComplete="off" maxLength={18}
+                  className={fieldErrors.cnpj ? "border-destructive/70" : ""}
+                />
+                {fieldErrors.cnpj && <p className="text-[11px] text-destructive">{fieldErrors.cnpj}</p>}
+              </div>
+            )}
           </>
         )}
 
         <div className="space-y-1">
           <Label htmlFor="email">Email</Label>
           <Input id="email" type="email" placeholder="voce@empresa.com" value={email}
-            onChange={(e) => setEmail(e.target.value)} autoComplete="email"
+            onChange={(e) => setEmail(e.target.value)} autoComplete="email" disabled={emailLocked}
             className={fieldErrors.email ? "border-destructive/70" : ""}
           />
           {fieldErrors.email && <p className="text-[11px] text-destructive">{fieldErrors.email}</p>}
@@ -218,43 +226,49 @@ export function LoginSignupForm({
         </Button>
       </form>
 
-      <div className="relative my-6">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-border" />
-        </div>
-        <div className="relative flex justify-center text-xs">
-          <span className="bg-card px-2 text-muted-foreground">ou</span>
-        </div>
-      </div>
+      {!hideOrgFields && (
+        <>
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-card px-2 text-muted-foreground">ou</span>
+            </div>
+          </div>
 
-      <Button
-        type="button"
-        variant="outline"
-        className="w-full"
-        onClick={onGoogleClick}
-        disabled={loading || (mode === "signup" && !acceptedTerms)}
-      >
-        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
-        Continuar com Google
-      </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full"
+            onClick={onGoogleClick}
+            disabled={loading || (mode === "signup" && !acceptedTerms)}
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <GoogleIcon />}
+            Continuar com Google
+          </Button>
+        </>
+      )}
 
-      <p className="text-center text-sm text-muted-foreground mt-6">
-        {mode === "login" ? (
-          <>
-            Não tem conta?{" "}
-            <button type="button" onClick={onToggleMode} className="text-primary font-medium hover:underline">
-              Criar conta
-            </button>
-          </>
-        ) : (
-          <>
-            Já tem conta?{" "}
-            <button type="button" onClick={onToggleMode} className="text-primary font-medium hover:underline">
-              Entrar
-            </button>
-          </>
-        )}
-      </p>
+      {!hideOrgFields && (
+        <p className="text-center text-sm text-muted-foreground mt-6">
+          {mode === "login" ? (
+            <>
+              Não tem conta?{" "}
+              <button type="button" onClick={onToggleMode} className="text-primary font-medium hover:underline">
+                Criar conta
+              </button>
+            </>
+          ) : (
+            <>
+              Já tem conta?{" "}
+              <button type="button" onClick={onToggleMode} className="text-primary font-medium hover:underline">
+                Entrar
+              </button>
+            </>
+          )}
+        </p>
+      )}
     </>
   );
 }

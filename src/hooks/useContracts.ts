@@ -1,13 +1,17 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { FREEMIUM_MONTHLY_ANALYSIS_LIMIT, STARTER_MONTHLY_ANALYSIS_LIMIT } from "@/lib/pricing";
+import { FREEMIUM_MONTHLY_ANALYSIS_LIMIT, STARTER_MONTHLY_ANALYSIS_LIMIT, PAID_PLANS } from "@/lib/pricing";
 
 // Mirrors PLAN_MONTHLY_LIMIT / FREEMIUM_MONTHLY_LIMIT in supabase/functions/parse-contract/index.ts
 const PLAN_MONTHLY_LIMIT: Record<string, number | null> = {
   starter: STARTER_MONTHLY_ANALYSIS_LIMIT,
   pro: null,
   enterprise: null,
+  individual: PAID_PLANS.individual.monthlyAnalysisLimit,
+  escritorio: PAID_PLANS.escritorio.monthlyAnalysisLimit,
+  juridico: PAID_PLANS.juridico.monthlyAnalysisLimit,
+  corporativo: PAID_PLANS.corporativo.monthlyAnalysisLimit,
 };
 const FREEMIUM_MONTHLY_LIMIT = FREEMIUM_MONTHLY_ANALYSIS_LIMIT;
 
@@ -104,13 +108,31 @@ export async function renameContract(id: string, name: string): Promise<void> {
   if (error) throw error;
 }
 
+export type QuotaExceededInfo = {
+  kind: "freemium" | "paid" | "suspended";
+  limit: number;
+  renewsAt: string | null; // ISO date -- so vale pra "paid" (organizations.plan_renews_at); freemium renova no 1o dia do mes, calculado na UI
+};
+
 export async function uploadContract(
   file: File,
-  onProcessing?: (id: string) => void
+  onProcessing?: (id: string) => void,
+  onQuotaExceeded?: (info: QuotaExceededInfo) => void
 ): Promise<DbContract | null> {
+  const { data: authData } = await supabase.auth.getUser();
+  if (!authData.user) {
+    toast.error("Não foi possível identificar sua organização");
+    return null;
+  }
+
+  // Filtra por id explicitamente -- a policy de RLS (org_id = get_org_id())
+  // sozinha devolve TODAS as linhas da organização do chamador, não só a
+  // dele, e quebra .maybeSingle() assim que a organização tem mais de 1
+  // usuário.
   const { data: userRow, error: userErr } = await supabase
     .from("users")
     .select("org_id")
+    .eq("id", authData.user.id)
     .maybeSingle();
 
   if (userErr || !userRow?.org_id) {
@@ -126,12 +148,13 @@ export async function uploadContract(
   // the backend still enforces it independently of this client-side check).
   const { data: org } = await supabase
     .from("organizations")
-    .select("plan_id, plan_status")
+    .select("plan_id, plan_status, plan_renews_at")
     .eq("id", orgId)
     .single();
 
+  const isSuspended = org?.plan_status === "suspended";
   const isFreemium = org?.plan_status === "trial";
-  const planLimit = isFreemium ? FREEMIUM_MONTHLY_LIMIT : PLAN_MONTHLY_LIMIT[org?.plan_id ?? "starter"] ?? null;
+  const planLimit = (isFreemium || isSuspended) ? FREEMIUM_MONTHLY_LIMIT : PLAN_MONTHLY_LIMIT[org?.plan_id ?? "starter"] ?? null;
   if (planLimit !== null) {
     const startOfMonth = new Date();
     startOfMonth.setUTCDate(1);
@@ -144,11 +167,21 @@ export async function uploadContract(
       .gte("created_at", startOfMonth.toISOString());
 
     if ((contractsThisMonth ?? 0) >= planLimit) {
-      toast.error(
-        isFreemium
-          ? `Limite de ${planLimit} análise gratuita por mês atingido. Faça upgrade para o plano Starter para mais análises.`
-          : `Limite de ${planLimit} contratos/mês do plano atingido. Entre em contato com nosso time para aumentar seu limite.`
-      );
+      if (onQuotaExceeded) {
+        onQuotaExceeded({
+          kind: isSuspended ? "suspended" : isFreemium ? "freemium" : "paid",
+          limit: planLimit,
+          renewsAt: isFreemium ? null : (org?.plan_renews_at ?? null),
+        });
+      } else {
+        toast.error(
+          isSuspended
+            ? "Sua assinatura foi suspensa por falta de pagamento. Renove em Configurações > Plano para voltar a analisar normalmente."
+            : isFreemium
+              ? `Limite de ${planLimit} análise gratuita por mês atingido. Faça upgrade para continuar analisando mais contratos.`
+              : `Limite de ${planLimit} contratos/mês do plano atingido. Entre em contato com nosso time para aumentar seu limite.`
+        );
+      }
       return null;
     }
   }

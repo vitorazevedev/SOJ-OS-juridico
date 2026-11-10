@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
-import { useContracts, uploadContract, deleteContract, type DbContract } from "@/hooks/useContracts";
+import { useContracts, uploadContract, deleteContract, type DbContract, type QuotaExceededInfo } from "@/hooks/useContracts";
+import { UpgradeLimitModal } from "@/components/contracts/UpgradeLimitModal";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { Upload, Search, SlidersHorizontal, Plus, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ export default function Contracts() {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [uploading, setUploading] = useState(false);
   const [renaming, setRenaming] = useState<DbContract | null>(null);
+  const [quotaInfo, setQuotaInfo] = useState<QuotaExceededInfo | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // counts per status
@@ -100,8 +102,10 @@ export default function Contracts() {
         if (file.size > maxBytesFor(file)) { toast.error(`${file.name}: arquivo maior que ${maxLabelFor(file)}`); continue; }
         const validMagic = await validateMagicBytes(file);
         if (!validMagic) { toast.error(`${file.name}: tipo de arquivo inválido ou não suportado`); continue; }
-        const inserted = await uploadContract(file, markProcessing);
+        let quotaHit = false;
+        const inserted = await uploadContract(file, markProcessing, (info) => { setQuotaInfo(info); quotaHit = true; });
         if (inserted) refetch();
+        if (quotaHit) break; // os próximos arquivos do lote bateriam no mesmo limite -- não insiste
       }
     } finally {
       setUploading(false);
@@ -128,6 +132,10 @@ export default function Contracts() {
 
       {renaming && (
         <RenameDialog contract={renaming} onClose={() => setRenaming(null)} onRenamed={refetch} />
+      )}
+
+      {quotaInfo && (
+        <UpgradeLimitModal info={quotaInfo} onClose={() => setQuotaInfo(null)} />
       )}
 
       {/* Header */}
