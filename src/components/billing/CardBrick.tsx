@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { initMercadoPago, CardPayment } from "@mercadopago/sdk-react";
 import { env } from "@/config/env";
 
@@ -40,6 +40,24 @@ export function CardBrick({ onToken, amount, payerEmail }: CardBrickProps) {
   );
   const customization = useMemo(() => ({ paymentMethods: { maxInstallments: 1 } }), []);
 
+  // onSubmit/onError tambem precisam de referencia estavel -- funcao
+  // inline nova a cada render tinha o mesmo efeito do objeto novo acima:
+  // qualquer digitacao em OUTRO campo da pagina (fora do Brick) derrubava
+  // e limpava o card. onTokenRef garante que a versao mais nova de
+  // onToken seja usada mesmo com a funcao memoizada uma vez so.
+  const handleSubmit = useCallback((formData: unknown) => {
+    const token = (formData as { token?: string } | undefined)?.token;
+    if (token) onTokenRef.current(token);
+    // Nunca enviamos isto pra nenhum endpoint -- o Brick ja fez a
+    // tokenizacao sozinho. Devolver uma Promise resolvida so evita o
+    // Brick mostrar um erro de envio que nao existe.
+    return Promise.resolve();
+  }, []);
+
+  const handleError = useCallback((error: unknown) => {
+    console.error("CardBrick: erro no Payment Brick do Mercado Pago:", error);
+  }, []);
+
   if (!env.mpPublicKey) {
     return (
       <p className="text-xs text-destructive rounded-lg border border-destructive/30 p-3">
@@ -53,17 +71,8 @@ export function CardBrick({ onToken, amount, payerEmail }: CardBrickProps) {
       <CardPayment
         initialization={initialization}
         customization={customization}
-        onSubmit={(formData) => {
-          const token = (formData as { token?: string } | undefined)?.token;
-          if (token) onTokenRef.current(token);
-          // Nunca enviamos isto pra nenhum endpoint -- o Brick ja fez a
-          // cobranca/tokenizacao sozinho. Devolver uma Promise resolvida
-          // so evita o Brick mostrar um erro de envio que nao existe.
-          return Promise.resolve();
-        }}
-        onError={(error) => {
-          console.error("CardBrick: erro no Payment Brick do Mercado Pago:", error);
-        }}
+        onSubmit={handleSubmit}
+        onError={handleError}
       />
     </div>
   );

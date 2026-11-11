@@ -125,10 +125,15 @@ type MpPayment = {
   money_release_date?: string
   date_approved?: string
   external_reference?: string
-  // subscription_authorized_payment traz o preapproval vinculado aqui.
+  // Confirmado ao vivo (GET /v1/payments/{id} de um pagamento real de
+  // assinatura): NAO existe `preapproval_id` no nivel raiz do pagamento --
+  // o vinculo com a assinatura vem aninhado em
+  // point_of_interaction.transaction_data.subscription_id.
   preapproval_id?: string
   card?: { first_six_digits?: string; last_four_digits?: string; expiration_month?: number; expiration_year?: number }
-  point_of_interaction?: { transaction_data?: { qr_code?: string; qr_code_base64?: string; ticket_url?: string } }
+  point_of_interaction?: {
+    transaction_data?: { qr_code?: string; qr_code_base64?: string; ticket_url?: string; subscription_id?: string }
+  }
   date_of_expiration?: string
 }
 
@@ -145,7 +150,7 @@ function mapMpPayment(p: MpPayment): ProviderPayment {
     moneyReleaseDate: p.money_release_date ? new Date(p.money_release_date) : undefined,
     approvedAt: p.date_approved ? new Date(p.date_approved) : undefined,
     externalReference: p.external_reference,
-    providerSubscriptionId: p.preapproval_id,
+    providerSubscriptionId: p.preapproval_id ?? p.point_of_interaction?.transaction_data?.subscription_id,
     card: p.card
       ? {
           brand: '', // MP nao devolve bandeira no objeto de pagamento, so os digitos
