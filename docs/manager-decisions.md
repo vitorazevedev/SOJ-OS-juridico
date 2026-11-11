@@ -18,7 +18,13 @@
 | `fiscal_invoices` (tabela) | **Já existe com esse nome exato**, criada na Fase 5c do `PAGAMENTOS_SPEC.md` (fila automática de NFS-e) | Nome igual, já é a mesma coisa. |
 | `invoices` (não está na spec do manager, mas é citado em "Notas fiscais") | Tabela `invoices` já existente (upload manual de nota feito por humano da equipe, via `staff_create_invoice`) | Coexiste com `fiscal_invoices`. A aba "Notas fiscais" do app do cliente já mistura as duas origens — o manager precisa fazer o mesmo, não só ler uma das duas. |
 | `manager-access`, `manager-pii`, `manager-billing`, `manager-ops`, `manager-support`, `manager-team`, `manager-export` (Edge Functions) | Nenhuma com esse nome. Equivalentes parciais espalhados: `admin-create-user`, `admin-create-staff-member`, `admin-send-invoice-email`, `admin-resend-onboarding-email`, `billing-dev-simulator`, mais as funções SQL `staff_*`/`get_admin_*`/`list_admin_*`/`list_ponderum_staff` (fazem o trabalho de `manager-access`/`manager-pii`/`manager-billing`/`manager-team` hoje, como função de banco em vez de Edge Function) | — |
-| `app.ponderum.com` (domínio do app do cliente, citado na spec) | Domínio real ainda não confirmado pelo Vitor (decisão em aberto nº 1 da seção 10 da spec) | Usado nesta sessão como referência: `app.ponderum.com`. Confirmar antes de configurar CORS/redirects do manager. |
+| `app.ponderum.com` (domínio do app do cliente, citado na spec) | **Confirmado em 2026-11-11** (ver seção de decisões abaixo) — `app.ponderum.com` = cliente, `manager.ponderum.com` = equipe Ponderum | — |
+
+## Decisões confirmadas (2026-11-11) — arquitetura da Fase 1
+
+1. **Modelo de staff:** criar tabela `staff_members` real (com `staff_role` enum), migrando as 5 colunas booleanas hoje em `users` (`is_ponderum_staff`, `can_view_dev`, `can_view_ponderum_team`, `full_platform_access`, `staff_job_title`). Resolve a causa raiz da duplicação de checagem apontada no achado da seção 0 do gap report.
+2. **Estrutura de código:** monorepo — um repositório Git só, com `apps/client` e `apps/manager` como projetos separados (builds/deploys independentes no Vercel), não um segundo repositório.
+3. **Domínios:** `app.ponderum.com` continua sendo o app do cliente; `manager.ponderum.com` é o novo subdomínio exclusivo da equipe Ponderum.
 
 ## Achado fora do mapeamento: `get_admin_dashboard()` com checagem errada
 
