@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { CardBrick } from "@/components/billing/CardBrick";
 import { getEdgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
 import { useOrganization } from "@/hooks/useOrganization";
+import { PIX_ENABLED } from "@/lib/pricing";
 
 // Modulo de Pagamentos, Fase 4b -- sair do past_due (spec Peça 6): atualizar
 // cartão ou pagar a fatura atual com Pix na hora.
@@ -79,16 +80,20 @@ export function UpdateCardModal({ open, onOpenChange, onUpdated }: UpdateCardMod
         <DialogHeader>
           <DialogTitle>Atualizar forma de pagamento</DialogTitle>
           <DialogDescription>
-            Atualize seu cartão para tentarmos cobrar novamente, ou pague a fatura atual agora com Pix.
+            {PIX_ENABLED
+              ? "Atualize seu cartão para tentarmos cobrar novamente, ou pague a fatura atual agora com Pix."
+              : "Atualize seu cartão para tentarmos cobrar novamente."}
           </DialogDescription>
         </DialogHeader>
 
         {amountReais != null && <CardBrick onToken={setCardToken} amount={amountReais} payerEmail={payerEmail} />}
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={() => retry("pix")} disabled={submitting} className="w-full sm:w-auto">
-            <QrCode className="h-3.5 w-3.5" /> Pagar com Pix agora
-          </Button>
+          {PIX_ENABLED && (
+            <Button variant="outline" onClick={() => retry("pix")} disabled={submitting} className="w-full sm:w-auto">
+              <QrCode className="h-3.5 w-3.5" /> Pagar com Pix agora
+            </Button>
+          )}
           <Button onClick={() => retry("card")} disabled={submitting || !cardToken} className="w-full sm:w-auto">
             {submitting && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
             Atualizar cartão

@@ -17,6 +17,12 @@ export const STARTER_MAX_USERS = 3;
 export const SUBSCRIPTION_RENEWAL_CYCLE_DAYS = 30;
 export const SUBSCRIPTION_RENEWAL_WARNING_DAYS = 7;
 
+// Pix avulso via Mercado Pago real fica indisponível temporariamente --
+// /v1/payments recusa a aplicação de teste usada em sandbox (ver
+// docs/billing-decisions.md, pendência 2026-11-11). Esconde a opção em
+// Checkout.tsx e UpdateCardModal.tsx; só volta a mostrar quando resolvido.
+export const PIX_ENABLED = false;
+
 // Planos pagos via Mercado Pago (Story 1.2). Valores de LANÇAMENTO vindos
 // de peças de campanha dos sócios (2026-10-13), AINDA NÃO CONFIRMADOS como
 // definitivos. Mirrors supabase/functions/_shared/mercadopago-plans.ts

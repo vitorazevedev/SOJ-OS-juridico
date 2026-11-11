@@ -6,16 +6,18 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, CreditCard, QrCode, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Loader2, CreditCard, QrCode, CheckCircle2, XCircle, Clock, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { CardBrick } from "@/components/billing/CardBrick";
 import { isValidDocument, formatCPF, formatCNPJ, onlyDigits, lookupCep } from "@/lib/documentValidation";
 import { fmtBRL } from "@/lib/adminDashboard";
 import { getEdgeFunctionErrorMessage } from "@/lib/edgeFunctionError";
+import { PIX_ENABLED } from "@/lib/pricing";
 
 type BillingPlan = { code: string; name: string; price_cents: number };
 type SubscriptionStatus = "incomplete" | "trialing" | "active" | "past_due" | "paused" | "canceled" | "expired";
+
 
 export default function Checkout() {
   const [searchParams] = useSearchParams();
@@ -215,6 +217,11 @@ export default function Checkout() {
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-8 max-w-2xl mx-auto">
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="sm" onClick={() => navigate("/settings?tab=plan")} className="gap-1.5 -ml-2">
+          <ArrowLeft className="h-3.5 w-3.5" /> Voltar para planos
+        </Button>
+      </div>
       <div>
         <h1 className="text-lg md:text-2xl font-semibold tracking-tight">Finalizar assinatura</h1>
         <p className="text-sm text-muted-foreground mt-1">
@@ -293,24 +300,26 @@ export default function Checkout() {
       <SojCard className="flex flex-col gap-4 p-5">
         <h3 className="text-sm font-medium">Forma de pagamento</h3>
 
-        <div className="flex gap-2">
-          <button
-            onClick={() => setPaymentMethod("card")}
-            className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-lg border text-sm transition-colors ${
-              paymentMethod === "card" ? "border-primary text-primary bg-primary-dim" : "border-border text-muted-foreground"
-            }`}
-          >
-            <CreditCard className="h-4 w-4" /> Cartão
-          </button>
-          <button
-            onClick={() => setPaymentMethod("pix")}
-            className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-lg border text-sm transition-colors ${
-              paymentMethod === "pix" ? "border-primary text-primary bg-primary-dim" : "border-border text-muted-foreground"
-            }`}
-          >
-            <QrCode className="h-4 w-4" /> Pix
-          </button>
-        </div>
+        {PIX_ENABLED && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => setPaymentMethod("card")}
+              className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-lg border text-sm transition-colors ${
+                paymentMethod === "card" ? "border-primary text-primary bg-primary-dim" : "border-border text-muted-foreground"
+              }`}
+            >
+              <CreditCard className="h-4 w-4" /> Cartão
+            </button>
+            <button
+              onClick={() => setPaymentMethod("pix")}
+              className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-lg border text-sm transition-colors ${
+                paymentMethod === "pix" ? "border-primary text-primary bg-primary-dim" : "border-border text-muted-foreground"
+              }`}
+            >
+              <QrCode className="h-4 w-4" /> Pix
+            </button>
+          </div>
+        )}
 
         {paymentMethod === "card" && plan && <CardBrick onToken={setCardToken} amount={plan.price_cents / 100} payerEmail={email} />}
       </SojCard>
