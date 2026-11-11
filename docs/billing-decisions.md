@@ -46,3 +46,11 @@ Dado o risco real de migrar dado de produção, a implementação da Fase 1 vai 
 ## Achado fora do mapeamento: `organizations.stripe_customer_id`
 
 Coluna existente no banco de produção, sem migration correspondente no repositório e sem nenhuma referência em código (app ou Edge Functions). Não mapeia pra nada na spec atual (gateway decidido é Mercado Pago, não Stripe). Registrado aqui só para rastreabilidade — nenhuma ação tomada.
+
+## Pendência (2026-11-11): Pix avulso via `/v1/payments` recusado pelo Mercado Pago (`Unauthorized use of live credentials`)
+
+Testado ao vivo contra a conta de teste real (Fase 6): o fluxo de **assinatura por cartão** funciona ponta a ponta (`createSubscription` via `/preapproval` → cobrança aprovada → webhook assinado processa certo → `subscriptions.status='active'`). O fluxo de **Pix avulso** (`createPixPayment`, que chama `/v1/payments` diretamente) é recusado pelo Mercado Pago com `401 {"error":"unauthorized","message":"Unauthorized use of live credentials","cause":[{"code":7}]}`, reproduzido também via `curl` direto contra a API (não é um bug do nosso código — confirmado isolando a chamada).
+
+Causa provável (não 100% confirmada pela documentação oficial, mas consistente com o padrão observado): o Mercado Pago está restringindo/descontinuando a API legada de pagamento avulso (`/v1/payments`) em favor da "Orders API" nova, e aplicações de teste recentes (como a nossa) não têm mais a permissão de "Payments" habilitada por padrão nessa API legada — diferente do endpoint de assinaturas (`/preapproval`), que continuou funcionando porque usa o motor de cobrança recorrente interno do MP, não essa chamada direta.
+
+**Decisão (Vitor, 2026-11-11):** pausar o teste do Pix por agora. O cartão (fluxo principal de receita) já está validado ponta a ponta. Retomar quando houver tempo pra decidir entre: (a) investigar no painel do MP se dá pra habilitar "Payments" nessa aplicação sem trocar de API, ou (b) migrar `MercadoPagoProvider.createPixPayment`/`getPayment` pra "Orders API" do Mercado Pago (mudança de API mais ampla, não um ajuste pontual).
