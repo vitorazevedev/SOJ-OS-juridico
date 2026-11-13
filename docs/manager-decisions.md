@@ -33,3 +33,19 @@ Função existente, não mapeia pra nenhum nome da spec (é a função por trás
 ## Achado fora do mapeamento: possível exposição de conteúdo de contrato
 
 Tabelas `analysis_shadow_context` e `clause_gating_shadow` (calibração interna do pipeline de IA) têm colunas de texto livre (`evidence`, `qualitative_alert`) que podem conter trecho do contrato do cliente, liberadas pra leitura de qualquer `is_ponderum_staff = true` sem checagem adicional. Precisa confirmação de conteúdo antes da Fase 1. Detalhe em `docs/manager-gap-report.md`, seção 2.
+
+## Fase 1 — Fundação de acesso: concluída e validada em produção (2026-11-13)
+
+Executada em 3 etapas independentes, cada uma testada antes da próxima:
+
+**Etapa A (fundação de dados):** `staff_members` + `staff_role` enum + `staff_audit_log` + `is_staff()`/`has_staff_role()`/`log_staff_action()` substituindo as 5 colunas booleanas em `users`. Migradas **17 funções SQL + 4 policies RLS** (o levantamento real, maior que os 12 estimados no gap report) que liam essas colunas direto. As 5 colunas antigas em `users` continuam existindo (não lidas por nada — remoção fica pra Fase 5). Validado ao vivo: cadastro de staff gravando em `staff_members`, auditoria gravando em `staff_audit_log` em ações de bloqueio/desbloqueio de organização.
+
+**Etapa B (monorepo):** root virou workspace npm (`apps/*`, `packages/*`). `apps/client` é o app atual movido (histórico git preservado), `apps/manager` é novo e mínimo (login + `StaffRoute` + placeholder), `packages/ui` (`@ponderum/ui`) compartilha `Button`/`Input`/`Label`/`SojCard`/`cn()` entre os dois — os caminhos antigos em `apps/client` viraram reexports finos, sem tocar nenhum dos ~176 arquivos consumidores. `npm install` precisou de `--legacy-peer-deps` (bug conhecido do arborist do npm 10.9 com múltiplos workspaces — não é specífico deste projeto).
+
+**Etapa C (deploy):** projeto Vercel existente (`ponderum` → `app.ponderum.com`) com Root Directory trocado pra `apps/client`; projeto novo (`ponderum-manager` → `manager.ponderum.com`) com Root Directory `apps/manager`; DNS CNAME via Squarespace; redirect URL liberado no Supabase Auth.
+
+**Dois bugs reais encontrados e corrigidos no caminho:**
+1. O Tailwind de cada app só escaneava o próprio `src/` — as classes usadas pelos componentes de `packages/ui` nunca eram geradas, deixando inputs/botões sem nenhum estilo visível. Corrigido incluindo `../../packages/ui/src/**/*.{ts,tsx}` no `content` dos dois `tailwind.config.ts`.
+2. A env var `VITE_SUPABASE_URL` no projeto `ponderum-manager` da Vercel foi salva com um caractere faltando (`...supabase.c` em vez de `...supabase.co`), bloqueado silenciosamente pelo CSP (`connect-src`) — o app mostrava "Email ou senha incorretos" genérico porque o erro de rede vira `AuthError` no supabase-js, mascarando a causa real. Diagnosticado comparando os logs de auth do Supabase (nenhuma tentativa chegando) com o console do navegador (`Refused to connect`).
+
+Testado ao vivo em produção: login real em `manager.ponderum.com`, gate de `StaffRoute` funcionando, `app.ponderum.com` seguindo intacto depois da troca de Root Directory.
