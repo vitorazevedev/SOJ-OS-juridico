@@ -41,6 +41,44 @@ async function sendChargebackAlertEmail(orgName: string, amountCents: number, re
   }
 }
 
+// E-mail de alerta pro time quando o processamento de um webhook falha.
+// Sem job de retentativa pra webhook_events.status='failed' -- o Mercado
+// Pago ja recebeu 200 na entrega (billing-webhook responde antes de
+// processar, via EdgeRuntime.waitUntil), entao ele nunca reenvia por
+// conta propria. Sem este alerta, uma falha fica invisivel pra sempre.
+// HTML inline (nao um template nomeado do Resend) pra nao depender de um
+// template desenhado manualmente no painel do Resend antes de funcionar
+// -- mesmo padrao alternativo que send-obligation-alerts/index.ts ja usa.
+async function sendWebhookFailedAlertEmail(provider: string, resourceType: string, resourceId: string, errorMessage: string, attempts: number): Promise<void> {
+  const resendKey = Deno.env.get('RESEND_API_KEY')
+  if (!resendKey) return
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        from: 'Ponderum <contato@ponderum.com>',
+        to: ['contato@ponderum.com'],
+        subject: '⚠️ Webhook de pagamento falhou — Ponderum',
+        html: `
+          <p>O processamento de um webhook de pagamento falhou e não foi reprocessado automaticamente.</p>
+          <ul>
+            <li><strong>Provedor:</strong> ${provider}</li>
+            <li><strong>Tipo de recurso:</strong> ${resourceType}</li>
+            <li><strong>ID do recurso:</strong> ${resourceId}</li>
+            <li><strong>Tentativas:</strong> ${attempts}</li>
+            <li><strong>Erro:</strong> ${errorMessage}</li>
+          </ul>
+          <p>Verifique a tabela <code>webhook_events</code> (status 'failed') pra reprocessar manualmente se necessário.</p>
+        `,
+      }),
+      signal: AbortSignal.timeout(8000),
+    })
+  } catch (err) {
+    console.error('processWebhookEvent: falha ao enviar alerta de webhook failed:', err)
+  }
+}
+
 // deno-lint-ignore no-explicit-any
 type SupabaseClient = any // tipagem completa do supabase-js nao exportada aqui -- ver uso em outras Edge Functions do projeto
 
@@ -379,6 +417,7 @@ export async function processWebhookEvent(
     await client.from('webhook_events').update({ status: 'processed', processed_at: new Date().toISOString() }).eq('id', row.id)
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
+    await sendWebhookFailedAlertEmail(provider.name, row.resource_type, row.resource_id, message, row.attempts + 1)
     await client.from('webhook_events').update({
       status: 'failed',
       attempts: row.attempts + 1,
