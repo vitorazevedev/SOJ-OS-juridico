@@ -8,7 +8,7 @@ type Role = "dev" | "equipe" | "financeiro";
 // está nas RPCs/policies (já checam has_staff_role() no banco); isto é só
 // a camada de apresentação.
 export default function RequireRole({ role, children }: { role: Role; children: ReactNode }) {
-  const { roles, fullPlatformAccess, loading } = useStaffRoles();
+  const { roles, loading } = useStaffRoles();
 
   if (loading) {
     return (
@@ -18,7 +18,7 @@ export default function RequireRole({ role, children }: { role: Role; children: 
     );
   }
 
-  if (!roles.includes(role) && !fullPlatformAccess) {
+  if (!roles.includes(role)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="max-w-sm text-center">

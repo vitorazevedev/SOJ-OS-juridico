@@ -39,14 +39,19 @@ export function useStaffRoles(): StaffRoles {
         .maybeSingle()
         .then(({ data }) => {
           const roles = data?.roles ?? [];
+          // full_platform_access NÃO é bypass de área interna -- significa
+          // "esse staff também acessa o app como cliente comum" (rótulo em
+          // PonderumStaffManagement: "Acesso completo à plataforma (como
+          // cliente)"). O acesso a /dev, /equipe, /financeiro depende só do
+          // papel em `roles`, igual o banco já checa em has_staff_role().
           const fullPlatformAccess = data?.full_platform_access === true;
           setState({
             roles,
             fullPlatformAccess,
             isStaff: !!data,
-            canViewEquipe: roles.includes("equipe") || fullPlatformAccess,
-            canViewDev: roles.includes("dev") || fullPlatformAccess,
-            canViewFinanceiro: roles.includes("financeiro") || fullPlatformAccess,
+            canViewEquipe: roles.includes("equipe"),
+            canViewDev: roles.includes("dev"),
+            canViewFinanceiro: roles.includes("financeiro"),
             loading: false,
           });
         });
