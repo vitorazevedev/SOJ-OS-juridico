@@ -24,7 +24,6 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { useOrganization } from "@/hooks/useOrganization";
 import { usePonderumPermissions } from "@/hooks/usePonderumPermissions";
-import { Wallet } from "lucide-react";
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -56,7 +55,7 @@ export function AppSidebar() {
   const isActive = (url: string) => (url === "/" ? pathname === "/" : pathname.startsWith(url));
   const { user, signOut } = useAuth();
   const { org, loading: orgLoading } = useOrganization();
-  const { isStaff, canViewDev, fullPlatformAccess, loading: permsLoading } = usePonderumPermissions();
+  const { isStaff, fullPlatformAccess, loading: permsLoading } = usePonderumPermissions();
   // Cliente normal (nunca e staff) sempre ve o menu regular. Membro da
   // equipe Ponderum so ve o menu regular (Dashboard/Contratos/...) se
   // tiver full_platform_access -- senao, so os menus internos que tiver.
@@ -120,24 +119,6 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              {canViewDev && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/financeiro")} tooltip="Financeiro">
-                    <NavLink
-                      to="/financeiro"
-                      className={cn(
-                        "flex items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors",
-                        isActive("/financeiro")
-                          ? "bg-primary-dim text-primary font-medium"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                      )}
-                    >
-                      <Wallet className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span>Financeiro</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

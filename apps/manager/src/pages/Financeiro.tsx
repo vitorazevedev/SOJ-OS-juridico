@@ -1,17 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { usePonderumPermissions } from "@/hooks/usePonderumPermissions";
-import { SojCard } from "@/components/layout/Primitives";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
-import { ChargebacksCard } from "@/components/admin/ChargebacksCard";
+import { SojCard, Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@ponderum/ui";
+import { ChargebacksCard } from "@/components/dev/ChargebacksCard";
 import {
   Loader2, TrendingUp, Percent, Wallet, Clock, CheckCircle2, Users, AlertTriangle, UserMinus, Download,
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import { supabase } from "@/lib/supabase";
 import { fmtBRL } from "@/lib/adminDashboard";
-import { downloadBlob } from "@/lib/contractDocs";
+import { downloadBlob } from "@/lib/downloadBlob";
 
 // Modulo de Pagamentos, Fase 5b -- painel financeiro (spec Peça 9).
 // Números vêm de get_admin_finance_summary()/list_admin_payments() —
@@ -45,17 +41,14 @@ type AdminPayment = {
   created_at: string;
 };
 
-export default function AdminFinance() {
-  const navigate = useNavigate();
-  const { canViewDev, loading: permsLoading } = usePonderumPermissions();
+export default function Financeiro() {
   const [summary, setSummary] = useState<FinanceSummary | null>(null);
   const [payments, setPayments] = useState<AdminPayment[] | null>(null);
 
   useEffect(() => {
-    if (!canViewDev) return;
     supabase.rpc("get_admin_finance_summary").then(({ data }) => setSummary(data as FinanceSummary | null));
     supabase.rpc("list_admin_payments", { p_limit: 200 }).then(({ data }) => setPayments((data as AdminPayment[]) ?? []));
-  }, [canViewDev]);
+  }, []);
 
   const toReleaseByDate = useMemo(() => {
     if (!payments) return [];
@@ -141,22 +134,6 @@ ${rows.map(row).join("\n")}
     downloadBlob(new Blob([pdf.output("arraybuffer")], { type: "application/pdf" }), exportFilename("pdf"));
   };
 
-  if (permsLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!canViewDev) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <p className="text-sm text-muted-foreground">Acesso restrito.</p>
-        <button onClick={() => navigate("/")} className="text-xs text-primary underline">Voltar</button>
-      </div>
-    );
-  }
 
   const cards = summary ? [
     { label: "Vendido (mês)", value: fmtBRL(summary.sold_cents_month / 100), icon: TrendingUp },

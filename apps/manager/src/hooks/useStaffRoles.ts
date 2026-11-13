@@ -7,6 +7,7 @@ export type StaffRoles = {
   isStaff: boolean;
   canViewEquipe: boolean;
   canViewDev: boolean;
+  canViewFinanceiro: boolean;
   loading: boolean;
 };
 
@@ -16,6 +17,7 @@ const EMPTY: StaffRoles = {
   isStaff: false,
   canViewEquipe: false,
   canViewDev: false,
+  canViewFinanceiro: false,
   loading: true,
 };
 
@@ -44,6 +46,7 @@ export function useStaffRoles(): StaffRoles {
             isStaff: !!data,
             canViewEquipe: roles.includes("equipe") || fullPlatformAccess,
             canViewDev: roles.includes("dev") || fullPlatformAccess,
+            canViewFinanceiro: roles.includes("financeiro") || fullPlatformAccess,
             loading: false,
           });
         });

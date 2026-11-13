@@ -25,7 +25,6 @@ const NotFound = lazy(() => import("@/pages/NotFound"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const Checkout = lazy(() => import("@/pages/Checkout"));
 const PixPayment = lazy(() => import("@/pages/PixPayment"));
-const AdminFinance = lazy(() => import("@/pages/AdminFinance"));
 const MfaEnroll = lazy(() => import("@/pages/MfaEnroll"));
 const MfaChallenge = lazy(() => import("@/pages/MfaChallenge"));
 
@@ -69,7 +68,6 @@ export default function App() {
                   <Route path="/settings" element={<Settings />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/checkout/pix/:paymentId" element={<PixPayment />} />
-                  <Route path="/financeiro" element={<AdminFinance />} />
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

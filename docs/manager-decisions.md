@@ -104,3 +104,21 @@ Terceira etapa da Fase 2: `apps/client/src/pages/Admin.tsx` (rota `/admin`) e os
 **O que saiu do `apps/client`:** rota `/admin` + lazy import; item "Dev" do `AppSidebar.tsx` (o de `/financeiro`, que também usa `canViewDev` hoje, continua intacto — só migra na Fase 2c). **O mecanismo inteiro do `StaffMenuDropdown`/ícone "Acesso interno" em `AppLayout.tsx` foi removido** — depois que Dev saiu, não sobrava nenhum botão dentro dele (Equipe já tinha saído na 2a; Financeiro nunca teve entrada nesse menu mobile). `/admin` agora dá 404.
 
 Testado localmente: `npm run typecheck`/`lint`/`build` limpos nos dois apps; bundle do `apps/client` sem nenhum resquício da página Dev.
+
+## Fase 2c — Migração da área Financeiro pro apps/manager (fecha a Fase 2)
+
+Última etapa da Fase 2: `apps/client/src/pages/AdminFinance.tsx` (rota `/financeiro`) migra pro `apps/manager` (rota `/financeiro`, gated por `has_staff_role('financeiro')` de verdade).
+
+**Mesmo achado das duas etapas anteriores, desta vez com impacto real de acesso:** `get_admin_finance_summary()` e `list_admin_payments()` só checavam `is_staff()`, não `has_staff_role('financeiro')`. Pior: o gate no front era `canViewDev` (herdado de quando a tela nasceu dentro do bloco Dev) — ou seja, **nem o Gabriel (CFO) nem o Fellipe (CEO) conseguiam ver `/financeiro` no client**, porque nenhum dos dois tem papel `dev`, só `equipe`. Migrar pro gate certo (`has_staff_role('financeiro')`, aplicado via `20261113020000_manager_tighten_finance_rpcs.sql`) corrige isso de verdade — os dois já têm o papel `financeiro` atribuído desde a decisão registrada na Fase 2a.
+
+`list_open_chargebacks` segue só `is_staff()` — decisão já tomada na Fase 2b, chargebacks são relevantes pra mais de um papel (Dev e Financeiro usam o mesmo `ChargebacksCard`).
+
+**O que moveu:** `AdminFinance.tsx` → `apps/manager/src/pages/Financeiro.tsx` (gate interno removido). Reaproveita o `ChargebacksCard` já migrado em `apps/manager/src/components/dev/` na Fase 2b (sem triplicar o arquivo). `downloadBlob` foi extraído de `apps/client/src/lib/contractDocs.ts` (arquivo de 688 linhas de geração de contrato) pra um `apps/manager/src/lib/downloadBlob.ts` próprio — só a função de 10 linhas que a tela realmente usa. `jspdf` virou dependência direta do `apps/manager/package.json` (não existia lá ainda).
+
+**Limpeza final:** a cópia de `ChargebacksCard.tsx` que tinha sido restaurada em `apps/client/src/components/admin/` na Fase 2b (só pra não quebrar o `AdminFinance.tsx` enquanto ele ainda vivia lá) foi removida de vez — nada mais no client usa. A pasta `apps/client/src/components/admin/` deixou de existir (ficou vazia depois dos 3 passes da Fase 2).
+
+**O que saiu do `apps/client`:** rota `/financeiro` + lazy import; o item "Financeiro" do `AppSidebar.tsx` — **último** bloco `canViewDev && (...)` que restava lá. `canViewDev` ficou sem nenhum uso de navegação no `AppSidebar.tsx` depois disso (removido da desestruturação; o campo continua existindo em `usePonderumPermissions.ts`, só não é mais lido — mesma decisão já tomada pra `canViewPonderumTeam` na Fase 2a). `/financeiro` agora dá 404.
+
+**Fase 2 completa:** as 3 áreas internas (Equipe, Dev, Financeiro) saíram inteiramente do `apps/client` e vivem só no `apps/manager`, cada uma com seu próprio gate de papel (`equipe`/`dev`/`financeiro`) checado no banco, não só no front — conforme o princípio 2 da spec. Fase 3 (gestão do time `/time`, owner-only, e auditoria `/auditoria`) e as tabelas novas da spec (`leads`, `expenses`, `feature_flags`, `access_overrides`) ficam pra uma etapa futura, fora do escopo desta migração.
+
+Testado localmente: `npm run typecheck`/`lint`/`build` limpos nos dois apps; bundle do `apps/client` sem nenhum resquício da página Financeiro.

@@ -9,6 +9,7 @@ import Login from "@/pages/Login";
 import Home from "@/pages/Home";
 import Equipe from "@/pages/Equipe";
 import Dev from "@/pages/Dev";
+import Financeiro from "@/pages/Financeiro";
 import MfaEnroll from "@/pages/MfaEnroll";
 import MfaChallenge from "@/pages/MfaChallenge";
 
@@ -81,6 +82,20 @@ export default function App() {
                   <RequireRole role="dev">
                     <ManagerLayout>
                       <Dev />
+                    </ManagerLayout>
+                  </RequireRole>
+                </StaffRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/financeiro"
+            element={
+              <ProtectedRoute>
+                <StaffRoute>
+                  <RequireRole role="financeiro">
+                    <ManagerLayout>
+                      <Financeiro />
                     </ManagerLayout>
                   </RequireRole>
                 </StaffRoute>
