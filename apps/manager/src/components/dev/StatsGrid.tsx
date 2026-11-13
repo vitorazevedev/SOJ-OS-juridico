@@ -1,4 +1,4 @@
-import { SojCard } from "@/components/layout/Primitives";
+import { SojCard } from "@ponderum/ui";
 import { Building2, FileText, MessageSquare, ScanSearch, UserPlus } from "lucide-react";
 import { estimatedCostBRL, fmtBRL, type Stats } from "@/lib/adminDashboard";
 

@@ -1,38 +1,31 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { usePonderumPermissions } from "@/hooks/usePonderumPermissions";
-import { SojCard } from "@/components/layout/Primitives";
+import { SojCard } from "@ponderum/ui";
 import { Loader2, AlertTriangle, ExternalLink } from "lucide-react";
-import { env } from "@/config/env";
-import { StatsGrid } from "@/components/admin/StatsGrid";
-import { AnalysesChart } from "@/components/admin/AnalysesChart";
-import { CronHealthCard } from "@/components/admin/CronHealthCard";
-import { WaitlistTable } from "@/components/admin/WaitlistTable";
-import { RecentActivityFeed } from "@/components/admin/RecentActivityFeed";
-import { OrganizationsTable } from "@/components/admin/OrganizationsTable";
-import { FeedbacksList } from "@/components/admin/FeedbacksList";
-import { PonderumStaffManagement } from "@/components/admin/PonderumStaffManagement";
-import { SupportChannelCard } from "@/components/admin/SupportChannelCard";
-import { BillingDevSimulator } from "@/components/admin/BillingDevSimulator";
-import { ChargebacksCard } from "@/components/admin/ChargebacksCard";
+import { StatsGrid } from "@/components/dev/StatsGrid";
+import { AnalysesChart } from "@/components/dev/AnalysesChart";
+import { CronHealthCard } from "@/components/dev/CronHealthCard";
+import { WaitlistTable } from "@/components/dev/WaitlistTable";
+import { OrganizationsTable } from "@/components/dev/OrganizationsTable";
+import { FeedbacksList } from "@/components/dev/FeedbacksList";
+import { PonderumStaffManagement } from "@/components/dev/PonderumStaffManagement";
+import { SupportChannelCard } from "@/components/dev/SupportChannelCard";
+import { BillingDevSimulator } from "@/components/dev/BillingDevSimulator";
+import { ChargebacksCard } from "@/components/dev/ChargebacksCard";
 import type {
   Stats, WaitlistEntry, Feedback, Org, DayCount, CronJob,
 } from "@/lib/adminDashboard";
 
-export default function Admin() {
-  const navigate  = useNavigate();
-  const { canViewDev } = usePonderumPermissions();
-  const [loading, setLoading]   = useState(true);
-  const [stats, setStats]       = useState<Stats | null>(null);
-  const [feedbacks, setFeedbacks]         = useState<Feedback[]>([]);
-  const [orgs, setOrgs]                   = useState<Org[]>([]);
+export default function Dev() {
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<Stats | null>(null);
+  const [feedbacks, setFeedbacks] = useState<Feedback[]>([]);
+  const [orgs, setOrgs] = useState<Org[]>([]);
   const [analysesPerDay, setAnalysesPerDay] = useState<DayCount[]>([]);
-  const [cronHealth, setCronHealth]         = useState<CronJob[]>([]);
-  const [waitlist, setWaitlist]             = useState<WaitlistEntry[]>([]);
+  const [cronHealth, setCronHealth] = useState<CronJob[]>([]);
+  const [waitlist, setWaitlist] = useState<WaitlistEntry[]>([]);
 
   useEffect(() => {
-    if (canViewDev === false) return;
     supabase.rpc("get_admin_dashboard").then(({ data, error }) => {
       if (error || !data) { setLoading(false); return; }
       const d = data as {
@@ -48,14 +41,7 @@ export default function Admin() {
       setCronHealth(d.cron_health ?? []);
       setLoading(false);
     });
-  }, [canViewDev]);
-
-  if (!canViewDev && !loading) return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-      <p className="text-sm text-muted-foreground">Acesso restrito.</p>
-      <button onClick={() => navigate("/")} className="text-xs text-primary underline">Voltar</button>
-    </div>
-  );
+  }, []);
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -92,7 +78,7 @@ export default function Admin() {
           </div>
         </div>
         <a
-          href={env.sentryProjectUrl ?? "https://sentry.io"}
+          href="https://sentry.io"
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-1.5 h-9 px-4 rounded-lg border border-border text-sm hover:bg-muted/40 transition-colors shrink-0"
@@ -102,8 +88,6 @@ export default function Admin() {
       </SojCard>
 
       <WaitlistTable waitlist={waitlist} />
-
-      <RecentActivityFeed />
 
       <SupportChannelCard />
 

@@ -23,7 +23,6 @@ const Generator = lazy(() => import("@/pages/Generator"));
 const Settings = lazy(() => import("@/pages/Settings"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
-const Admin = lazy(() => import("@/pages/Admin"));
 const Checkout = lazy(() => import("@/pages/Checkout"));
 const PixPayment = lazy(() => import("@/pages/PixPayment"));
 const AdminFinance = lazy(() => import("@/pages/AdminFinance"));
@@ -68,7 +67,6 @@ export default function App() {
                   <Route path="/obligations" element={<Obligations />} />
                   <Route path="/generator" element={<Generator />} />
                   <Route path="/settings" element={<Settings />} />
-                  <Route path="/admin" element={<Admin />} />
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/checkout/pix/:paymentId" element={<PixPayment />} />
                   <Route path="/financeiro" element={<AdminFinance />} />

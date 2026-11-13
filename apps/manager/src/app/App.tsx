@@ -8,6 +8,7 @@ import ManagerLayout from "@/components/layout/ManagerLayout";
 import Login from "@/pages/Login";
 import Home from "@/pages/Home";
 import Equipe from "@/pages/Equipe";
+import Dev from "@/pages/Dev";
 import MfaEnroll from "@/pages/MfaEnroll";
 import MfaChallenge from "@/pages/MfaChallenge";
 
@@ -66,6 +67,20 @@ export default function App() {
                   <RequireRole role="equipe">
                     <ManagerLayout>
                       <Equipe />
+                    </ManagerLayout>
+                  </RequireRole>
+                </StaffRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dev"
+            element={
+              <ProtectedRoute>
+                <StaffRoute>
+                  <RequireRole role="dev">
+                    <ManagerLayout>
+                      <Dev />
                     </ManagerLayout>
                   </RequireRole>
                 </StaffRoute>

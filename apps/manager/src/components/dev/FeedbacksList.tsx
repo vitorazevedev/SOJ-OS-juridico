@@ -1,4 +1,4 @@
-import { SojCard } from "@/components/layout/Primitives";
+import { SojCard } from "@ponderum/ui";
 import { MessageSquare, ThumbsDown, ThumbsUp } from "lucide-react";
 import { CAT_LABEL, fmtDate, type Feedback } from "@/lib/adminDashboard";
 

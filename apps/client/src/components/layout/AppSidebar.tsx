@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { useOrganization } from "@/hooks/useOrganization";
 import { usePonderumPermissions } from "@/hooks/usePonderumPermissions";
-import { TerminalSquare, Wallet } from "lucide-react";
+import { Wallet } from "lucide-react";
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
@@ -120,24 +120,6 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-              {canViewDev && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActive("/admin")} tooltip="Dev">
-                    <NavLink
-                      to="/admin"
-                      className={cn(
-                        "flex items-center gap-3 rounded-md px-2 py-2 text-sm transition-colors",
-                        isActive("/admin")
-                          ? "bg-primary-dim text-primary font-medium"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                      )}
-                    >
-                      <TerminalSquare className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span>Dev</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
               {canViewDev && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActive("/financeiro")} tooltip="Financeiro">

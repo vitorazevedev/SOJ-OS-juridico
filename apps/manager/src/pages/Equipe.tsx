@@ -1,6 +1,7 @@
 import { CreateStarterUserForm } from "@/components/equipe/CreateStarterUserForm";
 import { OrganizationsManagementList } from "@/components/equipe/OrganizationsManagementList";
 import { ExecutiveDashboard } from "@/components/equipe/ExecutiveDashboard";
+import { RecentActivityFeed } from "@/components/equipe/RecentActivityFeed";
 
 export default function Equipe() {
   return (
@@ -13,6 +14,7 @@ export default function Equipe() {
       <ExecutiveDashboard />
       <CreateStarterUserForm />
       <OrganizationsManagementList />
+      <RecentActivityFeed />
     </div>
   );
 }

@@ -8,13 +8,12 @@ import { OnboardingHeaderButton } from "./OnboardingHeaderButton";
 import { FeedbackButton } from "./FeedbackButton";
 import { SupportButton } from "./SupportButton";
 import { SearchPanel } from "./SearchPanel";
-import { Bell, CalendarClock, CreditCard, Search, ShieldCheck, TerminalSquare, X } from "lucide-react";
+import { Bell, CalendarClock, CreditCard, Search, X } from "lucide-react";
 import { UrgentObligationsContext, useUrgentObligationsProvider } from "@/hooks/useUrgentObligations";
 import { OnboardingUIProvider } from "@/hooks/useOnboardingUI";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
 import { OrganizationContext, useOrganizationProvider } from "@/hooks/useOrganization";
 import { useTheme } from "@/hooks/useTheme";
-import { usePonderumPermissions } from "@/hooks/usePonderumPermissions";
 import { SUBSCRIPTION_RENEWAL_WARNING_DAYS } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
@@ -110,51 +109,13 @@ function NotificationsDropdown({
   );
 }
 
-// Acesso rápido a Dev/Equipe Ponderum no mobile — no desktop essas rotas já
-// aparecem no AppSidebar, mas o sidebar só existe como Sheet acionável a
-// partir de md: pra cima; sem isso, staff no celular não tinha como chegar
-// nessas páginas.
-function StaffMenuDropdown({
-  canViewDev,
-  onNavigate,
-  onClose,
-}: {
-  canViewDev: boolean;
-  onNavigate: (path: string) => void;
-  onClose: () => void;
-}) {
-  return (
-    <div className="absolute right-0 top-11 z-50 w-56 rounded-xl border border-border bg-popover shadow-xl overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <span className="text-sm font-medium">Acesso interno</span>
-        <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-      <div className="py-1.5">
-        {canViewDev && (
-          <button
-            onClick={() => onNavigate("/admin")}
-            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm hover:bg-muted/30 transition-colors"
-          >
-            <TerminalSquare className="h-4 w-4 text-muted-foreground" />
-            Dev
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
 export default function AppLayout() {
   const navigate = useNavigate();
   const urgentCtx = useUrgentObligationsProvider();
   const orgCtx = useOrganizationProvider();
   const { org } = orgCtx;
   const { theme } = useTheme();
-  const { canViewDev } = usePonderumPermissions();
   const [panelOpen, setPanelOpen] = useState(false);
-  const [staffMenuOpen, setStaffMenuOpen] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
   const [renewalBannerDismissed, setRenewalBannerDismissed] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -170,7 +131,6 @@ export default function AppLayout() {
 
   const panelRef = useRef<HTMLDivElement>(null);
   const mobilePanelRef = useRef<HTMLDivElement>(null);
-  const staffMenuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const mobileSearchRef = useRef<HTMLInputElement>(null);
 
@@ -193,16 +153,6 @@ export default function AppLayout() {
     const id = setTimeout(() => document.addEventListener("mousedown", handleClick), 0);
     return () => { clearTimeout(id); document.removeEventListener("mousedown", handleClick); };
   }, [panelOpen]);
-
-  // Close staff menu on outside click
-  useEffect(() => {
-    if (!staffMenuOpen) return;
-    function handleClick(e: MouseEvent) {
-      if (!staffMenuRef.current?.contains(e.target as Node)) setStaffMenuOpen(false);
-    }
-    const id = setTimeout(() => document.addEventListener("mousedown", handleClick), 0);
-    return () => { clearTimeout(id); document.removeEventListener("mousedown", handleClick); };
-  }, [staffMenuOpen]);
 
   // Close search panel on outside click — depends only on searchOpen, not search object
   useEffect(() => {
@@ -299,24 +249,6 @@ export default function AppLayout() {
                     <Search className="h-4 w-4" />
                   </button>
                   <OnboardingHeaderButton />
-                  {canViewDev && (
-                    <div className="relative" ref={staffMenuRef}>
-                      <button
-                        onClick={() => setStaffMenuOpen((v) => !v)}
-                        className="h-9 w-9 rounded-lg hover:bg-muted/50 flex items-center justify-center text-muted-foreground transition-colors"
-                        aria-label="Acesso interno"
-                      >
-                        <ShieldCheck className="h-4 w-4" />
-                      </button>
-                      {staffMenuOpen && (
-                        <StaffMenuDropdown
-                          canViewDev={canViewDev}
-                          onNavigate={(path) => { navigate(path); setStaffMenuOpen(false); }}
-                          onClose={() => setStaffMenuOpen(false)}
-                        />
-                      )}
-                    </div>
-                  )}
                   <div className="relative" ref={mobilePanelRef}>
                     <button
                       onClick={() => setPanelOpen((v) => !v)}

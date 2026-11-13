@@ -1,4 +1,4 @@
-import { SojCard } from "@/components/layout/Primitives";
+import { SojCard } from "@ponderum/ui";
 import { Activity } from "lucide-react";
 import type { DayCount } from "@/lib/adminDashboard";
 

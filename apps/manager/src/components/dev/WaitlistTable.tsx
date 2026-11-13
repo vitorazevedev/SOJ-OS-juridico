@@ -1,5 +1,4 @@
-import { SojCard } from "@/components/layout/Primitives";
-import { cn } from "@/lib/utils";
+import { SojCard, cn } from "@ponderum/ui";
 import { fmtDate, type WaitlistEntry } from "@/lib/adminDashboard";
 
 export function WaitlistTable({ waitlist }: { waitlist: WaitlistEntry[] }) {

@@ -1,4 +1,4 @@
-import { SojCard } from "@/components/layout/Primitives";
+import { SojCard } from "@ponderum/ui";
 import { CheckCircle2, Clock, XCircle } from "lucide-react";
 import { fmtDate, type CronJob } from "@/lib/adminDashboard";
 

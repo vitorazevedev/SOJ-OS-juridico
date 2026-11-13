@@ -85,3 +85,22 @@ Primeira etapa da Fase 2 (seção 6 do `docs/MANAGER_SPEC.md`): mover as 3 área
 **O que saiu do `apps/client`:** rota `/equipe-ponderum` e o lazy import de `PonderumTeam`; o item "Equipe Ponderum" do `AppSidebar.tsx`; o botão "Equipe Ponderum" do menu mobile (`StaffMenuDropdown` em `AppLayout.tsx`). `/equipe-ponderum` agora dá 404 (nunca redireciona pro manager, como a spec pede). **Não mexido:** `usePonderumPermissions.ts` e `PonderumStaffManagement.tsx` continuam com `canViewPonderumTeam` — é o campo que concede o papel `equipe` a alguém, parte da gestão de time (Dev area, migra numa etapa futura).
 
 Testado localmente: `npm run typecheck`/`lint`/`build` limpos nos dois apps; bundle de produção do `apps/client` sem nenhum resquício da página/rota Equipe (só sobra `canViewPonderumTeam` como nome de campo em `PonderumStaffManagement.tsx`, esperado).
+
+## Fase 2b — Migração da área Dev pro apps/manager
+
+Terceira etapa da Fase 2: `apps/client/src/pages/Admin.tsx` (rota `/admin`) e os componentes que ela renderiza migram pro `apps/manager` (rota `/dev`, gated por `has_staff_role('dev')`).
+
+**Dois achados corrigidos durante a migração:**
+
+1. **`get_admin_dashboard()` só checava `is_staff()` no banco, não `has_staff_role('dev')`** — qualquer staff (mesmo só com papel `equipe`/`financeiro`) conseguiria chamar essa RPC direto (ex.: via console do navegador), mesmo sem ver a tela. Falha pré-existente da Etapa A, não introduzida agora. Apertado via migration (`20261113010000_manager_tighten_get_admin_dashboard.sql`) — mesma função, só trocou `is_staff()` por `has_staff_role('dev')` no gate inicial.
+2. **`RecentActivityFeed` (lista de contratos recentes) chamava `list_staff_contracts`/`staff_set_courtesy_unlock`, que já exigiam papel `equipe`** desde a Etapa A — mas vivia dentro da página Dev. Nunca quebrou porque os 3 staff reais têm `equipe` também. Corrigido movendo o componente pra página Equipe (`apps/manager/src/pages/Equipe.tsx`), onde seu backend já pertencia de verdade — sem mexer em RPC nenhuma.
+
+**O que moveu** (`git mv`): `StatsGrid`, `AnalysesChart`, `CronHealthCard`, `WaitlistTable`, `OrganizationsTable`, `FeedbacksList`, `PonderumStaffManagement`, `SupportChannelCard`, `BillingDevSimulator`, `ChargebacksCard` → `apps/manager/src/components/dev/`; `RecentActivityFeed` → `apps/manager/src/components/equipe/`; `Admin.tsx` → `apps/manager/src/pages/Dev.tsx` (gate interno removido, `RequireRole("dev")` já cobre).
+
+**Achado no meio da migração:** `ChargebacksCard` também é usado por `apps/client/src/pages/AdminFinance.tsx` (área Financeiro, ainda não migrada — Fase 2c futura). Como `git mv` move (não copia), isso quebrou o typecheck do client. Corrigido restaurando uma cópia de `ChargebacksCard.tsx` em `apps/client/src/components/admin/` (conteúdo original, sem alteração) — fica duplicado de propósito até a Fase 2c migrar o Financeiro também, quando aí sim a cópia do client pode sair.
+
+**O que foi substituído/criado:** `apps/manager/src/lib/adminDashboard.ts` passou da versão enxuta da Fase 2a (só `aiCostBRL`/`fmtBRL`) pra cópia completa do arquivo do client (a Dev area usa `Stats`, `WaitlistEntry`, `Feedback`, `Org`, `DayCount`, `CronJob`, `PLAN_LABEL`, `CAT_LABEL`, `STATUS_LABEL`, `fmtDate`, `estimatedCostBRL`). `apps/manager/src/lib/edgeFunctionError.ts` (novo, cópia do client, usado pelo `BillingDevSimulator`). `useStaffRoles.ts` ganhou `canViewDev`. `ManagerLayout.tsx` ganhou o item "Dev" no sidebar.
+
+**O que saiu do `apps/client`:** rota `/admin` + lazy import; item "Dev" do `AppSidebar.tsx` (o de `/financeiro`, que também usa `canViewDev` hoje, continua intacto — só migra na Fase 2c). **O mecanismo inteiro do `StaffMenuDropdown`/ícone "Acesso interno" em `AppLayout.tsx` foi removido** — depois que Dev saiu, não sobrava nenhum botão dentro dele (Equipe já tinha saído na 2a; Financeiro nunca teve entrada nesse menu mobile). `/admin` agora dá 404.
+
+Testado localmente: `npm run typecheck`/`lint`/`build` limpos nos dois apps; bundle do `apps/client` sem nenhum resquício da página Dev.

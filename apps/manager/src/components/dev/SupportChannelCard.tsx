@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
-import { SojCard } from "@/components/layout/Primitives";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { SojCard, Input, Button } from "@ponderum/ui";
 import { Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
