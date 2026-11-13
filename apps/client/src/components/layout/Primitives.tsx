@@ -1,15 +1,8 @@
-import { cn } from "@/lib/utils";
-import { ReactNode } from "react";
+import { cn, SojCard } from "@ponderum/ui";
 import { Lock } from "lucide-react";
 import { gravidadeFaixa } from "@/lib/analysisFormat";
 
-export function SojCard({ children, className, padding = true }: { children: ReactNode; className?: string; padding?: boolean }) {
-  return (
-    <div className={cn("rounded-xl border border-border bg-card", padding && "p-5", className)}>
-      {children}
-    </div>
-  );
-}
+export { SojCard };
 
 export function KPICard({
   label,

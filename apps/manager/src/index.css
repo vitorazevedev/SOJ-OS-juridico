@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Ponderum Design System v1.2 — mesmos tokens de apps/client/src/index.css
+   (CSS puro, duplicado de propósito pra não acoplar os builds Tailwind dos
+   dois apps — ver docs/manager-decisions.md). */
+
+@layer base {
+  :root {
+    --background: 216 60% 10%;
+    --foreground: 0 0% 96%;
+    --card: 216 55% 13%;
+    --card-foreground: 0 0% 96%;
+    --popover: 216 55% 13%;
+    --popover-foreground: 0 0% 96%;
+    --primary: 181 90% 24%;
+    --primary-foreground: 0 0% 96%;
+    --primary-dim: 181 90% 24% / 0.12;
+    --secondary: 216 45% 17%;
+    --secondary-foreground: 0 0% 90%;
+    --muted: 216 45% 17%;
+    --muted-foreground: 214 20% 62%;
+    --accent: 216 45% 19%;
+    --accent-foreground: 0 0% 96%;
+    --destructive: 0 78% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 216 40% 22%;
+    --input: 216 40% 22%;
+    --ring: 181 90% 24%;
+    --radius: 0.625rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+    -webkit-tap-highlight-color: transparent;
+  }
+  html, body, #root {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+  body {
+    overscroll-behavior: none;
+  }
+  @media (max-width: 767px) {
+    input, select, textarea { font-size: 16px !important; }
+  }
+}
