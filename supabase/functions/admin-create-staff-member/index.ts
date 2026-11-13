@@ -130,22 +130,14 @@ Deno.serve(async (req) => {
     { global: { headers: { Authorization: authHeader } } }
   )
 
-  // Gestao de membros da equipe fica dentro do Menu Dev — exige
-  // can_view_dev, checado de novo aqui porque o service role abaixo
-  // ignora RLS por completo. Filtra por id explicitamente -- a policy de
-  // RLS (org_id = get_org_id()) sozinha devolve TODAS as linhas da
-  // organização do chamador, não só a dele, e quebra .maybeSingle() assim
-  // que a organização (inclusive a da própria Equipe Ponderum) tem mais
-  // de 1 usuário.
+  // Gestao de membros da equipe fica dentro do Menu Dev — exige papel
+  // 'dev' em staff_members (Fase 1 do Manager, 2026-11-11), checado de
+  // novo aqui porque o service role abaixo ignora RLS por completo.
   const { data: authData } = await userClient.auth.getUser()
   if (!authData.user) return jsonResponse({ error: 'Acesso negado' }, 403)
 
-  const { data: caller, error: callerErr } = await userClient
-    .from('users')
-    .select('can_view_dev')
-    .eq('id', authData.user.id)
-    .maybeSingle()
-  if (callerErr || !caller?.can_view_dev) {
+  const { data: callerIsDev, error: callerErr } = await userClient.rpc('has_staff_role', { p_role: 'dev' })
+  if (callerErr || !callerIsDev) {
     return jsonResponse({ error: 'Acesso negado' }, 403)
   }
 
@@ -216,23 +208,21 @@ Deno.serve(async (req) => {
     }
     const userId = created.user.id
 
-    // 2. Marca como membro da equipe Ponderum com as permissoes escolhidas.
-    // terms_accepted_at ja fica preenchido (via metadata terms_accepted
-    // acima) -- membro interno nao precisa aceitar Termos/Privacidade
-    // como um cliente.
-    const { error: updateErr } = await serviceClient
-      .from('users')
-      .update({
-        is_ponderum_staff: true,
-        social_name: socialName,
-        staff_job_title: jobTitle,
-        can_view_dev: canViewDevPerm,
-        can_view_ponderum_team: canViewPonderumTeamPerm,
-        full_platform_access: fullPlatformAccessPerm,
-      })
-      .eq('id', userId)
-    if (updateErr) {
-      console.error('admin-create-staff-member update failed:', JSON.stringify(updateErr))
+    // 2. Marca como membro da equipe Ponderum com as permissoes escolhidas
+    // (staff_members, Fase 1 do Manager). social_name continua em `users`
+    // -- não é um atributo de staff.
+    const roles = [canViewDevPerm ? 'dev' : null, canViewPonderumTeamPerm ? 'equipe' : null].filter(
+      (r): r is 'dev' | 'equipe' => r !== null
+    )
+    const { error: socialNameErr } = await serviceClient.from('users').update({ social_name: socialName }).eq('id', userId)
+    const { error: staffErr } = await serviceClient.from('staff_members').insert({
+      id: userId,
+      roles,
+      job_title: jobTitle,
+      full_platform_access: fullPlatformAccessPerm,
+    })
+    if (socialNameErr || staffErr) {
+      console.error('admin-create-staff-member update failed:', JSON.stringify(socialNameErr ?? staffErr))
       return jsonResponse({ error: 'Usuário criado, mas falhou ao definir permissões' }, 500)
     }
 

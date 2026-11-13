@@ -1659,6 +1659,79 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_audit_log: {
+        Row: {
+          action: string
+          created_at: string
+          id: number
+          metadata: Json
+          staff_id: string
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: number
+          metadata?: Json
+          staff_id: string
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: number
+          metadata?: Json
+          staff_id?: string
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_audit_log_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_members: {
+        Row: {
+          created_at: string
+          full_platform_access: boolean
+          id: string
+          job_title: string | null
+          roles: Database["public"]["Enums"]["staff_role"][]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_platform_access?: boolean
+          id: string
+          job_title?: string | null
+          roles?: Database["public"]["Enums"]["staff_role"][]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_platform_access?: boolean
+          id?: string
+          job_title?: string | null
+          roles?: Database["public"]["Enums"]["staff_role"][]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_members_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           billing_day: number
@@ -2077,6 +2150,14 @@ export type Database = {
       get_executive_dashboard: { Args: never; Returns: Json }
       get_org_id: { Args: never; Returns: string }
       get_support_stats: { Args: never; Returns: Json }
+      has_staff_role: {
+        Args: {
+          p_role: Database["public"]["Enums"]["staff_role"]
+          p_user_id?: string
+        }
+        Returns: boolean
+      }
+      is_staff: { Args: { p_user_id?: string }; Returns: boolean }
       list_admin_payments: { Args: { p_limit?: number }; Returns: Json }
       list_contracts: { Args: never; Returns: Json }
       list_open_chargebacks: { Args: never; Returns: Json }
@@ -2089,6 +2170,15 @@ export type Database = {
       list_staff_organizations: {
         Args: { p_page?: number; p_page_size?: number; p_search?: string }
         Returns: Json
+      }
+      log_staff_action: {
+        Args: {
+          p_action: string
+          p_metadata?: Json
+          p_target_id?: string
+          p_target_type?: string
+        }
+        Returns: undefined
       }
       recalcular_indice_desequilibrio: {
         Args: { p_analysis_id: string }
@@ -2163,6 +2253,7 @@ export type Database = {
         | "partially_refunded"
         | "charged_back"
         | "in_mediation"
+      staff_role: "owner" | "dev" | "equipe" | "financeiro"
       subscription_status:
         | "incomplete"
         | "trialing"
@@ -2310,6 +2401,7 @@ export const Constants = {
         "charged_back",
         "in_mediation",
       ],
+      staff_role: ["owner", "dev", "equipe", "financeiro"],
       subscription_status: [
         "incomplete",
         "trialing",

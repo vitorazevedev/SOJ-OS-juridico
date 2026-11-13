@@ -100,21 +100,16 @@ Deno.serve(async (req) => {
     { global: { headers: { Authorization: authHeader } } }
   )
 
-  // Mesma autoridade de quem pode cadastrar usuarios (Equipe Ponderum ou
-  // Menu Dev). Filtra por id explicitamente -- a policy de RLS (org_id =
-  // get_org_id()) sozinha devolve TODAS as linhas da organização do
-  // chamador, não só a dele, e quebra .maybeSingle() assim que a
-  // organização (inclusive a da própria Equipe Ponderum) tem mais de 1
-  // usuário.
+  // Mesma autoridade de quem pode cadastrar usuarios (papel 'equipe' ou
+  // 'dev' em staff_members, Fase 1 do Manager, 2026-11-11).
   const { data: authData } = await userClient.auth.getUser()
   if (!authData.user) return jsonResponse({ error: 'Acesso negado' }, 403)
 
-  const { data: caller, error: callerErr } = await userClient
-    .from('users')
-    .select('can_view_ponderum_team, can_view_dev')
-    .eq('id', authData.user.id)
-    .maybeSingle()
-  if (callerErr || !(caller?.can_view_ponderum_team || caller?.can_view_dev)) {
+  const [{ data: callerIsEquipe, error: equipeErr }, { data: callerIsDev, error: devErr }] = await Promise.all([
+    userClient.rpc('has_staff_role', { p_role: 'equipe' }),
+    userClient.rpc('has_staff_role', { p_role: 'dev' }),
+  ])
+  if (equipeErr || devErr || !(callerIsEquipe || callerIsDev)) {
     return jsonResponse({ error: 'Acesso negado' }, 403)
   }
 
@@ -134,13 +129,20 @@ Deno.serve(async (req) => {
 
   const { data: userRow, error: userErr } = await serviceClient
     .from('users')
-    .select('name, social_name, staff_job_title, is_ponderum_staff')
+    .select('id, name, social_name')
     .eq('email', email)
     .maybeSingle()
   if (userErr || !userRow) {
     return jsonResponse({ error: 'Usuário não encontrado' }, 404)
   }
   const name = userRow.social_name || userRow.name || 'usuário(a)'
+
+  const { data: staffRow } = await serviceClient
+    .from('staff_members')
+    .select('job_title')
+    .eq('id', userRow.id)
+    .maybeSingle()
+  const isStaff = !!staffRow
 
   const { data: linkData, error: linkErr } = await withRetry(() =>
     serviceClient.auth.admin.generateLink({
@@ -158,10 +160,10 @@ Deno.serve(async (req) => {
   const resendKey = Deno.env.get('RESEND_API_KEY') ?? ''
   if (!resendKey) return jsonResponse({ error: 'RESEND_API_KEY não configurada' }, 500)
 
-  const intro = userRow.is_ponderum_staff
-    ? `Você foi cadastrado(a) como ${userRow.staff_job_title || 'membro'} da equipe Ponderum. Clique no link abaixo para definir sua senha de acesso.`
+  const intro = isStaff
+    ? `Você foi cadastrado(a) como ${staffRow?.job_title || 'membro'} da equipe Ponderum. Clique no link abaixo para definir sua senha de acesso.`
     : 'Sua conta na Ponderum já foi criada. Clique no link abaixo para definir sua senha de acesso e começar a usar a plataforma.'
-  const subject = userRow.is_ponderum_staff
+  const subject = isStaff
     ? 'Bem-vindo à equipe Ponderum — crie sua senha de acesso'
     : 'Bem-vindo à Ponderum — crie sua senha de acesso'
 

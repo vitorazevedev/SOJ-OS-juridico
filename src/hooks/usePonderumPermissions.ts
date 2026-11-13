@@ -26,21 +26,22 @@ export function usePonderumPermissions(): PonderumPermissions {
         setPerms({ ...EMPTY, loading: false });
         return;
       }
-      // Filtra por id explicitamente -- a policy de RLS (org_id = get_org_id())
-      // sozinha devolve TODAS as linhas da organização do chamador, não só
-      // a dele, e quebra .maybeSingle() assim que a organização tem mais
-      // de 1 usuário (achado ao vivo: toda organização cliente com 2+
-      // usuários quebrava este hook, usado em todo o AppSidebar).
+      // Lê de staff_members (Fase 1 do Manager, 2026-11-11) -- a policy
+      // staff_members_self_select só libera a própria linha (id = auth.uid()),
+      // então .maybeSingle() aqui já é seguro por construção (diferente da
+      // antiga leitura em `users`, que precisava do filtro por id explícito
+      // pra não quebrar em organização com 2+ usuários).
       supabase
-        .from("users")
-        .select("is_ponderum_staff, can_view_dev, can_view_ponderum_team, full_platform_access")
+        .from("staff_members")
+        .select("roles, full_platform_access")
         .eq("id", authData.user.id)
         .maybeSingle()
         .then(({ data }) => {
+          const roles = data?.roles ?? [];
           setPerms({
-            isStaff: data?.is_ponderum_staff === true,
-            canViewDev: data?.can_view_dev === true,
-            canViewPonderumTeam: data?.can_view_ponderum_team === true,
+            isStaff: !!data,
+            canViewDev: roles.includes("dev"),
+            canViewPonderumTeam: roles.includes("equipe"),
             fullPlatformAccess: data?.full_platform_access === true,
             loading: false,
           });
