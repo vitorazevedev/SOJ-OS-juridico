@@ -144,7 +144,7 @@ Deno.serve(async (req) => {
   let body: {
     name?: string; socialName?: string | null; jobTitle?: string; ddi?: string; phone?: string; email?: string;
     cnpj?: string | null;
-    canViewDev?: boolean; canViewPonderumTeam?: boolean; fullPlatformAccess?: boolean;
+    canViewDev?: boolean; canViewPonderumTeam?: boolean; canViewFinanceiro?: boolean; fullPlatformAccess?: boolean;
     sendEmail?: boolean;
   }
   try {
@@ -161,13 +161,14 @@ Deno.serve(async (req) => {
   const cnpj = body.cnpj?.trim() || null
   const canViewDevPerm = body.canViewDev === true
   const canViewPonderumTeamPerm = body.canViewPonderumTeam === true
+  const canViewFinanceiroPerm = body.canViewFinanceiro === true
   const fullPlatformAccessPerm = body.fullPlatformAccess === true
   const sendEmail = body.sendEmail !== false
 
   if (!name || !jobTitle || !email) {
     return jsonResponse({ error: 'Campos obrigatórios faltando' }, 400)
   }
-  if (!canViewDevPerm && !canViewPonderumTeamPerm && !fullPlatformAccessPerm) {
+  if (!canViewDevPerm && !canViewPonderumTeamPerm && !canViewFinanceiroPerm && !fullPlatformAccessPerm) {
     return jsonResponse({ error: 'Selecione ao menos uma permissão' }, 400)
   }
 
@@ -211,9 +212,11 @@ Deno.serve(async (req) => {
     // 2. Marca como membro da equipe Ponderum com as permissoes escolhidas
     // (staff_members, Fase 1 do Manager). social_name continua em `users`
     // -- não é um atributo de staff.
-    const roles = [canViewDevPerm ? 'dev' : null, canViewPonderumTeamPerm ? 'equipe' : null].filter(
-      (r): r is 'dev' | 'equipe' => r !== null
-    )
+    const roles = [
+      canViewDevPerm ? 'dev' : null,
+      canViewPonderumTeamPerm ? 'equipe' : null,
+      canViewFinanceiroPerm ? 'financeiro' : null,
+    ].filter((r): r is 'dev' | 'equipe' | 'financeiro' => r !== null)
     const { error: socialNameErr } = await serviceClient.from('users').update({ social_name: socialName }).eq('id', userId)
     const { error: staffErr } = await serviceClient.from('staff_members').insert({
       id: userId,

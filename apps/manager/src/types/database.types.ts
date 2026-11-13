@@ -2240,6 +2240,18 @@ export type Database = {
             }
             Returns: undefined
           }
+        | {
+            Args: {
+              p_can_view_dev: boolean
+              p_can_view_financeiro?: boolean
+              p_can_view_ponderum_team: boolean
+              p_full_platform_access: boolean
+              p_job_title: string
+              p_social_name?: string
+              p_user_id: string
+            }
+            Returns: undefined
+          }
     }
     Enums: {
       payment_status:

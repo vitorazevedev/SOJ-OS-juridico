@@ -14,13 +14,14 @@ type StaffMember = {
   staff_job_title: string | null;
   can_view_dev: boolean;
   can_view_ponderum_team: boolean;
+  can_view_financeiro: boolean;
   full_platform_access: boolean;
   created_at: string;
 };
 
 const EMPTY_FORM = {
   name: "", socialName: "", jobTitle: "", ddi: "+55", phone: "", email: "", cnpj: "",
-  canViewDev: false, canViewPonderumTeam: false, fullPlatformAccess: false,
+  canViewDev: false, canViewPonderumTeam: false, canViewFinanceiro: false, fullPlatformAccess: false,
 };
 type FieldErrors = Partial<Record<"name" | "jobTitle" | "email" | "cnpj" | "permissions", string>>;
 
@@ -90,7 +91,7 @@ export function PonderumStaffManagement() {
   const [copied, setCopied] = useState<"link" | "template" | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState({ jobTitle: "", socialName: "", canViewDev: false, canViewPonderumTeam: false, fullPlatformAccess: false });
+  const [editForm, setEditForm] = useState({ jobTitle: "", socialName: "", canViewDev: false, canViewPonderumTeam: false, canViewFinanceiro: false, fullPlatformAccess: false });
   const [savingEdit, setSavingEdit] = useState(false);
   const [resettingMfaId, setResettingMfaId] = useState<string | null>(null);
 
@@ -127,7 +128,7 @@ export function PonderumStaffManagement() {
       const doc = validateDocument(form.cnpj);
       if (!doc.valid) errs.cnpj = `${doc.type === "cpf" ? "CPF" : "CNPJ"} inválido`;
     }
-    if (!form.canViewDev && !form.canViewPonderumTeam && !form.fullPlatformAccess) {
+    if (!form.canViewDev && !form.canViewPonderumTeam && !form.canViewFinanceiro && !form.fullPlatformAccess) {
       errs.permissions = "Selecione ao menos uma permissão";
     }
     if (Object.keys(errs).length > 0) {
@@ -148,6 +149,7 @@ export function PonderumStaffManagement() {
         cnpj: form.cnpj.trim() || null,
         canViewDev: form.canViewDev,
         canViewPonderumTeam: form.canViewPonderumTeam,
+        canViewFinanceiro: form.canViewFinanceiro,
         fullPlatformAccess: form.fullPlatformAccess,
         sendEmail,
       });
@@ -199,13 +201,14 @@ export function PonderumStaffManagement() {
       socialName: m.social_name ?? "",
       canViewDev: m.can_view_dev,
       canViewPonderumTeam: m.can_view_ponderum_team,
+      canViewFinanceiro: m.can_view_financeiro,
       fullPlatformAccess: m.full_platform_access,
     });
   };
 
   const saveEdit = async () => {
     if (!editingId) return;
-    if (!editForm.canViewDev && !editForm.canViewPonderumTeam && !editForm.fullPlatformAccess) {
+    if (!editForm.canViewDev && !editForm.canViewPonderumTeam && !editForm.canViewFinanceiro && !editForm.fullPlatformAccess) {
       toast.error("Selecione ao menos uma permissão");
       return;
     }
@@ -217,6 +220,7 @@ export function PonderumStaffManagement() {
         p_social_name: editForm.socialName.trim() || null,
         p_can_view_dev: editForm.canViewDev,
         p_can_view_ponderum_team: editForm.canViewPonderumTeam,
+        p_can_view_financeiro: editForm.canViewFinanceiro,
         p_full_platform_access: editForm.fullPlatformAccess,
       });
       if (error) {
@@ -315,6 +319,10 @@ export function PonderumStaffManagement() {
               <Switch checked={form.canViewPonderumTeam} onCheckedChange={(v) => set("canViewPonderumTeam", v)} />
             </label>
             <label className="flex items-center justify-between gap-3">
+              <span className="text-sm">Menu Financeiro</span>
+              <Switch checked={form.canViewFinanceiro} onCheckedChange={(v) => set("canViewFinanceiro", v)} />
+            </label>
+            <label className="flex items-center justify-between gap-3">
               <span className="text-sm">Acesso completo à plataforma (como cliente)</span>
               <Switch checked={form.fullPlatformAccess} onCheckedChange={(v) => set("fullPlatformAccess", v)} />
             </label>
@@ -377,6 +385,7 @@ export function PonderumStaffManagement() {
                   <div className="flex flex-wrap gap-1">
                     <PermissionBadge label="Dev" active={m.can_view_dev} />
                     <PermissionBadge label="Equipe Ponderum" active={m.can_view_ponderum_team} />
+                    <PermissionBadge label="Financeiro" active={m.can_view_financeiro} />
                     <PermissionBadge label="Plataforma completa" active={m.full_platform_access} />
                   </div>
                 </td>
@@ -428,6 +437,10 @@ export function PonderumStaffManagement() {
             <label className="flex items-center justify-between gap-3">
               <span className="text-sm">Menu Equipe Ponderum</span>
               <Switch checked={editForm.canViewPonderumTeam} onCheckedChange={(v) => setEditForm((p) => ({ ...p, canViewPonderumTeam: v }))} />
+            </label>
+            <label className="flex items-center justify-between gap-3">
+              <span className="text-sm">Menu Financeiro</span>
+              <Switch checked={editForm.canViewFinanceiro} onCheckedChange={(v) => setEditForm((p) => ({ ...p, canViewFinanceiro: v }))} />
             </label>
             <label className="flex items-center justify-between gap-3">
               <span className="text-sm">Acesso completo à plataforma (como cliente)</span>
