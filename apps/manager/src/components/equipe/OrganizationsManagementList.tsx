@@ -1,13 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { SojCard } from "@/components/layout/Primitives";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { SojCard, Input, Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, cn } from "@ponderum/ui";
 import { MoreVertical, MessageCircle, Loader2, FileUp } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
-import { cn } from "@/lib/utils";
-import { UploadInvoiceModal } from "@/components/admin/UploadInvoiceModal";
+import { UploadInvoiceModal } from "@/components/equipe/UploadInvoiceModal";
 
 type StaffOrg = {
   id: string;

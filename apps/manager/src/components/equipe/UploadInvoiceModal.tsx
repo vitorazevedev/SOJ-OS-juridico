@@ -1,15 +1,7 @@
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, Input, Label, Button } from "@ponderum/ui";
 import { Loader2, Upload } from "lucide-react";
-import { uploadInvoiceForOrg } from "@/hooks/useInvoices";
+import { uploadInvoiceForOrg } from "@/lib/uploadInvoice";
 
 type Props = {
   org: { id: string; name: string } | null;

@@ -1,12 +1,7 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { SojCard } from "@/components/layout/Primitives";
+import { Button, Input, Label, Switch, SojCard, cn } from "@ponderum/ui";
 import { Loader2, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
 import { formatDocument, validateDocument } from "@/lib/brazilianDocs";
 

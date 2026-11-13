@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { SojCard } from "@/components/layout/Primitives";
+import { SojCard } from "@ponderum/ui";
 import { supabase } from "@/lib/supabase";
 import { aiCostBRL, fmtBRL } from "@/lib/adminDashboard";
 import { Loader2, TrendingUp, Users, Building2, ShieldAlert, Wallet, Coins } from "lucide-react";

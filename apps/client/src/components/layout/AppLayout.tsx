@@ -8,7 +8,7 @@ import { OnboardingHeaderButton } from "./OnboardingHeaderButton";
 import { FeedbackButton } from "./FeedbackButton";
 import { SupportButton } from "./SupportButton";
 import { SearchPanel } from "./SearchPanel";
-import { Bell, CalendarClock, CreditCard, Search, ShieldCheck, TerminalSquare, Users, X } from "lucide-react";
+import { Bell, CalendarClock, CreditCard, Search, ShieldCheck, TerminalSquare, X } from "lucide-react";
 import { UrgentObligationsContext, useUrgentObligationsProvider } from "@/hooks/useUrgentObligations";
 import { OnboardingUIProvider } from "@/hooks/useOnboardingUI";
 import { useGlobalSearch } from "@/hooks/useGlobalSearch";
@@ -116,12 +116,10 @@ function NotificationsDropdown({
 // nessas páginas.
 function StaffMenuDropdown({
   canViewDev,
-  canViewPonderumTeam,
   onNavigate,
   onClose,
 }: {
   canViewDev: boolean;
-  canViewPonderumTeam: boolean;
   onNavigate: (path: string) => void;
   onClose: () => void;
 }) {
@@ -143,15 +141,6 @@ function StaffMenuDropdown({
             Dev
           </button>
         )}
-        {canViewPonderumTeam && (
-          <button
-            onClick={() => onNavigate("/equipe-ponderum")}
-            className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left text-sm hover:bg-muted/30 transition-colors"
-          >
-            <Users className="h-4 w-4 text-muted-foreground" />
-            Equipe Ponderum
-          </button>
-        )}
       </div>
     </div>
   );
@@ -163,7 +152,7 @@ export default function AppLayout() {
   const orgCtx = useOrganizationProvider();
   const { org } = orgCtx;
   const { theme } = useTheme();
-  const { canViewDev, canViewPonderumTeam } = usePonderumPermissions();
+  const { canViewDev } = usePonderumPermissions();
   const [panelOpen, setPanelOpen] = useState(false);
   const [staffMenuOpen, setStaffMenuOpen] = useState(false);
   const [bannerDismissed, setBannerDismissed] = useState(false);
@@ -310,7 +299,7 @@ export default function AppLayout() {
                     <Search className="h-4 w-4" />
                   </button>
                   <OnboardingHeaderButton />
-                  {(canViewDev || canViewPonderumTeam) && (
+                  {canViewDev && (
                     <div className="relative" ref={staffMenuRef}>
                       <button
                         onClick={() => setStaffMenuOpen((v) => !v)}
@@ -322,7 +311,6 @@ export default function AppLayout() {
                       {staffMenuOpen && (
                         <StaffMenuDropdown
                           canViewDev={canViewDev}
-                          canViewPonderumTeam={canViewPonderumTeam}
                           onNavigate={(path) => { navigate(path); setStaffMenuOpen(false); }}
                           onClose={() => setStaffMenuOpen(false)}
                         />
