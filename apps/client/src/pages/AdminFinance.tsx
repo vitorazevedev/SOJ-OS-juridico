@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { usePonderumPermissions } from "@/hooks/usePonderumPermissions";
-import { useRequireStaffMfa } from "@/hooks/useRequireStaffMfa";
 import { SojCard } from "@/components/layout/Primitives";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
@@ -48,17 +47,15 @@ type AdminPayment = {
 
 export default function AdminFinance() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { canViewDev, loading: permsLoading } = usePonderumPermissions();
-  const mfaStatus = useRequireStaffMfa(canViewDev, permsLoading);
   const [summary, setSummary] = useState<FinanceSummary | null>(null);
   const [payments, setPayments] = useState<AdminPayment[] | null>(null);
 
   useEffect(() => {
-    if (mfaStatus !== "ok") return;
+    if (!canViewDev) return;
     supabase.rpc("get_admin_finance_summary").then(({ data }) => setSummary(data as FinanceSummary | null));
     supabase.rpc("list_admin_payments", { p_limit: 200 }).then(({ data }) => setPayments((data as AdminPayment[]) ?? []));
-  }, [mfaStatus]);
+  }, [canViewDev]);
 
   const toReleaseByDate = useMemo(() => {
     if (!payments) return [];
@@ -144,10 +141,7 @@ ${rows.map(row).join("\n")}
     downloadBlob(new Blob([pdf.output("arraybuffer")], { type: "application/pdf" }), exportFilename("pdf"));
   };
 
-  if (mfaStatus === "needs-enroll") return <Navigate to="/mfa/enroll" state={{ from: location }} replace />;
-  if (mfaStatus === "needs-challenge") return <Navigate to="/mfa/challenge" state={{ from: location }} replace />;
-
-  if (mfaStatus === "loading") {
+  if (permsLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -155,7 +149,7 @@ ${rows.map(row).join("\n")}
     );
   }
 
-  if (mfaStatus === "not-staff") {
+  if (!canViewDev) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
         <p className="text-sm text-muted-foreground">Acesso restrito.</p>

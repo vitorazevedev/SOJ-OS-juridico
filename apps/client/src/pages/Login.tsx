@@ -10,6 +10,7 @@ import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
 import { RecoveryCodeForm } from "@/components/auth/RecoveryCodeForm";
 import { LoginSignupForm } from "@/components/auth/LoginSignupForm";
 import { loginSchema, signupSchema, inviteSignupSchema, forgotSchema, recoveryCodeSchema, translateAuthError, type Mode, type FormErrors } from "@/lib/authForm";
+import { getSupportWhatsapp, buildWaLink } from "@/lib/supportWhatsapp";
 
 const POST_AUTH_REDIRECT_KEY = "ponderum:post_auth_redirect";
 
@@ -317,6 +318,21 @@ export default function Login() {
             />
           )}
         </Card>
+
+        <button
+          type="button"
+          onClick={() => {
+            getSupportWhatsapp().then((number) => {
+              window.open(
+                buildWaLink(number, "Olá! Preciso de ajuda pra acessar minha conta na Ponderum."),
+                "_blank",
+              );
+            });
+          }}
+          className="text-xs text-muted-foreground underline w-full text-center mt-4"
+        >
+          Preciso de ajuda com o acesso
+        </button>
       </div>
     </div>
   );

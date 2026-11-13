@@ -1,20 +1,14 @@
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { usePonderumPermissions } from "@/hooks/usePonderumPermissions";
-import { useRequireStaffMfa } from "@/hooks/useRequireStaffMfa";
 import { CreateStarterUserForm } from "@/components/admin/CreateStarterUserForm";
 import { OrganizationsManagementList } from "@/components/admin/OrganizationsManagementList";
 import { ExecutiveDashboard } from "@/components/admin/ExecutiveDashboard";
 
 export default function PonderumTeam() {
   const navigate = useNavigate();
-  const location = useLocation();
-  const { canViewPonderumTeam, loading: permsLoading } = usePonderumPermissions();
-  const mfaStatus = useRequireStaffMfa(canViewPonderumTeam, permsLoading);
+  const { canViewPonderumTeam } = usePonderumPermissions();
 
-  if (mfaStatus === "needs-enroll") return <Navigate to="/mfa/enroll" state={{ from: location }} replace />;
-  if (mfaStatus === "needs-challenge") return <Navigate to="/mfa/challenge" state={{ from: location }} replace />;
-
-  if (mfaStatus !== "ok") return (
+  if (!canViewPonderumTeam) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
       <p className="text-sm text-muted-foreground">Acesso restrito.</p>
       <button onClick={() => navigate("/")} className="text-xs text-primary underline">Voltar</button>

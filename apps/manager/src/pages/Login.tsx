@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation, useNavigate, Navigate } from "react-router-dom";
+import { Eye, EyeOff } from "lucide-react";
 import { Button, Input, Label, SojCard } from "@ponderum/ui";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/features/auth/components/AuthProvider";
@@ -12,6 +13,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   if (!loading && session) {
     const from = (location.state as { from?: Location })?.from;
@@ -32,12 +34,15 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <SojCard className="w-full max-w-sm space-y-6">
-        <div>
-          <h1 className="text-lg font-semibold text-foreground">Ponderum Manager</h1>
-          <p className="text-sm text-muted-foreground">Acesso restrito à equipe Ponderum.</p>
+    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
+      <div className="w-full max-w-sm">
+        <div className="flex flex-col items-center mb-8">
+          <img src="/ponderum-icon-white.png" alt="Ponderum" className="h-12 w-12 mb-3 object-contain" />
+          <h1 className="font-cormorant text-3xl font-light tracking-wider">Ponderum Manager</h1>
+          <p className="text-xs text-muted-foreground tracking-wide mt-0.5">Acesso restrito à equipe Ponderum</p>
         </div>
+
+        <SojCard className="w-full space-y-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="email">Email</Label>
@@ -52,21 +57,34 @@ export default function Login() {
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="pr-10"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                tabIndex={-1}
+                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={submitting}>
             {submitting ? "Entrando..." : "Entrar"}
           </Button>
         </form>
-      </SojCard>
+        </SojCard>
+      </div>
     </div>
   );
 }

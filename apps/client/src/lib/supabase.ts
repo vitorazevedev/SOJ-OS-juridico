@@ -7,5 +7,8 @@ export const supabase = createClient<Database>(env.supabaseUrl, env.supabaseAnon
     storage: localStorage,
     persistSession: true,
     autoRefreshToken: true,
+    // Códigos de backup de MFA (Fase 1b) -- recurso experimental do GoTrue,
+    // precisa desse opt-in no cliente além de habilitado no projeto.
+    experimental: { recoveryCodes: true },
   },
 });

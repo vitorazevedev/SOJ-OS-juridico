@@ -53,22 +53,8 @@ export default function App() {
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/termos" element={<Termos />} />
                 <Route path="/privacidade" element={<Privacidade />} />
-                <Route
-                  path="/mfa/enroll"
-                  element={
-                    <ProtectedRoute>
-                      <MfaEnroll />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/mfa/challenge"
-                  element={
-                    <ProtectedRoute>
-                      <MfaChallenge />
-                    </ProtectedRoute>
-                  }
-                />
+                <Route path="/mfa/enroll" element={<MfaEnroll />} />
+                <Route path="/mfa/challenge" element={<MfaChallenge />} />
                 <Route
                   element={
                     <ProtectedRoute>

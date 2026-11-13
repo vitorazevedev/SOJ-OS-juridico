@@ -182,7 +182,7 @@ export function PonderumStaffManagement() {
         toast.error(data?.error ?? "Erro ao resetar MFA");
         return;
       }
-      toast.success("MFA removido — a pessoa vai cadastrar de novo no próximo login");
+      toast.success("MFA removido. A pessoa vai cadastrar de novo no próximo login.");
     } finally {
       setResettingMfaId(null);
     }
