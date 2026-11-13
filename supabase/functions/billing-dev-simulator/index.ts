@@ -55,16 +55,11 @@ Deno.serve(async (req) => {
   const { data: authData } = await userClient.auth.getUser()
   if (!authData.user) return jsonResponse({ error: 'Acesso restrito à equipe Ponderum (Menu Dev).' }, 403)
 
-  // Filtra por id explicitamente -- a policy de RLS (org_id = get_org_id())
-  // sozinha devolve TODAS as linhas da organizacao do chamador, nao so a
-  // dele, e quebra .maybeSingle() em qualquer organizacao com mais de 1
-  // usuario (inclusive a da propria equipe Ponderum, que tem varios).
-  const { data: me, error: meErr } = await userClient
-    .from('users')
-    .select('is_ponderum_staff, can_view_dev')
-    .eq('id', authData.user.id)
-    .maybeSingle()
-  if (meErr || !me || !(me.is_ponderum_staff === true && me.can_view_dev === true)) {
+  // has_staff_role('dev') em vez das antigas colunas is_ponderum_staff/
+  // can_view_dev (staff_members.roles é a fonte de verdade desde a Etapa A
+  // da Fase 1 do Manager).
+  const { data: callerIsDev, error: meErr } = await userClient.rpc('has_staff_role', { p_role: 'dev' })
+  if (meErr || !callerIsDev) {
     return jsonResponse({ error: 'Acesso restrito à equipe Ponderum (Menu Dev).' }, 403)
   }
 
