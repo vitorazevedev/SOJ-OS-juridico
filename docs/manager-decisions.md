@@ -122,3 +122,17 @@ Testado localmente: `npm run typecheck`/`lint`/`build` limpos nos dois apps; bun
 **Fase 2 completa:** as 3 áreas internas (Equipe, Dev, Financeiro) saíram inteiramente do `apps/client` e vivem só no `apps/manager`, cada uma com seu próprio gate de papel (`equipe`/`dev`/`financeiro`) checado no banco, não só no front — conforme o princípio 2 da spec. Fase 3 (gestão do time `/time`, owner-only, e auditoria `/auditoria`) e as tabelas novas da spec (`leads`, `expenses`, `feature_flags`, `access_overrides`) ficam pra uma etapa futura, fora do escopo desta migração.
 
 Testado localmente: `npm run typecheck`/`lint`/`build` limpos nos dois apps; bundle do `apps/client` sem nenhum resquício da página Financeiro.
+
+## Auditoria de segurança pós-Fase 2 (2026-11-13)
+
+Depois de fechar a Fase 2, o Vitor pediu uma conferência completa: garantir que `app.ponderum.com` não expõe nada das áreas Equipe/Dev/Financeiro nem pro front nem pro banco.
+
+**Frontend/bundle:** confirmado limpo. Nenhuma rota `/admin`/`/equipe-ponderum`/`/financeiro`, nenhum link de menu, e o bundle de produção compilado (`apps/client/dist/assets/*.js`) não contém nenhum nome de RPC, Edge Function ou texto dessas 3 áreas — testado via grep direto no JS gerado, não só no código-fonte.
+
+**Backend (defesa de verdade):** as 17 RPCs das 3 áreas (`get_admin_dashboard`, `get_admin_finance_summary`, `get_executive_dashboard`, `list_admin_payments`, `list_ponderum_staff`, `list_staff_organizations`, `list_staff_contracts`, `staff_create_invoice`, `staff_renew_org_subscription`, `staff_set_courtesy_unlock`, `staff_set_org_blocked`, `staff_set_org_plan_status`, `staff_set_org_risk_flag`, `staff_set_support_whatsapp`, `staff_update_member_permissions` com os 3 overloads, `get_support_stats`, `list_open_chargebacks`) foram conferidas uma a uma — todas checam `has_staff_role()`/`is_staff()` de verdade no corpo e levantam exceção, não é só a tela que esconde o botão. O linter de segurança do Supabase (`get_advisors`) acusa essas funções como "executáveis por anon/authenticated", mas isso é esperado pra qualquer RPC do PostgREST — o que importa é o check interno, que está presente em todas.
+
+**3 bugs reais encontrados e corrigidos:** `admin-create-user`, `admin-send-invoice-email` e `billing-dev-simulator` sobreviveram à migração da Etapa A ainda lendo as colunas antigas `users.can_view_dev`/`can_view_ponderum_team`/`is_ponderum_staff` em vez de `staff_members.roles` (via `has_staff_role()`). Essas colunas pararam de ser a fonte de verdade desde a Etapa A (2026-11-11), mas continuam existindo na tabela (remoção adiada pra uma Fase 5 de limpeza) — e hoje coincidem com os papéis reais só porque nenhum dos 3 staff teve a permissão editada pela tela desde então. Na próxima edição de permissão via `PonderumStaffManagement`, essas 3 funções dessincronizariam (podendo negar acesso indevido a quem ganhou o papel, ou manter acesso de quem teve o papel revogado). Corrigido trocando as 3 pra `has_staff_role()` via RPC, com deploy já feito.
+
+**RLS:** nenhuma policy referencia as colunas antigas — só as 2 funções que usam esses nomes como alias de parâmetro/coluna de saída (`list_ponderum_staff`, `staff_update_member_permissions`), não leitura real da tabela — confirmado seguro.
+
+Conclusão: nenhum risco de exposição das 3 áreas pro `app.ponderum.com`, e a defesa em profundidade (banco, não só front) está intacta e agora mais robusta que antes da auditoria.
