@@ -28,6 +28,8 @@ const PonderumTeam = lazy(() => import("@/pages/PonderumTeam"));
 const Checkout = lazy(() => import("@/pages/Checkout"));
 const PixPayment = lazy(() => import("@/pages/PixPayment"));
 const AdminFinance = lazy(() => import("@/pages/AdminFinance"));
+const MfaEnroll = lazy(() => import("@/pages/MfaEnroll"));
+const MfaChallenge = lazy(() => import("@/pages/MfaChallenge"));
 
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -51,6 +53,22 @@ export default function App() {
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/termos" element={<Termos />} />
                 <Route path="/privacidade" element={<Privacidade />} />
+                <Route
+                  path="/mfa/enroll"
+                  element={
+                    <ProtectedRoute>
+                      <MfaEnroll />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/mfa/challenge"
+                  element={
+                    <ProtectedRoute>
+                      <MfaChallenge />
+                    </ProtectedRoute>
+                  }
+                />
                 <Route
                   element={
                     <ProtectedRoute>

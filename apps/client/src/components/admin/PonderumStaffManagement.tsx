@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Loader2, Copy, Check, Pencil } from "lucide-react";
+import { Loader2, Copy, Check, Pencil, ShieldOff } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
@@ -97,6 +97,7 @@ export function PonderumStaffManagement() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ jobTitle: "", socialName: "", canViewDev: false, canViewPonderumTeam: false, fullPlatformAccess: false });
   const [savingEdit, setSavingEdit] = useState(false);
+  const [resettingMfaId, setResettingMfaId] = useState<string | null>(null);
 
   const fetchMembers = async () => {
     setLoadingList(true);
@@ -168,6 +169,22 @@ export function PonderumStaffManagement() {
       toast.error("Erro ao cadastrar membro");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const resetMfa = async (m: StaffMember) => {
+    const name = m.social_name || m.name || m.email;
+    if (!window.confirm(`Remover o MFA de ${name}? A pessoa vai precisar cadastrar um novo autenticador no próximo login.`)) return;
+    setResettingMfaId(m.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-reset-staff-mfa", { body: { targetUserId: m.id } });
+      if (error || data?.error) {
+        toast.error(data?.error ?? "Erro ao resetar MFA");
+        return;
+      }
+      toast.success("MFA removido — a pessoa vai cadastrar de novo no próximo login");
+    } finally {
+      setResettingMfaId(null);
     }
   };
 
@@ -370,9 +387,17 @@ export function PonderumStaffManagement() {
                 </td>
                 <td className="py-2.5 text-right text-muted-foreground text-xs">{fmtDate(m.created_at)}</td>
                 <td className="py-2.5 text-right">
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(m)}>
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex justify-end gap-1">
+                    <Button
+                      variant="ghost" size="icon" className="h-7 w-7" title="Resetar MFA"
+                      disabled={resettingMfaId === m.id} onClick={() => resetMfa(m)}
+                    >
+                      {resettingMfaId === m.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldOff className="h-3.5 w-3.5" />}
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => startEdit(m)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}

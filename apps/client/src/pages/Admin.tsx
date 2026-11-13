@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { usePonderumPermissions } from "@/hooks/usePonderumPermissions";
+import { useRequireStaffMfa } from "@/hooks/useRequireStaffMfa";
 import { SojCard } from "@/components/layout/Primitives";
 import { Loader2, AlertTriangle, ExternalLink } from "lucide-react";
 import { env } from "@/config/env";
@@ -22,7 +23,9 @@ import type {
 
 export default function Admin() {
   const navigate  = useNavigate();
-  const { canViewDev } = usePonderumPermissions();
+  const location = useLocation();
+  const { canViewDev, loading: permsLoading } = usePonderumPermissions();
+  const mfaStatus = useRequireStaffMfa(canViewDev, permsLoading);
   const [loading, setLoading]   = useState(true);
   const [stats, setStats]       = useState<Stats | null>(null);
   const [feedbacks, setFeedbacks]         = useState<Feedback[]>([]);
@@ -32,7 +35,7 @@ export default function Admin() {
   const [waitlist, setWaitlist]             = useState<WaitlistEntry[]>([]);
 
   useEffect(() => {
-    if (canViewDev === false) return;
+    if (mfaStatus !== "ok") return;
     supabase.rpc("get_admin_dashboard").then(({ data, error }) => {
       if (error || !data) { setLoading(false); return; }
       const d = data as {
@@ -48,16 +51,19 @@ export default function Admin() {
       setCronHealth(d.cron_health ?? []);
       setLoading(false);
     });
-  }, [canViewDev]);
+  }, [mfaStatus]);
 
-  if (!canViewDev && !loading) return (
+  if (mfaStatus === "needs-enroll") return <Navigate to="/mfa/enroll" state={{ from: location }} replace />;
+  if (mfaStatus === "needs-challenge") return <Navigate to="/mfa/challenge" state={{ from: location }} replace />;
+
+  if (mfaStatus === "not-staff") return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
       <p className="text-sm text-muted-foreground">Acesso restrito.</p>
       <button onClick={() => navigate("/")} className="text-xs text-primary underline">Voltar</button>
     </div>
   );
 
-  if (loading) return (
+  if (mfaStatus === "loading" || loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
     </div>
