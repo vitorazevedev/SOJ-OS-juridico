@@ -112,6 +112,34 @@ Deno.serve(async (req) => {
 
   const isUpgrade = newPlan.price_cents > currentPlan.price_cents
 
+  // Cupom (docs/CUPOM_SPEC.md, secao 5): "troca de plano durante o desconto
+  // -- v1 encerra o cupom e passa a cobrar o preco cheio do novo plano".
+  // Vale pra upgrade e downgrade -- o preco cheio do plano novo ja e o que
+  // as duas ramificacoes abaixo aplicam (updateSubscriptionAmount com
+  // newPlan.price_cents no upgrade; renovacao normal sem desconto no
+  // downgrade, ja que nao existe mais resgate ativo).
+  const { data: activeCoupon } = await serviceClient
+    .from('coupon_redemptions')
+    .select('id')
+    .eq('subscription_id', subscription.id)
+    .eq('status', 'active')
+    .maybeSingle()
+  if (activeCoupon) {
+    await serviceClient
+      .from('coupon_redemptions')
+      .update({ status: 'canceled', completed_at: new Date().toISOString() })
+      .eq('id', activeCoupon.id)
+    await serviceClient.from('billing_audit_log').insert({
+      organization_id: orgId,
+      entity: 'coupon_redemption',
+      entity_id: activeCoupon.id,
+      from_status: 'active',
+      to_status: 'canceled',
+      actor: `user:${orgId}`,
+      metadata: { reason: 'plan_changed', from_plan_id: currentPlan.id, to_plan_id: newPlan.id },
+    })
+  }
+
   if (isUpgrade) {
     if (subscription.payment_method === 'card' && subscription.provider_subscription_id) {
       try {

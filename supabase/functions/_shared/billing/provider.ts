@@ -52,6 +52,7 @@ export type ProviderSubscription = {
   status: ProviderSubscriptionStatus
   externalReference?: string
   nextPaymentDate?: Date
+  amount?: Cents // valor recorrente atual (ex.: auto_recurring.transaction_amount do MP) -- usado pelo job coupon-sync
   raw: unknown
 }
 

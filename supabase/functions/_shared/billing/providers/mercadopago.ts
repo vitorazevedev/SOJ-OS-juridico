@@ -168,6 +168,7 @@ type MpPreapproval = {
   status: string
   external_reference?: string
   next_payment_date?: string
+  auto_recurring?: { transaction_amount?: number }
 }
 
 function mapMpPreapproval(s: MpPreapproval): ProviderSubscription {
@@ -176,6 +177,7 @@ function mapMpPreapproval(s: MpPreapproval): ProviderSubscription {
     status: toProviderSubscriptionStatus(s.status),
     externalReference: s.external_reference,
     nextPaymentDate: s.next_payment_date ? new Date(s.next_payment_date) : undefined,
+    amount: reaisToCents(s.auto_recurring?.transaction_amount),
     raw: s,
   }
 }

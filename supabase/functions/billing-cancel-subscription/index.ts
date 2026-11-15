@@ -190,6 +190,12 @@ Deno.serve(async (req) => {
       .eq('id', subscription.id)
     await transitionSubscription(serviceClient, subscription.id, 'canceled', `user:${orgId}`, { reason: 'regret_period', reason_text: body.reason_text ?? null })
 
+    // Cupom (docs/CUPOM_SPEC.md, secao 5): "estorno pelo direito de
+    // arrependimento -- o uso do cupom volta a ser contado como nao
+    // utilizado no limite total". Apaga a linha (nao so marca canceled)
+    // pra nao contar em max_redemptions/max_per_organization nunca mais.
+    await serviceClient.from('coupon_redemptions').delete().eq('subscription_id', subscription.id).eq('status', 'active')
+
     const protocol = cancellationProtocol(subscription.id)
     if (customer?.email) await sendCancellationEmail(customer.email, customer.legal_name ?? 'cliente', protocol, true, null)
 
@@ -214,6 +220,15 @@ Deno.serve(async (req) => {
     })
     .eq('id', subscription.id)
   if (updateErr) return jsonResponse({ error: 'Erro ao cancelar. Tente novamente.' }, 500)
+
+  // Cupom (docs/CUPOM_SPEC.md, secao 5): "cancelou -- resgate vira canceled"
+  // (cancelamento agendado continua contando no limite de usos -- so o
+  // arrependimento acima libera o uso).
+  await serviceClient
+    .from('coupon_redemptions')
+    .update({ status: 'canceled', completed_at: new Date().toISOString() })
+    .eq('subscription_id', subscription.id)
+    .eq('status', 'active')
 
   await serviceClient.from('billing_audit_log').insert({
     organization_id: orgId,

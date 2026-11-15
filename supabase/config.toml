@@ -60,3 +60,11 @@ verify_jwt = false
 # (quem recebeu o convite ainda nao tem conta) -- Modulo "Equipe".
 [functions.org-invite-info]
 verify_jwt = false
+
+# generate-pix-renewals e coupon-sync: chamados pelo pg_cron -- Modulo de
+# Cupom de Desconto, Etapa B.
+[functions.generate-pix-renewals]
+verify_jwt = false
+
+[functions.coupon-sync]
+verify_jwt = false
