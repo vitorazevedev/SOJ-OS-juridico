@@ -364,22 +364,34 @@ export default function Checkout() {
         <h3 className="text-sm font-medium">Forma de pagamento</h3>
 
         {appliedCoupon ? (
-          <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary-dim px-3 py-2 text-xs">
-            <span className="flex items-center gap-1.5 text-primary">
-              <Tag className="h-3.5 w-3.5" /> Cupom <strong>{appliedCoupon.code}</strong> aplicado
-            </span>
-            <button onClick={handleRemoveCoupon} className="text-muted-foreground hover:text-foreground">
-              <X className="h-3.5 w-3.5" />
-            </button>
+          <div className="flex flex-col gap-1 rounded-lg border border-primary/30 bg-primary-dim px-3 py-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1.5 text-primary">
+                <Tag className="h-3.5 w-3.5" /> Cupom <strong>{appliedCoupon.code}</strong> aplicado
+              </span>
+              <button onClick={handleRemoveCoupon} className="text-muted-foreground hover:text-foreground">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground">{appliedCoupon.ruleText}</p>
           </div>
         ) : couponOpen ? (
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-1.5 rounded-lg border border-border px-3 py-2.5">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-2 text-sm text-foreground">
+                <Tag className="h-4 w-4 text-muted-foreground" /> Cupom de desconto
+              </span>
+              <button onClick={() => { setCouponOpen(false); setCouponError(null); }} className="text-muted-foreground hover:text-foreground">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
             <div className="flex gap-2">
               <Input
                 value={couponInput}
                 onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
                 placeholder="Código do cupom"
                 className="flex-1"
+                autoFocus
               />
               <Button variant="outline" onClick={handleApplyCoupon} disabled={couponApplying || !couponInput.trim()}>
                 {couponApplying && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
@@ -389,8 +401,14 @@ export default function Checkout() {
             {couponError && <p className="text-xs text-destructive">{couponError}</p>}
           </div>
         ) : (
-          <button onClick={() => setCouponOpen(true)} className="text-xs text-primary underline w-fit">
-            Tenho um cupom
+          <button
+            onClick={() => setCouponOpen(true)}
+            className="flex items-center justify-between rounded-lg border border-border px-3 py-2.5 text-sm hover:border-primary/40 transition-colors"
+          >
+            <span className="flex items-center gap-2 text-foreground">
+              <Tag className="h-4 w-4 text-muted-foreground" /> Cupom de desconto
+            </span>
+            <span className="text-primary font-medium">Selecionar cupom</span>
           </button>
         )}
 
