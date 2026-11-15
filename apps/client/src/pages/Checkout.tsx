@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Loader2, CreditCard, QrCode, CheckCircle2, XCircle, Clock, ArrowLeft } from "lucide-react";
+import { Loader2, CreditCard, QrCode, CheckCircle2, XCircle, Clock, ArrowLeft, Tag, X } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { CardBrick } from "@/components/billing/CardBrick";
@@ -41,6 +41,17 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState<"card" | "pix">("card");
   const [cardToken, setCardToken] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
+
+  const [couponOpen, setCouponOpen] = useState(false);
+  const [couponInput, setCouponInput] = useState("");
+  const [couponApplying, setCouponApplying] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    ruleText: string;
+    fullAmountCents: number;
+    discountedAmountCents: number;
+  } | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
   const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
@@ -107,6 +118,48 @@ export default function Checkout() {
     setUf(addr.uf);
   };
 
+  // Método de pagamento mudou enquanto um cupom estava aplicado -- limpa e
+  // pede pra reaplicar, em vez de arriscar um cupom válido só pro método
+  // anterior (allowed_methods) continuar mostrado como aplicado.
+  useEffect(() => {
+    setAppliedCoupon(null);
+    setCouponError(null);
+  }, [paymentMethod]);
+
+  const handleApplyCoupon = async () => {
+    if (!plan || !couponInput.trim()) return;
+    setCouponApplying(true);
+    setCouponError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("billing-validate-coupon", {
+        body: { code: couponInput.trim(), planCode: plan.code, method: paymentMethod },
+      });
+      if (error || data?.error) {
+        setCouponError(data?.error ?? "Erro ao validar cupom. Tente novamente.");
+        return;
+      }
+      if (!data.valid) {
+        setCouponError(data.reason ?? "cupom inválido");
+        return;
+      }
+      setAppliedCoupon({
+        code: data.code,
+        ruleText: data.ruleText,
+        fullAmountCents: data.fullAmountCents,
+        discountedAmountCents: data.discountedAmountCents,
+      });
+      setCouponOpen(false);
+    } finally {
+      setCouponApplying(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponInput("");
+    setCouponError(null);
+  };
+
   const documentDigits = onlyDigits(documentNumber);
   const documentValid = documentDigits.length > 0 && isValidDocument(documentDigits, documentType);
   const canSubmit =
@@ -135,6 +188,7 @@ export default function Checkout() {
             email,
             address: { cep: onlyDigits(cep), logradouro, numero, complemento, bairro, localidade, uf },
           },
+          coupon_code: appliedCoupon?.code,
         },
       });
 
@@ -225,8 +279,17 @@ export default function Checkout() {
       <div>
         <h1 className="text-lg md:text-2xl font-semibold tracking-tight">Finalizar assinatura</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Plano <span className="font-medium text-foreground">{plan.name}</span> — {fmtBRL(plan.price_cents / 100)}/mês
+          Plano <span className="font-medium text-foreground">{plan.name}</span> —{" "}
+          {appliedCoupon ? (
+            <>
+              <span className="line-through">{fmtBRL(appliedCoupon.fullAmountCents / 100)}</span>{" "}
+              <span className="font-medium text-primary">{fmtBRL(appliedCoupon.discountedAmountCents / 100)}/mês</span>
+            </>
+          ) : (
+            `${fmtBRL(plan.price_cents / 100)}/mês`
+          )}
         </p>
+        {appliedCoupon && <p className="text-xs text-muted-foreground mt-0.5">{appliedCoupon.ruleText}</p>}
       </div>
 
       <SojCard className="flex flex-col gap-4 p-5">
@@ -300,6 +363,37 @@ export default function Checkout() {
       <SojCard className="flex flex-col gap-4 p-5">
         <h3 className="text-sm font-medium">Forma de pagamento</h3>
 
+        {appliedCoupon ? (
+          <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary-dim px-3 py-2 text-xs">
+            <span className="flex items-center gap-1.5 text-primary">
+              <Tag className="h-3.5 w-3.5" /> Cupom <strong>{appliedCoupon.code}</strong> aplicado
+            </span>
+            <button onClick={handleRemoveCoupon} className="text-muted-foreground hover:text-foreground">
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        ) : couponOpen ? (
+          <div className="flex flex-col gap-1.5">
+            <div className="flex gap-2">
+              <Input
+                value={couponInput}
+                onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                placeholder="Código do cupom"
+                className="flex-1"
+              />
+              <Button variant="outline" onClick={handleApplyCoupon} disabled={couponApplying || !couponInput.trim()}>
+                {couponApplying && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                Aplicar
+              </Button>
+            </div>
+            {couponError && <p className="text-xs text-destructive">{couponError}</p>}
+          </div>
+        ) : (
+          <button onClick={() => setCouponOpen(true)} className="text-xs text-primary underline w-fit">
+            Tenho um cupom
+          </button>
+        )}
+
         {PIX_ENABLED && (
           <div className="flex gap-2">
             <button
@@ -321,7 +415,9 @@ export default function Checkout() {
           </div>
         )}
 
-        {paymentMethod === "card" && plan && <CardBrick onToken={setCardToken} amount={plan.price_cents / 100} payerEmail={email} />}
+        {paymentMethod === "card" && plan && (
+          <CardBrick onToken={setCardToken} amount={(appliedCoupon?.discountedAmountCents ?? plan.price_cents) / 100} payerEmail={email} />
+        )}
       </SojCard>
 
       <label className="flex items-start gap-2 text-xs text-muted-foreground">

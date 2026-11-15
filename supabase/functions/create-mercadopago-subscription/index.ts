@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { getPaymentProvider } from '../_shared/billing/providers/index.ts'
+import { validateCoupon } from '../_shared/billing/domain/coupons.ts'
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -78,6 +79,7 @@ Deno.serve(async (req) => {
     payment_method?: 'card' | 'pix'
     cardToken?: string
     billing?: Billing
+    coupon_code?: string
   }
   try {
     body = await req.json()
@@ -226,12 +228,46 @@ Deno.serve(async (req) => {
     metadata: { plan_code: plan.code, terms_version: TERMS_VERSION, terms_accepted_at: new Date().toISOString(), ip: requestIp },
   })
 
+  // Cupom (docs/CUPOM_SPEC.md, passo 6 da jornada) -- revalida de novo aqui,
+  // dentro do mesmo fluxo que ja reservou a assinatura via
+  // claim_subscription_lock, e so entao reserva o resgate de verdade
+  // (redeem_coupon) -- nunca confia num valor com desconto vindo do front.
+  let chargeAmountCents = plan.price_cents
+  if (body.coupon_code) {
+    const couponResult = await validateCoupon(serviceClient, {
+      code: body.coupon_code,
+      planCode: plan.code,
+      method: paymentMethod,
+      organizationId: orgId,
+      fullAmountCents: plan.price_cents,
+    })
+    if (!couponResult.valid) {
+      return jsonResponse({ error: couponResult.reason }, 400)
+    }
+    const { data: redemption, error: redeemErr } = await serviceClient.rpc('redeem_coupon', {
+      p_coupon_id: couponResult.coupon.id,
+      p_organization_id: orgId,
+      p_subscription_id: subscriptionId,
+      p_full_amount_cents: couponResult.fullAmountCents,
+      p_discounted_amount_cents: couponResult.discountedAmountCents,
+      p_cycles_total: couponResult.cyclesTotal,
+      p_discount_snapshot: couponResult.coupon,
+    })
+    if (redeemErr) {
+      const reason = redeemErr.message?.includes('coupon_exhausted') ? 'cupom esgotado'
+        : redeemErr.message?.includes('coupon_already_used_by_org') ? 'cupom já utilizado'
+        : 'cupom inválido'
+      return jsonResponse({ error: reason }, 409)
+    }
+    chargeAmountCents = couponResult.discountedAmountCents
+  }
+
   try {
     if (paymentMethod === 'card') {
       const sub = await provider.createSubscription({
         idempotencyKey: crypto.randomUUID(),
         planCode: plan.code,
-        amount: plan.price_cents,
+        amount: chargeAmountCents,
         frequency: 1,
         frequencyType: 'months',
         cardToken: body.cardToken!,
@@ -253,7 +289,7 @@ Deno.serve(async (req) => {
         subscription_id: subscriptionId,
         idempotency_key: crypto.randomUUID(),
         status: 'pending',
-        amount_cents: plan.price_cents,
+        amount_cents: chargeAmountCents,
         method: 'pix',
         pix_expires_at: expiresAt.toISOString(),
       })
@@ -263,7 +299,7 @@ Deno.serve(async (req) => {
 
     const pix = await provider.createPixPayment({
       idempotencyKey: crypto.randomUUID(),
-      amount: plan.price_cents,
+      amount: chargeAmountCents,
       description: `Ponderum — Plano ${plan.code}`,
       payer: { email: billing.email, name: billing.legal_name, document: documentDigits, documentType: billing.document_type },
       expiresAt,

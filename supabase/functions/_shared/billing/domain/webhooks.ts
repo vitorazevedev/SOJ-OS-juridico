@@ -6,6 +6,7 @@
 import type { PaymentProvider, NormalizedWebhookEvent } from '../provider.ts'
 import { applyPaymentUpdate, isForwardPaymentTransition, type PaymentStatus } from './payments.ts'
 import { transitionSubscription } from './subscriptions.ts'
+import { applyCouponToPayment } from './coupons.ts'
 import { centsToBRL } from '../money.ts'
 
 // E-mail de alerta pro time (nao pro cliente) quando um chargeback novo
@@ -317,7 +318,7 @@ export async function processWebhookEvent(
         throw new Error(`processWebhookEvent: não foi possível determinar a organização do pagamento ${payment.providerPaymentId}`)
       }
 
-      const { applied } = await applyPaymentUpdate(client, {
+      const { applied, paymentId } = await applyPaymentUpdate(client, {
         organizationId,
         provider: provider.name,
         providerPaymentId: payment.providerPaymentId,
@@ -337,6 +338,7 @@ export async function processWebhookEvent(
       if (applied && subscriptionRow) {
         if (payment.status === 'approved') {
           await advanceSubscriptionPeriod(client, subscriptionRow.id, 'webhook')
+          await applyCouponToPayment(client, provider, { subscriptionId: subscriptionRow.id, paymentId, actor: 'webhook' })
         } else if (payment.status === 'rejected' && subscriptionRow.status === 'active') {
           await transitionSubscription(client, subscriptionRow.id, 'past_due', 'webhook', { reason: 'renewal_rejected' })
         }

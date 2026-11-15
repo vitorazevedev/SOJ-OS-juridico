@@ -157,7 +157,7 @@ export type ApplyPaymentUpdateInput = {
 export async function applyPaymentUpdate(
   client: SupabaseClient,
   input: ApplyPaymentUpdateInput,
-): Promise<{ applied: boolean; reason?: string }> {
+): Promise<{ applied: boolean; paymentId?: string; reason?: string }> {
   const { data: byProviderId, error: fetchErr } = await client
     .from('payments')
     .select('id, status')
@@ -205,7 +205,7 @@ export async function applyPaymentUpdate(
       await enqueueFiscalInvoice(client, input.organizationId, existing.id)
       await sendPaymentConfirmedEmail(client, input.organizationId, input.amount, input.subscriptionId)
     }
-    return { applied: true }
+    return { applied: true, paymentId: existing.id }
   }
 
   const { data: inserted, error: insertErr } = await client.from('payments').insert({
@@ -230,5 +230,5 @@ export async function applyPaymentUpdate(
     await enqueueFiscalInvoice(client, input.organizationId, inserted.id)
     await sendPaymentConfirmedEmail(client, input.organizationId, input.amount, input.subscriptionId)
   }
-  return { applied: true }
+  return { applied: true, paymentId: inserted.id }
 }
