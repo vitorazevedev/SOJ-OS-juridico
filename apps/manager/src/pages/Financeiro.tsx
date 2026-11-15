@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { SojCard, Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@ponderum/ui";
 import { ChargebacksCard } from "@/components/dev/ChargebacksCard";
+import { GmvNmvPanel } from "@/components/financeiro/GmvNmvPanel";
 import {
   Loader2, TrendingUp, Percent, Wallet, Clock, CheckCircle2, Users, AlertTriangle, UserMinus, Download,
 } from "lucide-react";
@@ -205,6 +206,8 @@ ${rows.map(row).join("\n")}
       </SojCard>
 
       <ChargebacksCard />
+
+      <GmvNmvPanel />
     </div>
   );
 }

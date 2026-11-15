@@ -1017,6 +1017,151 @@ export type Database = {
           },
         ]
       }
+      coupon_redemptions: {
+        Row: {
+          completed_at: string | null
+          coupon_id: string
+          created_at: string
+          cycles_total: number | null
+          cycles_used: number
+          discount_snapshot: Json
+          discounted_amount_cents: number
+          full_amount_cents: number
+          id: string
+          organization_id: string
+          status: string
+          subscription_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          coupon_id: string
+          created_at?: string
+          cycles_total?: number | null
+          cycles_used?: number
+          discount_snapshot: Json
+          discounted_amount_cents: number
+          full_amount_cents: number
+          id?: string
+          organization_id: string
+          status?: string
+          subscription_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          coupon_id?: string
+          created_at?: string
+          cycles_total?: number | null
+          cycles_used?: number
+          discount_snapshot?: Json
+          discounted_amount_cents?: number
+          full_amount_cents?: number
+          id?: string
+          organization_id?: string
+          status?: string
+          subscription_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "coupon_redemptions_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_redemptions_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "coupon_redemptions_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: true
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      coupon_validation_attempts: {
+        Row: {
+          created_at: string
+          id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      coupons: {
+        Row: {
+          allowed_methods: string[]
+          allowed_plans: string[]
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          duration: string
+          duration_cycles: number | null
+          id: string
+          is_active: boolean
+          max_per_organization: number
+          max_redemptions: number | null
+          new_customers_only: boolean
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          allowed_methods?: string[]
+          allowed_plans?: string[]
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          duration: string
+          duration_cycles?: number | null
+          id?: string
+          is_active?: boolean
+          max_per_organization?: number
+          max_redemptions?: number | null
+          new_customers_only?: boolean
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          allowed_methods?: string[]
+          allowed_plans?: string[]
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          duration?: string
+          duration_cycles?: number | null
+          id?: string
+          is_active?: boolean
+          max_per_organization?: number
+          max_redemptions?: number | null
+          new_customers_only?: boolean
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       economic_indexes: {
         Row: {
           fetched_at: string | null
@@ -1546,7 +1691,9 @@ export type Database = {
         Row: {
           amount_cents: number
           approved_at: string | null
+          coupon_redemption_id: string | null
           created_at: string
+          discount_cents: number
           fee_cents: number | null
           id: string
           idempotency_key: string
@@ -1571,7 +1718,9 @@ export type Database = {
         Insert: {
           amount_cents: number
           approved_at?: string | null
+          coupon_redemption_id?: string | null
           created_at?: string
+          discount_cents?: number
           fee_cents?: number | null
           id?: string
           idempotency_key: string
@@ -1596,7 +1745,9 @@ export type Database = {
         Update: {
           amount_cents?: number
           approved_at?: string | null
+          coupon_redemption_id?: string | null
           created_at?: string
+          discount_cents?: number
           fee_cents?: number | null
           id?: string
           idempotency_key?: string
@@ -1619,6 +1770,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "payments_coupon_redemption_id_fkey"
+            columns: ["coupon_redemption_id"]
+            isOneToOne: false
+            referencedRelation: "coupon_redemptions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "payments_organization_id_fkey"
             columns: ["organization_id"]
@@ -2131,6 +2289,10 @@ export type Database = {
       }
     }
     Functions: {
+      _finance_waterfall: {
+        Args: { p_end: string; p_start: string }
+        Returns: Json
+      }
       claim_mercadopago_subscription_lock: {
         Args: { p_org_id: string; p_placeholder_id: string }
         Returns: boolean
@@ -2145,9 +2307,29 @@ export type Database = {
         }
         Returns: string
       }
+      create_coupon: {
+        Args: {
+          p_allowed_methods?: string[]
+          p_allowed_plans?: string[]
+          p_code: string
+          p_description?: string
+          p_discount_type: string
+          p_discount_value: number
+          p_duration: string
+          p_duration_cycles?: number
+          p_max_per_organization?: number
+          p_max_redemptions?: number
+          p_new_customers_only?: boolean
+          p_valid_from?: string
+          p_valid_until?: string
+        }
+        Returns: Json
+      }
       get_admin_dashboard: { Args: never; Returns: Json }
       get_admin_finance_summary: { Args: never; Returns: Json }
+      get_coupon_redemptions: { Args: { p_coupon_id: string }; Returns: Json }
       get_executive_dashboard: { Args: never; Returns: Json }
+      get_finance_metrics: { Args: { p_month?: string }; Returns: Json }
       get_org_id: { Args: never; Returns: string }
       get_support_stats: { Args: never; Returns: Json }
       has_staff_role: {
@@ -2160,6 +2342,7 @@ export type Database = {
       is_staff: { Args: { p_user_id?: string }; Returns: boolean }
       list_admin_payments: { Args: { p_limit?: number }; Returns: Json }
       list_contracts: { Args: never; Returns: Json }
+      list_coupons: { Args: never; Returns: Json }
       list_open_chargebacks: { Args: never; Returns: Json }
       list_ponderum_staff: { Args: never; Returns: Json }
       list_recent_contracts: { Args: { p_limit?: number }; Returns: Json }
@@ -2183,6 +2366,41 @@ export type Database = {
       recalcular_indice_desequilibrio: {
         Args: { p_analysis_id: string }
         Returns: number
+      }
+      redeem_coupon: {
+        Args: {
+          p_coupon_id: string
+          p_cycles_total: number
+          p_discount_snapshot: Json
+          p_discounted_amount_cents: number
+          p_full_amount_cents: number
+          p_organization_id: string
+          p_subscription_id: string
+        }
+        Returns: {
+          completed_at: string | null
+          coupon_id: string
+          created_at: string
+          cycles_total: number | null
+          cycles_used: number
+          discount_snapshot: Json
+          discounted_amount_cents: number
+          full_amount_cents: number
+          id: string
+          organization_id: string
+          status: string
+          subscription_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "coupon_redemptions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      set_coupon_active: {
+        Args: { p_id: string; p_is_active: boolean }
+        Returns: undefined
       }
       staff_create_invoice: {
         Args: {
@@ -2252,6 +2470,21 @@ export type Database = {
             }
             Returns: undefined
           }
+      update_coupon: {
+        Args: {
+          p_description?: string
+          p_discount_type?: string
+          p_discount_value?: number
+          p_duration?: string
+          p_duration_cycles?: number
+          p_id: string
+          p_is_active?: boolean
+          p_max_per_organization?: number
+          p_max_redemptions?: number
+          p_valid_until?: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       payment_status:

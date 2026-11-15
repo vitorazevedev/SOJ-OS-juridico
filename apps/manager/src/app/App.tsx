@@ -10,6 +10,7 @@ import Home from "@/pages/Home";
 import Equipe from "@/pages/Equipe";
 import Dev from "@/pages/Dev";
 import Financeiro from "@/pages/Financeiro";
+import Cupons from "@/pages/Cupons";
 import MfaEnroll from "@/pages/MfaEnroll";
 import MfaChallenge from "@/pages/MfaChallenge";
 
@@ -93,9 +94,23 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <StaffRoute>
-                  <RequireRole role="financeiro">
+                  <RequireRole role={["financeiro", "owner"]}>
                     <ManagerLayout>
                       <Financeiro />
+                    </ManagerLayout>
+                  </RequireRole>
+                </StaffRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cupons"
+            element={
+              <ProtectedRoute>
+                <StaffRoute>
+                  <RequireRole role={["financeiro", "owner", "equipe"]}>
+                    <ManagerLayout>
+                      <Cupons />
                     </ManagerLayout>
                   </RequireRole>
                 </StaffRoute>

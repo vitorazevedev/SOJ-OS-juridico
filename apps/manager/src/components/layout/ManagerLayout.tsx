@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Home, Users, TerminalSquare, Wallet, LogOut } from "lucide-react";
+import { Home, Users, TerminalSquare, Wallet, LogOut, Tag } from "lucide-react";
 import { cn } from "@ponderum/ui";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { useStaffRoles } from "@/hooks/useStaffRoles";
@@ -8,7 +8,10 @@ import { supabase } from "@/lib/supabase";
 
 export default function ManagerLayout({ children }: { children: ReactNode }) {
   const { user } = useAuth();
-  const { canViewEquipe, canViewDev, canViewFinanceiro } = useStaffRoles();
+  const { roles, canViewEquipe, canViewDev, canViewFinanceiro } = useStaffRoles();
+  const isOwner = roles.includes("owner");
+  const canViewFinanceiroArea = canViewFinanceiro || isOwner;
+  const canViewCupons = canViewFinanceiroArea || canViewEquipe;
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
 
@@ -63,7 +66,7 @@ export default function ManagerLayout({ children }: { children: ReactNode }) {
               Dev
             </NavLink>
           )}
-          {canViewFinanceiro && (
+          {canViewFinanceiroArea && (
             <NavLink
               to="/financeiro"
               className={cn(
@@ -75,6 +78,20 @@ export default function ManagerLayout({ children }: { children: ReactNode }) {
             >
               <Wallet className="h-4 w-4 shrink-0" />
               Financeiro
+            </NavLink>
+          )}
+          {canViewCupons && (
+            <NavLink
+              to="/cupons"
+              className={cn(
+                "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
+                isActive("/cupons")
+                  ? "bg-primary-dim text-primary font-medium"
+                  : "text-muted-foreground hover:bg-muted/40 hover:text-foreground",
+              )}
+            >
+              <Tag className="h-4 w-4 shrink-0" />
+              Cupons
             </NavLink>
           )}
         </nav>

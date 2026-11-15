@@ -1,14 +1,15 @@
 import { ReactNode } from "react";
 import { useStaffRoles } from "@/hooks/useStaffRoles";
 
-type Role = "dev" | "equipe" | "financeiro";
+export type Role = "dev" | "equipe" | "financeiro" | "owner";
 
 // Fica dentro de StaffRoute, que já garante sessão + is_staff() + aal2 --
 // aqui só falta checar o papel específico da área. A segurança de verdade
 // está nas RPCs/policies (já checam has_staff_role() no banco); isto é só
 // a camada de apresentação.
-export default function RequireRole({ role, children }: { role: Role; children: ReactNode }) {
+export default function RequireRole({ role, children }: { role: Role | Role[]; children: ReactNode }) {
   const { roles, loading } = useStaffRoles();
+  const allowed = Array.isArray(role) ? role : [role];
 
   if (loading) {
     return (
@@ -18,7 +19,7 @@ export default function RequireRole({ role, children }: { role: Role; children: 
     );
   }
 
-  if (!roles.includes(role)) {
+  if (!allowed.some((r) => roles.includes(r))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
         <div className="max-w-sm text-center">
