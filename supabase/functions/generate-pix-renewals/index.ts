@@ -97,14 +97,18 @@ Deno.serve(async (req) => {
     if (!plan) continue
 
     // Idempotencia: ja existe uma cobranca pra este ciclo (period_start =
-    // current_period_end, igual ao que criamos abaixo)?
+    // current_period_end, igual ao que criamos abaixo)? Uma linha sem
+    // provider_payment_id e um QR que nunca saiu (createPixPayment falhou
+    // numa tentativa anterior) -- apaga e tenta de novo em vez de pular
+    // pra sempre.
     const { data: existing } = await serviceClient
       .from('payments')
-      .select('id')
+      .select('id, provider_payment_id')
       .eq('subscription_id', sub.id)
       .eq('period_start', sub.current_period_end)
       .maybeSingle()
-    if (existing) { skipped++; continue }
+    if (existing?.provider_payment_id) { skipped++; continue }
+    if (existing) await serviceClient.from('payments').delete().eq('id', existing.id)
 
     try {
       // Cupom (docs/CUPOM_SPEC.md, secao 5): aplica o desconto so se o
