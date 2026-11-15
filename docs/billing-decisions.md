@@ -62,3 +62,30 @@ Depois de ativar uma assinatura real por cartão com sucesso, nenhum webhook de 
 **Fix:** preencheu a URL de produção com o mesmo endereço da aba de teste (mesma "Assinatura secreta" nas duas abas, nada a mudar em `MP_WEBHOOK_SECRET`). Confirmado com o botão "Simular notificação" do próprio painel do MP: POST real chegou em `billing-webhook`, `webhook_events.signature_valid = true` — a camada de transporte e verificação de assinatura está correta de ponta a ponta. (O evento simulado falhou ao processar por buscar um `preapproval_id` fake que não existe de verdade no MP — comportamento esperado, não é um bug.)
 
 **Lição pra qualquer configuração futura de webhook no painel do Mercado Pago:** sempre conferir as duas abas (teste e produção), mesmo quando só uma parece relevante — o MP pode rotear eventos reais de contas de teste pela aba "produção" dependendo do tipo de credencial usada.
+
+## Correção (2026-11-14): o teste de 10-11/11 não usou a conta real da Ponderum — credenciais de produção da GVF nunca tinham sido ativadas
+
+Ao revisar o checklist de go-live da Fase 6, descobrimos que a conta principal (**GVF Serviços de Tecnologia Ltda**, CNPJ da Ponderum) nunca tinha ativado suas "Credenciais de produção" de verdade — a tela de ativação (Developers → Credenciais de produção) pedia, pela primeira vez, Setor de atuação + Site + aceite de termos, o que só acontece quando a conta real nunca gerou esse par de chaves antes.
+
+Isso confirma e detalha a nota da seção anterior ("não existem credenciais `TEST-` pra uma conta de teste"): o teste de assinatura por cartão de 10-11/11 rodou contra uma **conta de teste** (sub-usuário de teste do MP), cujas credenciais vêm no mesmo formato de produção (`APP_USR-...`) mas não são a conta bancária real da GVF. Ou seja, a cobrança de R$499 testada naquele dia não necessariamente envolveu dinheiro caindo na conta real da Ponderum — era dentro do sandbox do MP, só com formato de credencial de produção.
+
+**Ação tomada (2026-11-14):**
+1. Ativadas as credenciais de produção reais da aplicação "Ponderum" (Client ID `7679733491364531`) sob a conta GVF, com Setor = "Serviços de TI" e Site = `https://ponderum.com`.
+2. `MP_ACCESS_TOKEN` (secret do Supabase) substituído pelo Access Token real gerado nessa ativação.
+3. `VITE_MP_PUBLIC_KEY` adicionado nos Environment Variables da Vercel (projeto `ponderum`, só ambiente **Production**, tipo **Config** — não é segredo, vai pro bundle público do navegador de qualquer forma) com o Public Key real (`APP_USR-05ef75e1-...`). Antes desta mudança, **essa variável não existia na Vercel** — o site publicado (`app.ponderum.com`) nunca tinha conseguido tokenizar cartão de verdade, mesmo com o backend já configurado pra `PAYMENT_PROVIDER=mercadopago`.
+4. Webhook de produção (aba "Modo de produção", mesmo painel da seção anterior) configurado com a URL `https://igolxkyahbavripvfeak.supabase.co/functions/v1/billing-webhook` e os eventos Planos e assinaturas / Pagamentos (legacy) / Contestações — estava vazio antes dessa ativação (consequência direta de nunca ter existido uma credencial de produção real até agora).
+5. `MP_WEBHOOK_SECRET` (secret do Supabase) substituído pela assinatura secreta gerada na aba de produção dessa aplicação.
+6. Redeploy do projeto `apps/client` na Vercel pra aplicar a `VITE_MP_PUBLIC_KEY` nova.
+
+**Decisão (Vitor, 2026-11-14):** não fazer um teste de cobrança real agora pra validar ponta a ponta — confiar no mecanismo já testado antes (mesma lógica de código, só trocando as chaves) e validar organicamente quando o primeiro cliente real assinar. Se algo falhar, o alerta de webhook `failed` (adicionado nesta mesma sessão, ver commit `ba60388`) avisa por e-mail em `contato@ponderum.com`.
+
+Com isso, o checklist de go-live da Fase 6 (`docs/PAGAMENTOS_SPEC.md`, linhas 603-611) fica assim:
+- [x] Credenciais de produção reais nos secrets do Supabase; `PAYMENT_PROVIDER=mercadopago`
+- [x] Public key de produção do MP só no ambiente Production da Vercel
+- [x] Webhook de produção configurado (URL + eventos reais da conta GVF, não mais da conta de teste)
+- [x] Simulador desligado em produção (guarda automática, `billing-dev-simulator` só roda com `provider.name==='mock'`)
+- [x] Prazo de liberação do dinheiro conferido no painel do MP — "Na hora" pro canal Checkout/API (não D+30; o `MercadoPagoProvider` real já lê `money_release_date` direto da resposta da API, sem assumir nada fixo — só o `MockProvider` usa D+30 pra simulação)
+- [x] Alertas de webhook `failed` / chargeback aberto (ambos por e-mail, `contato@ponderum.com`)
+- [ ] Pix — permanece pausado (ver pendência 2026-11-11 acima), decisão de retomar fica pra depois
+- [ ] Termos de Uso com cláusulas de pagamento/cancelamento/reembolso — o Fellipe está escrevendo separadamente, fora do escopo técnico desta etapa
+- [ ] NFS-e real — depende do contador (decisão em aberto #6), segue em mock
