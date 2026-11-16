@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { SojCard, Button } from "@ponderum/ui";
+import { SojCard, Button, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@ponderum/ui";
 import { Loader2, Download, TrendingDown, TrendingUp } from "lucide-react";
+import { jsPDF } from "jspdf";
 import { supabase } from "@/lib/supabase";
 import { fmtBRL } from "@/lib/adminDashboard";
 import { downloadBlob } from "@/lib/downloadBlob";
@@ -79,18 +80,114 @@ export function GmvNmvPanel() {
       });
   }, [month]);
 
-  const exportCsv = () => {
-    if (!metrics) return;
-    const rows = [
+  const buildExportRows = (): string[][] => {
+    if (!metrics) return [];
+    return [
       ["Indicador", fmtMonth(metrics.month)],
       ...WATERFALL_ROWS.map((r) => [r.label, (metrics.current[r.key] / 100).toFixed(2)]),
+      [],
+      ["Por plano"],
+      ...metrics.by_plan.map((r) => [r.plan_code, (r.revenue_cents / 100).toFixed(2)]),
+      [],
+      ["Por método"],
+      ...metrics.by_method.map((r) => [r.method === "card" ? "Cartão" : "Pix", (r.revenue_cents / 100).toFixed(2)]),
+      [],
+      ["Por cupom"],
+      ...metrics.by_coupon.map((r) => [r.coupon_code, (r.discount_cents / 100).toFixed(2)]),
       [],
       ["Evolução 12 meses"],
       ["Mês", "GMV", "NMV"],
       ...metrics.evolution_12m.map((r) => [r.month, (r.gmv_cents / 100).toFixed(2), (r.nmv_cents / 100).toFixed(2)]),
     ];
+  };
+
+  const exportFilename = (ext: string) => `gmv-nmv-${metrics?.month ?? month}.${ext}`;
+
+  const exportCsv = () => {
+    const rows = buildExportRows();
+    if (rows.length === 0) return;
     const lines = rows.map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(","));
-    downloadBlob(new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" }), `gmv-nmv-${metrics.month}.csv`);
+    downloadBlob(new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" }), exportFilename("csv"));
+  };
+
+  // Mesmo formato SpreadsheetML (Excel 2003 XML) ja usado em Financeiro.tsx
+  // pros pagamentos -- abre direto no Excel, sem depender de biblioteca
+  // nova (xlsx/SheetJS).
+  const exportXls = () => {
+    const rows = buildExportRows();
+    if (rows.length === 0) return;
+    const escapeXml = (v: string) => v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const cell = (v: string) => `<Cell><Data ss:Type="String">${escapeXml(v)}</Data></Cell>`;
+    const row = (values: string[]) => `<Row>${values.map(cell).join("")}</Row>`;
+    const xml = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+<Worksheet ss:Name="GMV e NMV"><Table>
+${rows.map(row).join("\n")}
+</Table></Worksheet>
+</Workbook>`;
+    downloadBlob(new Blob([xml], { type: "application/vnd.ms-excel;charset=utf-8" }), exportFilename("xls"));
+  };
+
+  // PDF tem fundo branco -- precisa da variante escura do logo (a
+  // ponderum-icon-white.png usada no sidebar do manager fica invisível
+  // aqui). Carregada sob demanda só na exportação, não no load da tela.
+  const loadLogo = (): Promise<{ dataUrl: string; width: number; height: number } | null> =>
+    new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { resolve(null); return; }
+        ctx.drawImage(img, 0, 0);
+        resolve({ dataUrl: canvas.toDataURL("image/png"), width: img.naturalWidth, height: img.naturalHeight });
+      };
+      img.onerror = () => resolve(null);
+      img.src = "/ponderum-logo-dark.png";
+    });
+
+  const exportPdf = async () => {
+    const rows = buildExportRows();
+    if (rows.length === 0 || !metrics) return;
+    const pdf = new jsPDF({ unit: "mm", format: "a4" });
+    const margin = 15;
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    let y = margin;
+
+    const logo = await loadLogo();
+    if (logo) {
+      const h = 10;
+      const w = h * (logo.width / Math.max(1, logo.height));
+      try { pdf.addImage(logo.dataUrl, "PNG", margin, y, w, h); y += h + 8; } catch { /* ignore */ }
+    }
+
+    pdf.setFontSize(14);
+    pdf.text(`Ponderum · GMV e NMV · ${fmtMonth(metrics.month)}`, margin, y);
+    y += 6;
+    pdf.setFontSize(9);
+    pdf.setTextColor(120);
+    pdf.text("Definição provisória. Regras de cálculo ainda sujeitas a validação com o financeiro.", margin, y);
+    pdf.setTextColor(0);
+    y += 8;
+
+    pdf.setFontSize(10);
+    for (const r of rows) {
+      if (y + 5 > pageHeight - margin) { pdf.addPage(); y = margin; }
+      if (r.length === 1) {
+        pdf.setFont("helvetica", "bold");
+        y += 2;
+        pdf.text(r[0], margin, y);
+        pdf.setFont("helvetica", "normal");
+      } else if (r.length > 0) {
+        pdf.text(r[0], margin, y);
+        pdf.text(r.slice(1).join("   "), margin + 90, y, { align: "left" });
+      }
+      y += 5;
+    }
+
+    downloadBlob(new Blob([pdf.output("arraybuffer")], { type: "application/pdf" }), exportFilename("pdf"));
   };
 
   return (
@@ -99,7 +196,7 @@ export function GmvNmvPanel() {
         <div>
           <h2 className="text-sm font-medium">GMV e NMV</h2>
           <p className="text-[11px] text-muted-foreground mt-0.5">
-            Definição provisória — regras de cálculo ainda sujeitas a validação com o financeiro.
+            Definição provisória. Regras de cálculo ainda sujeitas a validação com o financeiro.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -109,9 +206,18 @@ export function GmvNmvPanel() {
             onChange={(e) => setMonth(e.target.value)}
             className="h-9 rounded-md border border-input bg-background px-2.5 text-sm"
           />
-          <Button variant="outline" size="sm" disabled={!metrics} onClick={exportCsv}>
-            <Download className="h-3.5 w-3.5" /> CSV
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" disabled={!metrics}>
+                <Download className="h-3.5 w-3.5" /> Exportar
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={exportCsv}>CSV</DropdownMenuItem>
+              <DropdownMenuItem onClick={exportXls}>Excel (.xls)</DropdownMenuItem>
+              <DropdownMenuItem onClick={exportPdf}>PDF</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
