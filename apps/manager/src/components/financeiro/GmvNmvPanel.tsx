@@ -204,7 +204,7 @@ ${rows.map(row).join("\n")}
             type="month"
             value={month}
             onChange={(e) => setMonth(e.target.value)}
-            className="h-9 rounded-md border border-input bg-background px-2.5 text-sm"
+            className="h-9 flex items-center rounded-md border border-input bg-background px-2.5 text-sm leading-none"
           />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
