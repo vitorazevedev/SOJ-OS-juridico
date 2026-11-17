@@ -89,3 +89,11 @@ Com isso, o checklist de go-live da Fase 6 (`docs/PAGAMENTOS_SPEC.md`, linhas 60
 - [ ] Pix — permanece pausado (ver pendência 2026-11-11 acima), decisão de retomar fica pra depois
 - [ ] Termos de Uso com cláusulas de pagamento/cancelamento/reembolso — o Fellipe está escrevendo separadamente, fora do escopo técnico desta etapa
 - [ ] NFS-e real — depende do contador (decisão em aberto #6), segue em mock
+
+## Correção (2026-11-16): limpeza dos dados de teste + MRR contando acesso interno como receita
+
+Antes do primeiro push do módulo de pagamentos completo pro `main`, todos os dados de teste gerados nesta fase (pagamentos, assinaturas, chargeback, cliente de cobrança, logs de auditoria/rate-limit/webhook) foram removidos em produção — pertenciam todos a uma única organização de teste. Nenhum cliente real havia processado pagamento até então.
+
+**Achado durante essa limpeza:** `get_admin_finance_summary()` contava no MRR qualquer `subscriptions.status='active'`, inclusive as de `provider='manual'` — usadas desde a Fase 1 pra dar acesso de staff (Fellipe, Gabriel/Kober, Vitor) sem cobrança real. Isso inflava o MRR em R$980,00 com zero pagamento de verdade. Corrigido (`20261116010000_billing_fix_mrr_excludes_manual_subscriptions.sql`): MRR só soma assinaturas com `provider <> 'manual'`.
+
+**Decisão (Vitor, 2026-11-16):** as 3 contas internas (Fellipe, Kober, Vitor — esta última renomeada de "Organização do SOJ" pra "Vitor Azevedo", já que não é mais um ambiente de teste) passam a ter plano `corporativo` (o mais alto) via assinatura `provider='manual'`, dando acesso completo à plataforma sem contar como receita — mesmo padrão já usado, só formalizado e com o bug do MRR corrigido.
