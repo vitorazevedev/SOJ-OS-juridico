@@ -33,7 +33,7 @@ export function CouponRedemptionsDialog({ couponId, couponCode, onClose }: { cou
 
   return (
     <Dialog open={!!couponId} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-lg w-full max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-lg w-full max-h-[80vh] overflow-y-auto scroll-thin">
         <DialogHeader>
           <DialogTitle>Resgates — {couponCode}</DialogTitle>
         </DialogHeader>

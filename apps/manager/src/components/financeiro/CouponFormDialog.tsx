@@ -145,7 +145,7 @@ export function CouponFormDialog({ open, coupon, onClose, onSaved }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-lg w-full max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-lg w-full max-h-[85vh] overflow-y-auto scroll-thin">
         <DialogHeader>
           <DialogTitle>{coupon ? `Editar cupom ${coupon.code}` : "Novo cupom"}</DialogTitle>
         </DialogHeader>
