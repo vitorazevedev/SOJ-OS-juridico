@@ -419,7 +419,7 @@ ul,ol{ margin:0; padding:0; list-style:none }
   font-size:.9375rem; line-height:1.55;
 }
 .plan__cta{ margin-top:1.75rem; width:100% }
-.plan__note{ margin:.8rem 0 0; min-height:1.1em; font-size:.75rem; color:var(--ink-40) }
+.plan__note{ margin:.8rem 0 0; height:1.1em; line-height:1.1em; font-size:.75rem; color:var(--ink-40) }
 
 .plan--hi{ background:var(--ink); border-color:var(--ink); color:var(--lt-92) }
 .plan--hi .plan__k{ color:var(--lt-55) }
