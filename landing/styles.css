@@ -395,7 +395,7 @@ ul,ol{ margin:0; padding:0; list-style:none }
    PLANOS
    ========================================================= */
 .planos-wrap{ max-width:1180px; margin-inline:auto; margin-top:3.25rem }
-.plans{ display:grid; grid-template-columns:repeat(5,1fr); align-items:stretch; gap:1rem }
+.plans{ display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); align-items:stretch; gap:1rem }
 .plan{
   display:flex; flex-direction:column; padding:1.5rem 1.25rem; height:100%;
   border:1px solid var(--ink-14); border-radius:var(--r); background:var(--paper);
@@ -544,6 +544,7 @@ ul,ol{ margin:0; padding:0; list-style:none }
   .hero__in{ grid-template-columns:1fr; gap:3rem; align-items:start }
   .doc{ max-width:34rem }
   .fdr__in{ grid-template-columns:minmax(0,290px) minmax(0,1fr) }
+  .plans{ grid-template-columns:repeat(3,minmax(0,1fr)) }
 }
 @media (max-width:900px){
   .nav,.hd__act{ display:none }
