@@ -1,5 +1,13 @@
 import { Link } from "react-router-dom";
 
+const PLANOS = [
+  { plano: "Freemium", mensalidade: "Gratuito", analises: "1", usuarios: "1" },
+  { plano: "Individual", mensalidade: "R$ 199,00", analises: "5", usuarios: "1" },
+  { plano: "Escritório", mensalidade: "R$ 499,00", analises: "15", usuarios: "3" },
+  { plano: "Jurídico", mensalidade: "R$ 899,00", analises: "40", usuarios: "5" },
+  { plano: "Corporativo", mensalidade: "R$ 1.749,00", analises: "100", usuarios: "10" },
+];
+
 export default function Termos() {
   return (
     <div className="min-h-screen bg-background px-4 py-10">
@@ -11,277 +19,417 @@ export default function Termos() {
         <div className="flex flex-col gap-4 text-sm leading-relaxed text-foreground/90 text-justify">
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">Termos de Uso</h1>
           <p className="text-xs text-muted-foreground">
-            Ponderum — plataforma de inteligência contratual · Última atualização: 04 de julho de 2026
+            Ponderum — plataforma de inteligência contratual · Última atualização: 18 de novembro de 2026
           </p>
 
-          <h2 className="text-base font-medium text-foreground mt-2">1. Aceitação dos Termos</h2>
+          <h2 className="text-base font-medium text-foreground mt-2">1. Identificação, objeto e aceitação</h2>
           <p>
-            1.1 Estes Termos de Uso ("Termos") regulam o acesso e a utilização da plataforma Ponderum
-            ("Plataforma" ou "Ponderum"), de titularidade da GVF Serviços de Tecnologia Ltda., sociedade
-            empresária inscrita no CNPJ nº 68.051.706/0001-16, com sede na Av. Manoel dos Santos Braga, nº 736,
-            Vila Monte Santo, CEP 08062-010, São Paulo/SP ("Ponderum", "nós" ou "Controladora").
+            1.1 Estes Termos de Uso ("Termos") regulam o acesso e a utilização da Ponderum ("Plataforma"), serviço
+            de software como serviço (SaaS) disponibilizado pela GVF Serviços de Tecnologia Ltda., CNPJ nº
+            68.051.706/0001-16, com sede na Av. Manoel dos Santos Braga, nº 736, Vila Monte Santo, CEP 08062-010,
+            São Paulo/SP ("Ponderum" ou "nós").
           </p>
           <p>
-            1.2 Ao criar uma conta, marcar a caixa de aceite no cadastro e/ou utilizar a Plataforma, o usuário
-            ("Usuário" ou "você") declara ter lido, compreendido e aceitado integralmente estes Termos e a{" "}
-            <Link to="/privacidade" className="text-primary hover:underline">Política de Privacidade</Link>,
-            que a eles se integra por referência.
+            1.2 O Usuário, ao realizar o cadastro e manifestar seu aceite eletrônico, declara ter lido e
+            compreendido estes Termos e a{" "}
+            <Link to="/privacidade" className="text-primary hover:underline">Política de Privacidade</Link>. O
+            aceite e a contratação serão registrados pelos meios disponibilizados na Plataforma.
           </p>
           <p>
-            1.3 Caso não concorde com qualquer disposição destes Termos, o Usuário não deve criar conta nem
-            utilizar a Plataforma.
-          </p>
-
-          <h2 className="text-base font-medium text-foreground mt-2">2. Descrição do Serviço e Limitações</h2>
-          <p>
-            2.1 O Ponderum é uma plataforma de software como serviço (SaaS) que permite o envio de contratos
-            para análise automatizada por inteligência artificial, com o objetivo de identificar cláusulas de
-            risco, sugerir alternativas de mitigação e organizar prazos e obrigações contratuais.
-          </p>
-          <p>2.2 O Ponderum também oferece a geração de minutas contratuais a partir de modelos (templates) predefinidos.</p>
-          <p>
-            2.3 O Ponderum <strong>NÃO</strong> presta serviços de advocacia, não emite pareceres jurídicos, não
-            garante a validade jurídica dos contratos analisados ou gerados, e não substitui a avaliação de
-            advogado habilitado. As saídas da Plataforma — incluindo score de risco, cláusulas identificadas,
-            sugestões de mitigação e estimativas de impacto financeiro — são estimativas geradas por
-            inteligência artificial e devem ser revisadas por profissional habilitado antes de qualquer decisão
-            jurídica, negocial ou de assinatura.
+            1.3 Quando atuar em nome de organização, o Usuário declara possuir autorização para representá-la no
+            uso do serviço e, quando aplicável, para contratar planos pagos. O Administrador da organização
+            gerencia o acesso de seus Membros.
           </p>
           <p>
-            2.4 Toda minuta gerada pela Plataforma traz o aviso: "Este documento foi gerado pelo Ponderum com
-            base em modelos padrão de mercado. Recomendamos revisão por advogado habilitado antes da
-            assinatura." Esse aviso não pode ser removido pelo Usuário e integra a própria minuta.
+            1.4 Em caso de divergência, condições comerciais expressamente apresentadas e aceitas no checkout
+            prevalecem quanto à transação específica, sem afastar direitos legais indisponíveis.
           </p>
 
-          <h2 className="text-base font-medium text-foreground mt-2">3. Elegibilidade</h2>
+          <h2 className="text-base font-medium text-foreground mt-2">2. Descrição do serviço e limites da inteligência artificial</h2>
           <p>
-            3.1 O uso do Ponderum é destinado exclusivamente a pessoas jurídicas e a profissionais maiores de 18
-            (dezoito) anos, atuando em nome próprio ou em nome de organização à qual estejam vinculados.
+            2.1 A Plataforma possibilita o envio de contratos para análise automatizada por inteligência
+            artificial, a identificação de cláusulas e riscos, a organização de obrigações e prazos, a emissão de
+            relatórios e, conforme as funcionalidades disponíveis, a geração de minutas a partir de modelos
+            predefinidos.
           </p>
           <p>
-            3.2 Ao se cadastrar, o Usuário declara e garante possuir capacidade civil plena e, quando aplicável,
-            poderes para vincular a organização em nome da qual atua.
+            2.2 A Ponderum não presta serviços de advocacia, não emite parecer jurídico, não garante a validade ou
+            a adequação jurídica dos documentos analisados ou gerados e não substitui a revisão por profissional
+            habilitado. As respostas de IA são estimativas de apoio à decisão e podem conter erros, omissões,
+            falsos positivos ou falsos negativos.
           </p>
           <p>
-            3.3 O Ponderum não coleta intencionalmente dados de menores de idade e poderá excluir, a qualquer
-            tempo e sem aviso prévio, contas identificadas como pertencentes a menores.
-          </p>
-
-          <h2 className="text-base font-medium text-foreground mt-2">4. Cadastro, Conta e Organização</h2>
-          <p>
-            4.1 O cadastro poderá ser realizado por e-mail e senha ou por meio de login federado via Google
-            (OAuth 2.0). Independentemente do método escolhido, a criação da conta exige o aceite expresso
-            destes Termos e da Política de Privacidade mediante marcação de caixa de confirmação, permanecendo
-            o botão de cadastro desabilitado até que o aceite seja manifestado.
+            2.3 A decisão sobre celebrar, modificar, rejeitar ou assinar um contrato é de responsabilidade do
+            Usuário ou de sua organização, que deverá verificar a exatidão das informações e obter assistência
+            profissional quando necessária.
           </p>
           <p>
-            4.2 Cada conta está vinculada a uma organização. Uma organização pode conter múltiplos Usuários
-            ("Membros"), havendo ao menos um Usuário com papel de Administrador, responsável por gerenciar o
-            acesso dos demais Membros.
-          </p>
-          <p>
-            4.3 Os dados e contratos de uma organização são isolados e não são acessíveis por Membros de outras
-            organizações.
-          </p>
-          <p>
-            4.4 O Usuário é responsável por manter a confidencialidade de suas credenciais de acesso e por todas
-            as atividades realizadas em sua conta. O Administrador de cada organização é responsável por
-            gerenciar adequadamente o acesso de seus Membros, incluindo a revogação de acesso quando cessado o
-            vínculo entre o Membro e a organização.
-          </p>
-          <p>
-            4.5 O Usuário compromete-se a fornecer informações verdadeiras, completas e atualizadas no cadastro,
-            incluindo nome completo, e-mail, nome da organização e, quando aplicável, CNPJ ou CPF e setor de
-            atuação.
+            2.4 As minutas geradas pela Plataforma contêm aviso de que foram produzidas com base em modelos padrão
+            de mercado e recomendam revisão por advogado habilitado antes da assinatura. O Usuário não deverá
+            suprimir o aviso incorporado ao documento, que integra a minuta gerada.
           </p>
 
-          <h2 className="text-base font-medium text-foreground mt-2">5. Planos e Limites de Uso</h2>
+          <h2 className="text-base font-medium text-foreground mt-2">3. Elegibilidade e informações cadastrais</h2>
           <p>
-            5.1 O Ponderum é oferecido nos seguintes planos, cujas condições comerciais podem ser atualizadas
-            mediante aviso prévio nos termos da Cláusula 12:
+            3.1 A Plataforma é destinada a pessoas jurídicas e a profissionais maiores de 18 (dezoito) anos, que
+            utilizem o serviço em nome próprio ou em nome de organização à qual estejam legitimamente vinculados.
           </p>
+          <p>
+            3.2 O Usuário deve fornecer dados verdadeiros, completos e atualizados, inclusive nome, e-mail,
+            organização e, quando aplicável, CPF ou CNPJ e dados de faturamento. A Ponderum poderá solicitar
+            correção de dados inconsistentes necessários ao cadastro ou à execução contratual.
+          </p>
+          <p>
+            3.3 A Ponderum não busca cadastrar menores de idade e poderá desativar contas que não atendam aos
+            requisitos de elegibilidade, observada a legislação aplicável.
+          </p>
+
+          <h2 className="text-base font-medium text-foreground mt-2">4. Contas, organizações e membros</h2>
+          <p>
+            4.1 O acesso é realizado mediante cadastro por e-mail e senha ou por autenticação federada via Google,
+            conforme os métodos efetivamente oferecidos pela Plataforma. Cada conta é vinculada a uma organização.
+          </p>
+          <p>
+            4.2 A organização poderá ter um ou mais Membros, observado o limite do plano contratado. Ao menos um
+            Membro terá perfil de Administrador, responsável por gerir convites, permissões e a exclusão de
+            acessos de pessoas desligadas da organização.
+          </p>
+          <p>
+            4.3 Os convites de ingresso em equipe são encaminhados por e-mail e, conforme o fluxo atual da
+            Plataforma, permanecem válidos por até 14 (quatorze) dias, podendo ser cancelados pelo Administrador.
+            Convites pendentes poderão contar para o limite de vagas do plano.
+          </p>
+          <p>
+            4.4 Cada Usuário utilizará sua própria conta. É proibido compartilhar senhas, credenciais, fatores de
+            autenticação ou sessões com terceiros não autorizados.
+          </p>
+          <p>
+            4.5 Os conteúdos das organizações são segregados por mecanismos de controle de acesso. Essa medida não
+            dispensa o dever dos Administradores de conceder apenas os acessos necessários aos respectivos
+            Membros.
+          </p>
+
+          <h2 className="text-base font-medium text-foreground mt-2">5. Autenticação de dois fatores (MFA) e recuperação de acesso</h2>
+          <p>
+            5.1 A Plataforma exige autenticação de dois fatores (MFA) nos fluxos de acesso em que essa verificação
+            é solicitada. Além da autenticação inicial, o Usuário deverá apresentar código temporário gerado por
+            aplicativo autenticador compatível com TOTP, de seis dígitos, quando requerido pelo sistema.
+          </p>
+          <p>
+            5.2 O MFA descrito nesta versão utiliza aplicativo autenticador (como Google Authenticator ou Authy),
+            e não códigos enviados por SMS. O Usuário é responsável por proteger o dispositivo, o aplicativo e os
+            meios de recuperação a que tenha acesso, evitando compartilhamento, reprodução não autorizada ou
+            armazenamento inseguro.
+          </p>
+          <p>
+            5.3 A configuração do segundo fator integra os requisitos de segurança de acesso. A recusa ou
+            impossibilidade de concluí-la poderá impedir o ingresso na Plataforma até a regularização.
+          </p>
+          <p>
+            5.4 Em caso de perda, troca ou indisponibilidade do dispositivo autenticador, o Usuário deverá
+            contatar o suporte da Ponderum por um canal oficial. A redefinição do segundo fator dependerá de
+            verificação de identidade e de vínculo com a conta, com posterior cadastramento de novo autenticador.
+          </p>
+          <p>
+            5.5 Para prevenir acesso indevido, a Ponderum poderá solicitar informações complementares, suspender
+            temporariamente o procedimento ou negar a redefinição quando não for possível verificar a
+            titularidade. A recuperação de acesso não é automática nem assegura disponibilidade imediata.
+          </p>
+          <p>
+            5.6 A Ponderum poderá atualizar mecanismos de autenticação e aplicar verificações adicionais
+            proporcionais aos riscos de segurança, informando mudanças relevantes aos Usuários quando cabível.
+          </p>
+
+          <h2 className="text-base font-medium text-foreground mt-2">6. Planos, preços e limites de utilização</h2>
+          <p>
+            6.1 A Ponderum oferece os seguintes planos para novas contratações, com cobrança mensal nos planos
+            pagos e limites por organização:
+          </p>
+          <div className="overflow-x-auto rounded-lg border border-border">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-muted/40 text-left">
+                  <th className="px-3 py-2 font-medium">Plano</th>
+                  <th className="px-3 py-2 font-medium">Mensalidade</th>
+                  <th className="px-3 py-2 font-medium">Análises/mês</th>
+                  <th className="px-3 py-2 font-medium">Usuários</th>
+                </tr>
+              </thead>
+              <tbody>
+                {PLANOS.map((p) => (
+                  <tr key={p.plano} className="border-t border-border">
+                    <td className="px-3 py-2 font-medium">{p.plano}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{p.mensalidade}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{p.analises}</td>
+                    <td className="px-3 py-2 text-muted-foreground">{p.usuarios}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p>
+            6.2 O plano Freemium não exige cartão de crédito, dá direito a 1 (uma) análise por mês e permite
+            visualizar o relatório na Plataforma, sem exportação. Podem existir limitações de cópia ou de captura
+            do resultado. Esses recursos dificultam, mas não garantem impedir tecnicamente a reprodução do
+            conteúdo.
+          </p>
+          <p>
+            6.3 Os planos pagos incluem as funcionalidades indicadas na oferta e, nos termos da página de planos,
+            exportação de relatórios. O esgotamento da franquia mensal impede novas análises até o início do
+            próximo ciclo ou alteração para plano que comporte o uso pretendido, com aviso ao Usuário na
+            Plataforma.
+          </p>
+          <p>
+            6.4 A franquia de análises e o limite de Membros seguem o ciclo de referência exibido na conta.
+            Análises não utilizadas não são automaticamente acumuladas para o mês seguinte, salvo condição
+            comercial expressamente informada na contratação.
+          </p>
+          <p>
+            6.5 Permanece existente apenas para assinantes anteriores à migração o plano Starter legado, com
+            mensalidade originalmente contratada de R$ 490,00, até 15 análises mensais e até 3 Membros por
+            organização. Não está disponível para novas contratações. Condições anteriores de preço preservado
+            serão observadas nos termos da oferta aceita, enquanto mantidas as condições aplicáveis ao assinante.
+          </p>
+          <p>
+            6.6 Os planos denominados "Pro" e "Enterprise", referidos em versões anteriores destes Termos, deixam
+            de integrar a oferta padrão atual, sem prejuízo de acordos individuais expressamente celebrados e
+            ainda vigentes.
+          </p>
+          <p>
+            6.7 São admitidos, nos limites técnicos informados: arquivos PDF de até 32 MB, arquivos Word/.docx de
+            até 50 MB e imagens JPG/PNG de até 5 MB. Ajustes futuros de formatos e tamanhos serão informados na
+            Plataforma.
+          </p>
+          <p>
+            6.8 Promoções e cupons, quando disponíveis, terão regras próprias de validade, elegibilidade, planos,
+            meios de pagamento, quantidade de usos e duração do desconto. A aplicação efetiva e o valor a pagar
+            serão exibidos antes da confirmação da compra. Encerrado o período de desconto, a cobrança poderá
+            retornar ao valor integral informado na contratação.
+          </p>
+
+          <h2 className="text-base font-medium text-foreground mt-2">7. Contratação, meios de pagamento e cobrança recorrente</h2>
+          <p>
+            7.1 Os pagamentos dos planos pagos são processados por Mercado Pago. As informações de cobrança e o
+            meio de pagamento serão apresentados no checkout, antes da conclusão da assinatura.
+          </p>
+          <p>
+            7.2 A contratação mensal autoriza a cobrança recorrente de cada ciclo enquanto a assinatura permanecer
+            ativa, segundo as condições apresentadas e aceitas na confirmação. O próximo vencimento e o status da
+            assinatura poderão ser consultados nos canais disponíveis na Plataforma.
+          </p>
+          <p>
+            7.3 A cobrança por cartão de crédito está integrada ao processador. O Pix será oferecido somente se
+            estiver efetivamente habilitado e disponível no checkout, observadas suas condições específicas. A
+            Ponderum não assegura a disponibilidade permanente de todos os meios de pagamento.
+          </p>
+          <p>
+            7.4 Os dados completos do cartão são tratados pelo processador de pagamentos; a Ponderum utiliza as
+            referências ou tokens de pagamento e informações transacionais necessárias à administração da
+            assinatura, sem armazenar o número completo e o código de segurança do cartão em seus sistemas
+            próprios.
+          </p>
+          <p>
+            7.5 Se uma cobrança for recusada, poderão ser enviadas comunicações pelo aplicativo e por e-mail.
+            Poderá ser concedido prazo de regularização de 7 (sete) dias com manutenção temporária do acesso,
+            seguido de suspensão caso o pagamento não seja concluído.
+          </p>
+          <p>
+            7.6 Persistindo a inadimplência por 30 (trinta) dias após a suspensão de acesso, a assinatura poderá
+            ser encerrada. O encerramento da assinatura não corresponde, por si só, à exclusão imediata da conta
+            ou de seus dados, que seguirá as regras específicas de retenção e exclusão.
+          </p>
+          <p>
+            7.7 A Ponderum poderá restringir tentativas de pagamento e solicitar validações adicionais para
+            prevenção a fraude. Os valores e eventual tributo incidente serão identificados nos documentos fiscais
+            e condições aplicáveis, sem promessa de emissão automática de nota fiscal enquanto tal rotina não
+            estiver ativada.
+          </p>
+
+          <h2 className="text-base font-medium text-foreground mt-2">8. Alterações de plano e condições comerciais</h2>
+          <p>
+            8.1 O upgrade para plano superior poderá produzir efeitos assim que confirmado no sistema, com ajuste
+            de limites e eventual cobrança complementar segundo os valores previamente exibidos e aceitos na
+            operação.
+          </p>
+          <p>
+            8.2 O downgrade solicitado pelo Usuário terá efeito, como regra operacional atual, na próxima
+            renovação. Até então, permanecerão disponíveis as condições do plano vigente já pago, ressalvadas
+            medidas de segurança ou disposição legal.
+          </p>
+          <p>
+            8.3 A alteração para plano com menor limite de Membros poderá demandar regularização do número de
+            participantes antes de sua efetivação. O sistema poderá impedir convites que ultrapassem a capacidade
+            contratada.
+          </p>
+          <p>
+            8.4 Mudanças de preço em novas contratações serão divulgadas nos canais comerciais. Alterações de
+            condições econômicas de assinaturas em curso exigirão comunicação prévia adequada e observância da
+            oferta, do contrato aceito e da legislação aplicável; não serão impostas retroativamente a ciclos já
+            pagos.
+          </p>
+
+          <h2 className="text-base font-medium text-foreground mt-2">9. Cancelamento, arrependimento, reembolsos e contestações</h2>
+          <p>
+            9.1 O titular ou Administrador autorizado poderá solicitar o cancelamento da assinatura pelos
+            controles disponibilizados na Plataforma, sem prejuízo de atendimento pelo suporte. A Ponderum
+            confirmará o recebimento da solicitação por meio adequado.
+          </p>
+          <p>
+            9.2 Fora das hipóteses legais que assegurem restituição ou de condição comercial específica, o
+            cancelamento interrompe futuras renovações e mantém o acesso ao plano pago até o término do ciclo já
+            quitado, conforme as condições contratadas. O cancelamento não implica, isoladamente, exclusão dos
+            dados ou da organização.
+          </p>
+          <p>
+            9.3 Quando aplicável uma relação de consumo e preenchidos os requisitos do art. 49 do Código de Defesa
+            do Consumidor, o contratante poderá exercer o direito de arrependimento dentro do prazo legal de 7
+            (sete) dias, com restituição integral dos valores devidos, nos termos da legislação. Esse direito não
+            depende exclusivamente de cadastro por CPF ou CNPJ, mas do enquadramento jurídico da contratação.
+          </p>
+          <p>
+            9.4 Pedidos de reembolso fora das hipóteses legalmente obrigatórias serão avaliados à luz da oferta
+            efetivamente aceita, das condições específicas eventualmente anunciadas e do caso concreto, não
+            havendo promessa de devolução proporcional fora das hipóteses legais ou de condição comercial
+            expressamente aceita.
+          </p>
+          <p>
+            9.5 O estorno poderá depender dos prazos e procedimentos do Mercado Pago e do emissor do instrumento
+            de pagamento. A Ponderum prestará as informações de acompanhamento disponíveis ao contratante.
+          </p>
+          <p>
+            9.6 A contestação de pagamento (chargeback) poderá ensejar bloqueio preventivo do acesso ou de novas
+            cobranças enquanto o caso for apurado, quando necessário e proporcional para prevenção a fraude,
+            respeitados os direitos do contratante e a possibilidade de regularização. A liberação de nova
+            cobrança por cartão poderá depender de verificação pela equipe.
+          </p>
+          <p>
+            9.7 O contratante poderá utilizar contato@ponderum.com.br para esclarecer dúvidas ou formalizar
+            solicitações relativas a cancelamento, arrependimento, cobrança ou contestação, sem prejuízo dos
+            canais diretamente disponíveis na Plataforma.
+          </p>
+
+          <h2 className="text-base font-medium text-foreground mt-2">10. Propriedade intelectual e conteúdos</h2>
+          <p>
+            10.1 Os arquivos e contratos enviados pelos Usuários permanecem de propriedade de seus titulares. A
+            Ponderum recebe autorização limitada ao tratamento necessário à prestação do serviço, na forma destes
+            Termos e da Política de Privacidade.
+          </p>
+          <p>
+            10.2 As minutas finais geradas e preenchidas com dados do Usuário poderão ser utilizadas nos fins a
+            que se destinam. Permanecem de titularidade da Ponderum ou de seus licenciantes os modelos, templates,
+            estruturas, interface, software, marcas, algoritmos, prompts e recursos técnicos subjacentes.
+          </p>
+          <p>
+            10.3 São vedadas reprodução não autorizada, descompilação, engenharia reversa, extração de código ou
+            exploração comercial indevida dos elementos proprietários da Plataforma.
+          </p>
+
+          <h2 className="text-base font-medium text-foreground mt-2">11. Uso aceitável e obrigações do Usuário</h2>
+          <p>11.1 O Usuário deverá utilizar a Plataforma de boa-fé e apenas para finalidades lícitas, abstendo-se de:</p>
           <ul className="list-disc pl-5 flex flex-col gap-1.5">
             <li>
-              <strong>Plano Freemium (gratuito):</strong> exige cadastro completo nos termos da Cláusula 4,
-              dispensada apenas a indicação de forma de pagamento, e permite o envio de 1 (um) contrato para
-              análise experimental por conta cadastrada, sem exportação de relatório, sem funcionalidade de
-              cópia do conteúdo analisado, e com medidas técnicas destinadas a dificultar a captura de tela do
-              resultado;
+              enviar documentos que não tenha autorização para compartilhar ou processar, inclusive quando
+              contenham dados pessoais de terceiros;
             </li>
+            <li>empregar a Plataforma para violar direitos de terceiros, a legislação aplicável ou deveres de confidencialidade;</li>
+            <li>utilizar automação não autorizada para sobrecarregar ou contornar limites técnicos ou comerciais;</li>
             <li>
-              <strong>Plano Starter:</strong> R$ 490,00 (quatrocentos e noventa reais) por mês, com até 15
-              (quinze) contratos analisados por mês e até 3 (três) usuários por organização;
+              explorar falhas, contornar mecanismos de autenticação, realizar ataques ou inserir instruções
+              maliciosas em documentos para manipular o sistema;
             </li>
+            <li>compartilhar credenciais, códigos MFA e contas;</li>
             <li>
-              <strong>Plano Pro:</strong> análises ilimitadas, mediante pagamento de mensalidade [valor a
-              definir durante o período de MVP];
-            </li>
-            <li><strong>Plano Enterprise:</strong> condições específicas a serem definidas mediante contratação direta.</li>
-          </ul>
-          <p>
-            5.2 As medidas técnicas do Plano Freemium destinadas a dificultar a cópia ou a captura de tela do
-            conteúdo analisado constituem mecanismo de dificultação, não de impedimento absoluto, dadas as
-            limitações inerentes a qualquer solução técnica dessa natureza. A tentativa de contornar essas
-            medidas, ou de copiar, reproduzir, fotografar, capturar ou redistribuir por qualquer meio o conteúdo
-            gerado no Plano Freemium, constitui violação ao Uso Aceitável (Cláusula 7) e sujeita o Usuário à
-            suspensão ou ao encerramento da conta, sem prejuízo de outras medidas cabíveis.
-          </p>
-          <p>
-            5.3 Aos Usuários que aderirem ao Plano Starter durante o MVP, o valor de R$ 490,00 mensais será
-            mantido enquanto a respectiva conta permanecer ativa e adimplente, ainda que o valor comercial do
-            Plano Starter venha a ser revisado para novos contratantes após o lançamento oficial da Plataforma.
-          </p>
-          <p>
-            5.4 Usuários do Plano Starter que optarem por migrar para o Plano Pro farão jus a desconto sobre o
-            valor vigente do Plano Pro à época da migração, em percentual e condições a serem definidos pelo
-            Ponderum.
-          </p>
-          <p>
-            5.5 Os valores dos planos Pro e Enterprise serão definidos durante o período de MVP e comunicados
-            aos Usuários com antecedência. Estes Termos serão atualizados antes do lançamento oficial da
-            Plataforma para refletir a precificação definitiva desses planos.
-          </p>
-          <p>
-            5.6 O Ponderum poderá limitar tecnicamente o volume de uso conforme o plano contratado, inclusive
-            suspendendo temporariamente novas análises até a renovação do ciclo de cobrança ou upgrade de plano.
-          </p>
-          <p>
-            5.7 Os tipos e tamanhos de arquivo aceitos pela Plataforma são: PDF (até 32 MB), Word/.docx (até 50
-            MB) e imagens JPG/PNG de documentos digitalizados (até 5 MB). Esses limites podem ser alterados a
-            critério do Ponderum, mediante comunicação na própria Plataforma.
-          </p>
-
-          <h2 className="text-base font-medium text-foreground mt-2">6. Propriedade Intelectual</h2>
-          <p>
-            6.1 <strong>Contratos e arquivos enviados pelo Usuário.</strong> Os contratos, arquivos e demais
-            conteúdos enviados pelo Usuário à Plataforma para análise permanecem de titularidade exclusiva do
-            Usuário ou da organização a que pertençam. O Ponderum não adquire qualquer direito de propriedade
-            sobre esse conteúdo, utilizando-o exclusivamente para a prestação do serviço contratado, nos termos
-            da Política de Privacidade.
-          </p>
-          <p>
-            6.2 <strong>Minutas geradas pela Plataforma.</strong> As minutas contratuais geradas a partir de
-            modelos (templates) do Ponderum são disponibilizadas ao Usuário para seu uso, observado o aviso
-            legal da Cláusula 2.4. Os modelos e templates subjacentes, enquanto estrutura, redação-padrão e
-            sistema de geração, permanecem de titularidade do Ponderum; o documento final gerado e preenchido
-            com as informações do Usuário pode ser livremente utilizado por este para os fins a que se destina.
-          </p>
-          <p>
-            6.3 <strong>Propriedade do Ponderum.</strong> A marca Ponderum, o software, a interface, os
-            algoritmos, os modelos de prompt, a documentação e demais elementos técnicos da Plataforma são de
-            titularidade exclusiva da GVF Serviços de Tecnologia Ltda. ou de seus licenciantes, sendo vedada sua
-            reprodução, engenharia reversa, descompilação ou uso não autorizado.
-          </p>
-
-          <h2 className="text-base font-medium text-foreground mt-2">7. Uso Aceitável</h2>
-          <p>7.1 O Usuário compromete-se a não:</p>
-          <ul className="list-disc pl-5 flex flex-col gap-1.5">
-            <li>utilizar a Plataforma para fins ilícitos ou que violem direitos de terceiros;</li>
-            <li>enviar contratos ou documentos cujo conteúdo o Usuário não esteja autorizado a compartilhar ou processar;</li>
-            <li>
-              tentar manipular, contornar ou explorar vulnerabilidades da inteligência artificial da Plataforma,
-              incluindo por meio de instruções inseridas no conteúdo dos documentos enviados (prompt injection);
-            </li>
-            <li>realizar engenharia reversa, descompilação ou tentativa de extração do código-fonte ou dos modelos utilizados pela Plataforma;</li>
-            <li>sobrecarregar deliberadamente a infraestrutura da Plataforma ou utilizá-la de forma automatizada sem autorização prévia;</li>
-            <li>compartilhar suas credenciais de acesso com terceiros não autorizados;</li>
-            <li>
-              contornar, tentar contornar ou utilizar meios técnicos — incluindo capturas de tela, fotografia da
-              tela, extensões de navegador ou ferramentas de terceiros — para copiar, reproduzir ou redistribuir
-              o conteúdo gerado no Plano Freemium, em violação à Cláusula 5.2.
+              burlar restrições de cópia/exportação do Freemium para reproduzir, distribuir ou comercializar
+              conteúdos restritos.
             </li>
           </ul>
           <p>
-            7.2 O descumprimento desta cláusula autoriza o Ponderum a suspender ou encerrar a conta do Usuário,
-            sem prejuízo de outras medidas cabíveis.
+            11.2 A violação das regras poderá resultar em medidas proporcionais, inclusive restrição temporária de
+            funcionalidades, suspensão ou encerramento de conta, mediante comunicação quando possível, sem
+            prejuízo de providências legais.
           </p>
 
-          <h2 className="text-base font-medium text-foreground mt-2">8. Natureza das Análises Geradas por Inteligência Artificial</h2>
+          <h2 className="text-base font-medium text-foreground mt-2">12. Precisão das análises automatizadas</h2>
           <p>
-            8.1 As análises realizadas pela Plataforma — incluindo score de risco, identificação de cláusulas,
-            sugestões de mitigação e estimativas de impacto financeiro em moeda corrente — são geradas por
-            sistema de inteligência artificial e constituem estimativas de apoio à decisão, não configurando
-            parecer jurídico, garantia de resultado ou substituto da análise de advogado habilitado.
+            12.1 Escores, índices, sugestões de redação, prazos e estimativas financeiras são resultados
+            computacionais destinados a apoiar a análise humana, não devendo ser interpretados como garantias de
+            resultado, certificação da validade jurídica ou decisão definitiva.
           </p>
           <p>
-            8.2 O Ponderum não garante a completude, exatidão ou ausência de erros nas análises geradas,
-            incluindo a possibilidade de identificação incorreta, omissão de riscos relevantes ou interpretação
-            inadequada de cláusulas (falsos positivos e falsos negativos).
-          </p>
-          <p>
-            8.3 Cabe exclusivamente ao Usuário, com apoio de profissional habilitado quando necessário, a
-            decisão final sobre a celebração, alteração ou rejeição de qualquer contrato analisado ou gerado
-            pela Plataforma.
+            12.2 Cabe ao Usuário confrontar os resultados com o texto original e com o contexto concreto da
+            relação contratual, considerando também normas, jurisprudência e circunstâncias não necessariamente
+            contidas no documento enviado.
           </p>
 
-          <h2 className="text-base font-medium text-foreground mt-2">9. Disponibilidade do Serviço</h2>
+          <h2 className="text-base font-medium text-foreground mt-2">13. Disponibilidade, manutenção e suporte</h2>
           <p>
-            9.1 O Ponderum envidará esforços razoáveis para manter a Plataforma disponível, porém não garante
-            disponibilidade ininterrupta (uptime), podendo ocorrer indisponibilidades temporárias para
-            manutenção, atualização ou por motivos alheios à sua vontade.
+            13.1 A Ponderum empregará esforços razoáveis para manter o serviço disponível, mas poderão ocorrer
+            interrupções por manutenção, atualizações, falhas de terceiros ou eventos alheios ao seu controle.
           </p>
-          <p>9.2 Não há, neste momento, acordo de nível de serviço (SLA) formalizado quanto a percentuais mínimos de disponibilidade.</p>
+          <p>13.2 Não há, nesta versão, garantia contratual de percentual mínimo de disponibilidade (SLA), salvo instrumento separado expressamente firmado com o contratante.</p>
 
-          <h2 className="text-base font-medium text-foreground mt-2">10. Limitação de Responsabilidade</h2>
+          <h2 className="text-base font-medium text-foreground mt-2">14. Responsabilidade</h2>
           <p>
-            10.1 Na máxima extensão permitida pela legislação aplicável, o Ponderum não será responsável por
-            danos indiretos, lucros cessantes, perda de dados ou de oportunidade de negócio decorrentes do uso
-            ou da impossibilidade de uso da Plataforma.
+            14.1 Na extensão permitida pela legislação, a Ponderum não responde por decisões tomadas
+            exclusivamente com base nas saídas da inteligência artificial, sem revisão adequada, nem por
+            prejuízos resultantes do uso em desconformidade com estes Termos.
           </p>
           <p>
-            10.2 O Ponderum não será responsável por decisões tomadas pelo Usuário com base exclusivamente nas
-            análises geradas pela Plataforma, sem a devida revisão por profissional habilitado.
+            14.2 Na máxima extensão permitida pela legislação, não se atribuirão à Ponderum lucros cessantes,
+            perdas de oportunidades de negócio ou danos indiretos resultantes de uso indevido da Plataforma ou de
+            decisões do Usuário tomadas sem a revisão profissional recomendada.
           </p>
           <p>
-            10.3 Nada nestes Termos exclui ou limita responsabilidade nos casos em que a lei brasileira vede tal
-            exclusão ou limitação, incluindo os direitos assegurados pelo Código de Defesa do Consumidor, quando
-            aplicável.
-          </p>
-
-          <h2 className="text-base font-medium text-foreground mt-2">11. Rescisão e Exclusão de Conta</h2>
-          <p>
-            11.1 O Usuário pode encerrar sua conta a qualquer momento por meio da funcionalidade disponível em
-            Configurações {'>'} Privacidade e Dados, o que implica a exclusão completa e irreversível dos dados
-            associados à conta, incluindo contratos, análises, arquivos e demais informações da organização, nos
-            termos da Política de Privacidade.
-          </p>
-          <p>
-            11.2 O Ponderum poderá suspender ou encerrar a conta do Usuário, mediante notificação, em caso de
-            descumprimento destes Termos, uso indevido da Plataforma ou por determinação legal ou judicial.
-          </p>
-          <p>
-            11.3 As disposições que, por sua natureza, devam subsistir ao encerramento da conta (incluindo
-            propriedade intelectual e limitação de responsabilidade) permanecerão vigentes.
+            14.3 Nenhuma disposição destes Termos afasta responsabilidade por conduta que legalmente não possa ser
+            excluída ou limitada, nem restringe direitos assegurados nas relações de consumo, quando existentes.
           </p>
 
-          <h2 className="text-base font-medium text-foreground mt-2">12. Alterações destes Termos</h2>
+          <h2 className="text-base font-medium text-foreground mt-2">15. Suspensão, encerramento de conta e dados</h2>
           <p>
-            12.1 O Ponderum poderá alterar estes Termos a qualquer tempo, comprometendo-se a comunicar o Usuário
-            com antecedência mínima de 5 (cinco) dias, por e-mail e por aviso na própria Plataforma, antes da
-            entrada em vigor das alterações.
+            15.1 O cancelamento de assinatura, a suspensão de acesso e a exclusão de conta são eventos distintos.
+            A exclusão da conta pode ser solicitada pelo caminho Configurações {" > "} Privacidade e Dados, quando
+            disponível, ou por solicitação ao suporte, conforme as permissões do usuário.
           </p>
           <p>
-            12.2 A manutenção do uso da Plataforma após a entrada em vigor das alterações constitui aceite
-            tácito das novas condições. Caso o Usuário não concorde com as alterações, poderá encerrar sua conta
-            nos termos da Cláusula 11.
+            15.2 A solicitação de exclusão elimina dados operacionais e documentos associados à conta e à
+            organização conforme os fluxos da Plataforma, ressalvados prazos de expurgo de cópias de segurança e a
+            conservação de registros exigida por lei, para prestação de contas ou exercício regular de direitos,
+            detalhados na Política de Privacidade.
           </p>
-
-          <h2 className="text-base font-medium text-foreground mt-2">13. Legislação Aplicável e Foro</h2>
-          <p>13.1 Estes Termos são regidos pelas leis da República Federativa do Brasil.</p>
           <p>
-            13.2 Fica eleito o foro da comarca de São Paulo, Estado de São Paulo, para dirimir quaisquer
-            controvérsias decorrentes destes Termos, com renúncia a qualquer outro, por mais privilegiado que
-            seja, ressalvadas as hipóteses de foro de eleição vedadas pela legislação consumerista, quando
-            aplicável.
+            15.3 A Ponderum poderá suspender ou encerrar o acesso por descumprimento destes Termos, risco de
+            segurança, determinação legal ou inadimplência, respeitadas as condições contratuais e os direitos
+            aplicáveis.
           </p>
 
-          <h2 className="text-base font-medium text-foreground mt-2">14. Disposições Gerais</h2>
-          <p>14.1 Caso qualquer disposição destes Termos seja considerada inválida ou inexequível, as demais disposições permanecerão em pleno vigor.</p>
-          <p>14.2 A tolerância quanto ao eventual descumprimento de qualquer disposição destes Termos não constituirá novação ou renúncia ao direito de exigir seu cumprimento.</p>
-          <p>14.3 Estes Termos, em conjunto com a Política de Privacidade, constituem o acordo integral entre o Usuário e o Ponderum quanto ao objeto aqui tratado.</p>
+          <h2 className="text-base font-medium text-foreground mt-2">16. Atualizações destes Termos</h2>
+          <p>
+            16.1 Alterações relevantes destes Termos serão comunicadas com antecedência mínima de 5 (cinco) dias
+            por e-mail e aviso na Plataforma, conforme o compromisso atualmente assumido pela Ponderum,
+            ressalvadas situações em que norma imperativa, ordem de autoridade ou medida urgente de segurança
+            exija prazo diverso.
+          </p>
+          <p>
+            16.2 Quando a alteração exigir novo aceite expresso, a Plataforma poderá solicitá-lo antes da
+            continuidade do uso. Quando juridicamente admissível, a continuidade da utilização após a vigência da
+            versão informada poderá representar concordância com as condições atualizadas.
+          </p>
+          <p>
+            16.3 O histórico de versões e a data efetiva da alteração serão disponibilizados ou registrados pelos
+            meios aplicáveis. Mudanças não eliminam direitos adquiridos ou obrigações já constituídas.
+          </p>
 
-          <h2 className="text-base font-medium text-foreground mt-2">15. Contato</h2>
-          <p>15.1 Dúvidas sobre estes Termos podem ser encaminhadas para contato@ponderum.com.br.</p>
+          <h2 className="text-base font-medium text-foreground mt-2">17. Lei aplicável e foro</h2>
+          <p>17.1 Estes Termos são regidos pelas leis da República Federativa do Brasil.</p>
+          <p>
+            17.2 Fica eleito o foro da Comarca de São Paulo/SP, ressalvadas regras legais de competência e os
+            direitos de foro protetivo do consumidor, quando aplicáveis.
+          </p>
+
+          <h2 className="text-base font-medium text-foreground mt-2">18. Disposições gerais e contato</h2>
+          <p>18.1 A invalidação de uma disposição não compromete as demais. A tolerância à infração não constitui renúncia de direito nem alteração tácita do acordo.</p>
+          <p>18.2 Estes Termos, a Política de Privacidade e as condições comerciais expressamente aceitas compõem o conjunto contratual aplicável ao uso da Plataforma.</p>
+          <p>18.3 Contato para dúvidas e solicitações contratuais: contato@ponderum.com.br. Sítio eletrônico: https://ponderum.com/.</p>
 
           <p className="pt-2 text-xs text-muted-foreground">
             Ponderum é uma marca da GVF Serviços de Tecnologia Ltda. © 2026. Todos os direitos reservados.

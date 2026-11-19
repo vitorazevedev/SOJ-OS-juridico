@@ -52,113 +52,103 @@ footer a { color: #8DA0B8; }
   <a href="/" class="back">← Voltar</a>
 
   <h1>Política de Privacidade</h1>
-  <p class="meta">Ponderum, plataforma de inteligência contratual. Última atualização: 04 de julho de 2026</p>
+  <p class="meta">Ponderum — plataforma de inteligência contratual · Última atualização: 18 de novembro de 2026</p>
 
-  <h2>1. Introdução e Identificação do Controlador</h2>
-  <p>1.1 Esta Política de Privacidade descreve como a GVF Serviços de Tecnologia Ltda., inscrita no CNPJ nº 68.051.706/0001-16, com sede na Av. Manoel dos Santos Braga, nº 736, Vila Monte Santo, CEP 08062-010, São Paulo/SP ("Ponderum", "Controladora", "nós"), coleta, utiliza, armazena, compartilha e protege os dados pessoais tratados por meio da plataforma Ponderum, em conformidade com a Lei nº 13.709/2018 (Lei Geral de Proteção de Dados Pessoais, LGPD).</p>
-  <p>1.2 Esta Política aplica-se a todos os Usuários da Plataforma e integra os <a href="/termos">Termos de Uso</a> da Ponderum.</p>
+  <h2>1. Identificação, escopo e papéis na LGPD</h2>
+  <p>1.1 Esta Política explica como a GVF Serviços de Tecnologia Ltda., CNPJ nº 68.051.706/0001-16, com sede na Av. Manoel dos Santos Braga, nº 736, Vila Monte Santo, CEP 08062-010, São Paulo/SP ("Ponderum"), trata dados pessoais na plataforma Ponderum e, quando aplicável, em suas páginas de contratação e comunicação.</p>
+  <p>1.2 A Ponderum atua, em regra, como controladora dos dados de cadastro, autenticação, contratação, cobrança, segurança e relacionamento com os Usuários. Quanto a dados pessoais de terceiros incluídos pelos clientes nos contratos enviados para análise, a organização contratante poderá atuar como controladora e a Ponderum como operadora, na medida em que trate tais dados segundo as instruções necessárias à prestação do serviço.</p>
+  <p>1.3 Esta Política deve ser lida em conjunto com os <a href="/termos">Termos de Uso</a>. A coleta e o tratamento observarão a Lei nº 13.709/2018 (LGPD) e demais normas aplicáveis.</p>
 
-  <h2>2. Dados Pessoais Coletados</h2>
-  <p>2.1 <strong>Dados de cadastro:</strong> nome completo, e-mail, senha (armazenada com hash, nunca em texto puro), nome da organização, CNPJ ou CPF (opcional) e setor de atuação (opcional).</p>
-  <p>2.2 <strong>Dados de contratos enviados:</strong> arquivos enviados pelo Usuário (PDF, Word e imagens), texto extraído pela inteligência artificial, resultados da análise (score de risco, cláusulas identificadas, sugestões), valores financeiros estimados associados a cláusulas de risco, e obrigações e prazos cadastrados manualmente.</p>
-  <p>2.3 <strong>Dados de uso:</strong> contratos gerados pela Plataforma a partir de templates, feedbacks enviados pelo Usuário e logs de auditoria de criação e exclusão de contratos.</p>
-  <p>2.4 <strong>Dados técnicos, coletados automaticamente:</strong> endereço IP, tipo de navegador e sistema operacional, páginas acessadas dentro da Plataforma, erros técnicos (monitorados pela ferramenta Sentry) e cookies de sessão e dados de armazenamento local (localStorage) para preferências de interface.</p>
+  <h2>2. Categorias de dados pessoais tratados</h2>
+  <p>2.1 <strong>Cadastro e organização:</strong> nome completo, endereço de e-mail, nome da organização, identificadores e permissões da conta, CPF ou CNPJ quando informado ou exigido para contratação, e setor de atuação quando fornecido.</p>
+  <p>2.2 <strong>Autenticação e segurança:</strong> senha protegida por mecanismo de hash no provedor de autenticação, dados de sessão, endereços IP e registros de tentativas de acesso, indicadores de ativação do MFA, informações técnicas necessárias ao uso do fator TOTP e o segredo de autenticação gerenciado e armazenado na infraestrutura do Supabase. Não são solicitados números de telefone nem enviados SMS para o MFA TOTP descrito nesta versão.</p>
+  <p>2.3 <strong>Contratos e análises:</strong> arquivos PDF, Word e imagens enviados; textos extraídos; dados pessoais eventualmente contidos nos documentos; informações de partes contratuais; resultados, classificações, sugestões, estimativas de impacto financeiro, obrigações e prazos cadastrados ou derivados dos documentos.</p>
+  <p>2.4 <strong>Utilização e funcionamento:</strong> minutas geradas, feedbacks, operações de criação e exclusão, logs de auditoria, erros técnicos, tipo de navegador, sistema operacional, páginas e funcionalidades acessadas e preferências armazenadas localmente.</p>
+  <p>2.5 <strong>Contratação, cobrança e documentos fiscais:</strong> nome ou razão social, CPF ou CNPJ, e-mail de cobrança, endereço de faturamento, plano e assinatura escolhidos, valores, descontos e cupons utilizados, datas, status de cobrança, pagamentos, devoluções, contestações e referências tokenizadas do meio de pagamento quando disponibilizadas pelo processador. A Ponderum não armazena em seu banco próprio o número integral ou código de segurança dos cartões.</p>
+  <p>2.6 <strong>Convites e comunicações:</strong> endereço de e-mail dos convidados a participar da organização, identificadores e situação dos convites, inclusive quando o convidado ainda não tiver conta, além de registros de e-mails transacionais. O convite, conforme a implementação informada, expira em até 14 dias ou pode ser cancelado.</p>
+  <p>2.7 <strong>Newsletter:</strong> e-mail e demais dados voluntariamente fornecidos em formulário próprio, caso o titular opte pela inscrição, além da informação necessária para atender pedidos de descadastro.</p>
+  <p>2.8 O Usuário e a organização são responsáveis por verificar se possuem base jurídica e autorização para inserir dados de terceiros nos documentos enviados. Os contratos podem conter dados sujeitos a proteção especial; não devem ser enviados documentos desnecessários ao serviço.</p>
 
-  <h2>3. Finalidades e Bases Legais do Tratamento</h2>
-  <p>3.1 Tratamos os dados pessoais acima para as seguintes finalidades, com as respectivas bases legais previstas no art. 7º da LGPD:</p>
+  <h2>3. Finalidades e fundamentos jurídicos</h2>
+  <p>3.1 As principais finalidades e bases legais para operações em que a Ponderum atua como controladora são descritas a seguir. A base jurídica concreta poderá variar conforme o tipo de titular e o contexto da operação:</p>
   <div class="table-wrap">
-    <table>
-      <thead><tr><th>Finalidade</th><th>Base legal</th></tr></thead>
-      <tbody>
-        <tr><td>Prestação do serviço de análise contratual e geração de minutas</td><td>Execução de contrato (art. 7º, V)</td></tr>
-        <tr><td>Controle de limites de uso conforme o plano contratado</td><td>Execução de contrato (art. 7º, V)</td></tr>
-        <tr><td>Envio de alertas por e-mail sobre vencimento de obrigações</td><td>Execução de contrato (art. 7º, V)</td></tr>
-        <tr><td>Comunicações operacionais (cadastro, recuperação de senha)</td><td>Execução de contrato (art. 7º, V)</td></tr>
-        <tr><td>Monitoramento de erros técnicos e manutenção da Plataforma</td><td>Legítimo interesse (art. 7º, IX)</td></tr>
-        <tr><td>Coleta de feedback para melhoria do produto</td><td>Legítimo interesse (art. 7º, IX)</td></tr>
-        <tr><td>Prevenção a fraude e segurança da informação</td><td>Legítimo interesse (art. 7º, IX)</td></tr>
-        <tr><td>Cumprimento de obrigação legal ou regulatória, quando aplicável</td><td>Cumprimento de obrigação legal (art. 7º, II)</td></tr>
-      </tbody>
-    </table>
+  <table>
+    <tr><th>Finalidade</th><th>Base legal</th></tr>
+    <tr><td>Cadastro, gestão de conta e prestação das funcionalidades contratadas</td><td>Execução de contrato ou procedimentos preliminares (art. 7º, V)</td></tr>
+    <tr><td>MFA/TOTP, recuperação de acesso, logs e prevenção de acessos indevidos</td><td>Execução de contrato e/ou legítimo interesse em segurança (art. 7º, V e IX)</td></tr>
+    <tr><td>Controle de planos, convites, franquias de análise e usuários</td><td>Execução de contrato (art. 7º, V)</td></tr>
+    <tr><td>Cobrança, gestão de assinaturas, pagamentos, estornos e contestações</td><td>Execução de contrato; obrigação legal e/ou exercício regular de direitos, conforme o caso</td></tr>
+    <tr><td>Emissão e conservação de documentos fiscais e registros exigidos</td><td>Cumprimento de obrigação legal ou regulatória (art. 7º, II)</td></tr>
+    <tr><td>E-mails transacionais: verificação, cobrança, recuperação e alertas do serviço</td><td>Execução de contrato (art. 7º, V)</td></tr>
+    <tr><td>Proteção antifraude, prevenção de abusos, monitoramento de erros</td><td>Legítimo interesse (art. 7º, IX), com avaliação de necessidade</td></tr>
+    <tr><td>Feedback voluntário e aperfeiçoamento da Plataforma</td><td>Legítimo interesse e/ou consentimento, conforme a operação</td></tr>
+    <tr><td>Newsletter solicitada voluntariamente</td><td>Consentimento, com possibilidade de descadastro</td></tr>
+  </table>
   </div>
-  <p>3.2 Quando o tratamento depender de consentimento, por exemplo para cookies não essenciais que venham a ser implementados no futuro, este será solicitado de forma específica e destacada, podendo ser revogado a qualquer tempo.</p>
+  <p>3.2 No tratamento dos contratos recebidos em nome das organizações clientes, as finalidades e bases legais relativas aos dados pessoais constantes desses documentos deverão ser determinadas pela organização controladora, cabendo à Ponderum observar a relação contratual e suas instruções legítimas, quando atuar como operadora.</p>
+  <p>3.3 O consentimento, quando utilizado, poderá ser revogado pelos meios indicados nesta Política, sem afetar tratamentos anteriores realizados de forma legítima nem as demais bases legais aplicáveis.</p>
 
-  <h2>4. Compartilhamento de Dados com Terceiros (Operadores)</h2>
-  <p>4.1 Para viabilizar a prestação do serviço, a Ponderum compartilha dados pessoais com os seguintes operadores:</p>
+  <h2>4. Compartilhamento e prestadores envolvidos</h2>
+  <p>4.1 Para operar a Plataforma e o módulo de pagamentos, a Ponderum utiliza os serviços abaixo. A atuação de cada fornecedor como operador, controlador independente ou outro agente dependerá da operação específica e de seus instrumentos contratuais:</p>
   <div class="table-wrap">
-    <table>
-      <thead><tr><th>Serviço</th><th>Empresa</th><th>Finalidade</th><th>Dados acessados</th></tr></thead>
-      <tbody>
-        <tr><td><strong>Supabase</strong></td><td>Supabase Inc. (EUA)</td><td>Banco de dados, autenticação e armazenamento de arquivos</td><td>Todos os dados da Plataforma</td></tr>
-        <tr><td><strong>Anthropic / Claude API</strong></td><td>Anthropic PBC (EUA)</td><td>Análise de contratos por IA (extração de texto e identificação de riscos)</td><td>Conteúdo dos contratos enviados para análise</td></tr>
-        <tr><td><strong>Resend</strong></td><td>Resend Inc. (EUA)</td><td>Envio de e-mails transacionais (alertas e confirmações)</td><td>Nome e e-mail do destinatário</td></tr>
-        <tr><td><strong>Vercel</strong></td><td>Vercel Inc. (EUA)</td><td>Hospedagem da interface web</td><td>IPs de acesso e logs de requisição</td></tr>
-        <tr><td><strong>Sentry</strong></td><td>Functional Software Inc. (EUA)</td><td>Monitoramento de erros em produção</td><td>Dados técnicos de erros, sem dados pessoais identificáveis</td></tr>
-      </tbody>
-    </table>
+  <table>
+    <tr><th>Fornecedor</th><th>Uso principal</th><th>Dados envolvidos</th></tr>
+    <tr><td>Supabase</td><td>Banco de dados, arquivos, autenticação e MFA</td><td>Dados da conta e da Plataforma, inclusive elementos técnicos do TOTP</td></tr>
+    <tr><td>Anthropic / Claude API</td><td>Processamento de contratos por inteligência artificial</td><td>Conteúdo e texto dos documentos submetidos para análise</td></tr>
+    <tr><td>Resend</td><td>Envio de e-mails transacionais</td><td>E-mail, identificação do destinatário e conteúdo operacional da mensagem</td></tr>
+    <tr><td>Vercel</td><td>Hospedagem da interface web</td><td>Endereço IP, informações de requisição e logs técnicos</td></tr>
+    <tr><td>Sentry</td><td>Monitoramento de falhas de aplicação</td><td>Dados técnicos de erro e contexto de diagnóstico</td></tr>
+    <tr><td>Mercado Pago</td><td>Checkout, cobrança, recorrência, pagamentos, estornos e antifraude</td><td>Identificação, faturamento e dados de transação e do meio de pagamento</td></tr>
+    <tr><td>Google (quando utilizado)</td><td>Login federado OAuth</td><td>Dados de autenticação/identificação fornecidos no fluxo de login</td></tr>
+  </table>
   </div>
-  <p>4.2 A Ponderum não vende dados pessoais a terceiros nem os compartilha para fins de publicidade de terceiros.</p>
-  <p>4.3 O conteúdo dos contratos enviados para análise é transmitido à API da Anthropic, nos Estados Unidos, exclusivamente para a finalidade de extração de texto e identificação de riscos. A Anthropic não utiliza o conteúdo processado por meio de seus produtos comerciais (incluindo a API) para treinamento de seus modelos de inteligência artificial, conforme os Termos Comerciais e a Central de Privacidade da própria Anthropic. A Ponderum adota medidas técnicas de isolamento (segregação do conteúdo do Usuário por meio de marcação estrutural no prompt) para reduzir o risco de que instruções inseridas no conteúdo dos documentos influenciem indevidamente o comportamento da inteligência artificial.</p>
+  <p>4.2 O Mercado Pago processa os dados necessários às operações de pagamento e pode adotar práticas e obrigações próprias relativas a seus serviços financeiros. A Ponderum utiliza as informações recebidas do processador para gerir contratos, assinaturas, faturamento e suporte.</p>
+  <p>4.3 Os contratos enviados para análise são transmitidos à API da Anthropic para extração e interpretação de texto, identificação de riscos e execução das funcionalidades contratadas. Segundo os termos comerciais aplicáveis à API informados no histórico da Plataforma, o conteúdo processado pela API comercial não é destinado ao treinamento geral dos modelos da Anthropic.</p>
+  <p>4.4 A Ponderum não vende dados pessoais dos Usuários a terceiros nem os compartilha para publicidade de terceiros. Compartilhamentos adicionais poderão ocorrer para atender obrigação legal, ordem válida de autoridade ou proteger direitos legítimos, na forma da lei.</p>
 
-  <h2>5. Transferência Internacional de Dados</h2>
-  <p>5.1 Em razão da utilização de provedores sediados nos Estados Unidos (Supabase, Anthropic, Resend, Vercel e Sentry), dados pessoais podem ser transferidos internacionalmente para fora do território brasileiro, ainda que o armazenamento primário dos dados do banco de dados ocorra em servidor da Supabase localizado na região sa-east-1 (São Paulo, Brasil).</p>
-  <p>5.2 Essa transferência fundamenta-se na necessidade de execução do contrato entre o Usuário e a Ponderum (art. 33, II c/c art. 7º, V, da LGPD). Especificamente quanto à Anthropic, o Data Processing Addendum (DPA) com Cláusulas-Contratuais Padrão (Standard Contractual Clauses) é incorporado automaticamente aos Termos Comerciais da Anthropic no momento da criação da conta de API e aceite desses termos, dispensada a assinatura de instrumento separado. Quanto aos demais operadores (Supabase, Resend, Vercel e Sentry), a Ponderum ampara-se nos instrumentos padrão de proteção de dados já disponibilizados por cada um a seus clientes, prática usual entre plataformas SaaS que utilizam esses mesmos provedores.</p>
-  <p>5.3 A Ponderum seleciona seus operadores com base em práticas de segurança da informação reconhecidas no mercado, exigindo, quando aplicável, compromissos contratuais de proteção de dados compatíveis com a LGPD.</p>
+  <h2>5. Transferência internacional de dados</h2>
+  <p>5.1 Alguns fornecedores de infraestrutura e inteligência artificial estão sediados fora do Brasil e, conforme a operação, podem receber ou acessar dados pessoais internacionalmente. O banco de dados principal utilizado pela Plataforma encontra-se informado como hospedado na região sa-east-1 (São Paulo, Brasil), sem que isso elimine transferências decorrentes de outros serviços.</p>
+  <p>5.2 As transferências internacionais devem observar as hipóteses legais do art. 33 da LGPD e, quando cabível, os instrumentos e requisitos da Resolução CD/ANPD nº 19/2024, inclusive cláusulas-padrão contratuais ou outros mecanismos adequados. A Ponderum observará os instrumentos aplicáveis aos prestadores envolvidos e disponibilizará informações adicionais aos titulares pelos canais de contato.</p>
+  <p>5.3 O Mercado Pago é apresentado na arquitetura atual como processador de pagamento localizado no Brasil. Isso não implica que todas as demais operações da Plataforma estejam necessariamente restritas ao território nacional.</p>
 
-  <h2>6. Segurança da Informação</h2>
-  <p>6.1 A Ponderum adota as seguintes medidas técnicas e administrativas de segurança:</p>
-  <ul>
-    <li>isolamento de dados por organização, por meio de controle de acesso a nível de linha no banco de dados (Row Level Security), testado em ambiente de produção em 05/07/2026, com resultado de bloqueio total de acesso cruzado confirmado entre organizações distintas;</li>
-    <li>criptografia em repouso (AES-256) para dados de banco de dados e arquivos armazenados, e criptografia em trânsito (TLS 1.2/1.3), fornecidas pela infraestrutura da Supabase;</li>
-    <li>armazenamento de senhas com hash seguro, gerenciado pelo provedor de autenticação (Supabase GoTrue); as senhas nunca são armazenadas em texto puro;</li>
-    <li>tokens de sessão (JWT) com expiração automática;</li>
-    <li>opção de login federado via Google (OAuth 2.0) como alternativa ao cadastro por e-mail e senha;</li>
-    <li>limite de tentativas de login (5 tentativas a cada 5 minutos, por endereço IP);</li>
-    <li>validação técnica dos arquivos enviados, com verificação do tipo real do arquivo;</li>
-    <li>monitoramento automático de erros em produção.</li>
-  </ul>
-  <p>6.2 Apesar dos esforços de segurança adotados, nenhum sistema é absolutamente livre de vulnerabilidades. Em caso de incidente de segurança que possa acarretar risco relevante aos titulares, a Ponderum comunicará a Autoridade Nacional de Proteção de Dados (ANPD) e os titulares afetados, nos termos do art. 48 da LGPD.</p>
+  <h2>6. Medidas de segurança e autenticação de dois fatores</h2>
+  <p>6.1 São utilizadas medidas técnicas e organizacionais voltadas à proteção dos dados, incluindo segregação de organizações por controle de acesso no banco de dados (Row Level Security), criptografia em repouso e em trânsito fornecida pela infraestrutura, senhas submetidas a hash, tokens de sessão com expiração e mecanismos de prevenção de tentativas indevidas de acesso.</p>
+  <p>6.2 O MFA utiliza códigos temporários de seis dígitos gerados por aplicativos compatíveis com o padrão TOTP. A infraestrutura de autenticação do Supabase gerencia os elementos necessários ao segundo fator, incluindo seu segredo técnico associado à conta. Os códigos temporários são gerados no aplicativo do Usuário; não há, no fluxo descrito, autenticação MFA por SMS ou coleta adicional de número de telefone.</p>
+  <p>6.3 Se o Usuário perder o autenticador, o suporte poderá tratar dados estritamente necessários à verificação de identidade e à recuperação segura do acesso, realizando nova vinculação do fator de autenticação após as verificações cabíveis.</p>
+  <p>6.4 Nenhum sistema é imune a incidentes. Ocorrendo incidente com risco ou dano relevante aos titulares, a Ponderum seguirá as obrigações de avaliação, documentação e comunicação à ANPD e aos titulares, nos prazos e condições previstos na LGPD e na regulamentação aplicável.</p>
 
-  <h2>7. Retenção e Exclusão de Dados</h2>
-  <p>7.1 Os dados pessoais são mantidos enquanto a conta do Usuário estiver ativa.</p>
-  <p>7.2 Organizações sem atividade por período superior a 24 (vinte e quatro) meses poderão ser sinalizadas internamente para revisão, podendo a Ponderum notificar o Usuário previamente à eventual exclusão dos dados por inatividade prolongada.</p>
-  <p>7.3 Após a exclusão da conta pelo Usuário, os dados pessoais associados, incluindo contratos, análises, arquivos e demais informações da organização, são removidos de forma permanente e irreversível dos sistemas da Ponderum, ressalvados os backups mantidos pela Supabase conforme sua política interna de retenção, que seguem seu próprio ciclo de expurgo.</p>
-  <p>7.4 Dados poderão ser mantidos por prazo adicional quando exigido por obrigação legal, regulatória ou para exercício regular de direitos em processo judicial, administrativo ou arbitral.</p>
+  <h2>7. Prazo de armazenamento e exclusão</h2>
+  <p>7.1 As informações de conta, autenticação, contratos e demais dados operacionais serão mantidos durante a relação com o Usuário e pelo período adicional estritamente necessário ao cumprimento das finalidades legítimas aplicáveis.</p>
+  <p>7.2 O titular ou Administrador poderá solicitar exclusão da conta pelas opções disponibilizadas em Configurações &gt; Privacidade e Dados. A solicitação desencadeia a remoção de dados operacionais associados, inclusive documentos e análises, observadas as restrições técnicas e legais desta seção.</p>
+  <p>7.3 A exclusão nos sistemas ativos não implica eliminação instantânea de todas as cópias de segurança, sujeitas ao ciclo de expurgo do fornecedor. Registros de cobrança, transações, notas fiscais e documentos correlatos poderão ser conservados pelos prazos impostos por legislação tributária, obrigações regulatórias e exercício regular de direitos.</p>
+  <p>7.4 Contas e organizações inativas por período superior a 24 (vinte e quatro) meses poderão ser sinalizadas para revisão e eventual comunicação prévia, de acordo com os procedimentos internos.</p>
+  <p>7.5 O encerramento de uma assinatura paga não equivale automaticamente ao encerramento da conta nem à exclusão integral dos dados. O tratamento posterior observará as finalidades e hipóteses legais aplicáveis.</p>
 
-  <h2>8. Direitos do Titular</h2>
-  <p>8.1 Nos termos do art. 18 da LGPD, o titular dos dados pode exercer, gratuitamente e a qualquer tempo, os seguintes direitos:</p>
-  <ul>
-    <li>Confirmação e acesso: confirmação da existência de tratamento e acesso aos dados;</li>
-    <li>Portabilidade: exportação completa dos dados em formato JSON ou PDF legível;</li>
-    <li>Correção: atualização de dados incompletos, inexatos ou desatualizados;</li>
-    <li>Eliminação: exclusão dos dados tratados com base em consentimento ou ao final do tratamento;</li>
-    <li>Revogação do consentimento, quando o tratamento tiver esse fundamento;</li>
-    <li>Informação sobre compartilhamento de dados com terceiros.</li>
-  </ul>
-  <p>8.2 Acesso, portabilidade e correção estão disponíveis diretamente na Plataforma, em Configurações &gt; Privacidade e Dados. A exclusão completa da conta e de todos os dados associados também está disponível nessa mesma seção e produz efeitos imediatos e irreversíveis.</p>
-  <p>8.3 Solicitações que não puderem ser resolvidas diretamente na Plataforma podem ser encaminhadas ao canal de contato indicado na Cláusula 10.</p>
+  <h2>8. Direitos dos titulares</h2>
+  <p>8.1 Nos termos da LGPD, o titular poderá requerer, conforme o caso, confirmação de tratamento; acesso; correção; anonimização, bloqueio ou eliminação de dados desnecessários, excessivos ou tratados em desconformidade; portabilidade nos termos da regulamentação; informação sobre compartilhamento; revogação de consentimento; e demais direitos legalmente previstos.</p>
+  <p>8.2 As opções de acesso, atualização, exportação e exclusão de conta poderão ser exercidas, conforme o recurso disponível, em Configurações &gt; Privacidade e Dados. Pedidos não resolvidos por autoatendimento poderão ser encaminhados ao canal de privacidade.</p>
+  <p>8.3 Para evitar divulgação indevida, a Ponderum poderá solicitar verificação razoável da identidade do solicitante antes de atender pedidos. Quando atuar como operadora dos contratos enviados por uma organização, poderá encaminhar o pedido à organização controladora e cooperar com sua execução nos termos aplicáveis.</p>
+  <p>8.4 O atendimento poderá observar limitações legais, como a conservação de dados exigidos por lei, a proteção de segredos comerciais e o exercício regular de direitos. A Ponderum fornecerá justificativa quando não puder atender integralmente uma solicitação.</p>
 
-  <h2>9. Cookies e Armazenamento Local</h2>
-  <p>9.1 A Ponderum utiliza cookies de sessão, estritamente necessários para manter o login do Usuário ativo, e dados de armazenamento local (localStorage) para lembrar preferências de interface, como tema visual e filtros de listagem.</p>
-  <p>9.2 A Ponderum não utiliza cookies de rastreamento ou de publicidade de terceiros.</p>
+  <h2>9. Cookies, preferências e comunicações</h2>
+  <p>9.1 A Plataforma utiliza cookies de sessão necessários à autenticação e armazenamento local (localStorage) para preferências de interface, como tema visual e filtros. Conforme a arquitetura documentada nesta versão, não utiliza cookies de publicidade comportamental de terceiros.</p>
+  <p>9.2 E-mails sobre cadastro, recuperação, autenticação, obrigações, cobrança, assinatura, cancelamento e segurança são comunicações operacionais vinculadas à utilização da Plataforma. A inscrição voluntária em newsletter, quando realizada, poderá ser cancelada pelo mecanismo oferecido na própria comunicação.</p>
 
-  <h2>10. Encarregado de Dados (DPO) e Canal de Contato</h2>
-  <p>10.1 Para exercer os direitos previstos nesta Política ou esclarecer dúvidas sobre o tratamento de dados pessoais, o titular pode entrar em contato com o Encarregado de Dados (DPO) da Ponderum por meio do e-mail contato@ponderum.com.</p>
-  <p>10.2 O Encarregado de Dados (DPO) da Ponderum é Vitor Moreira de Azevedo.</p>
+  <h2>10. Dados de menores de idade</h2>
+  <p>10.1 A Plataforma destina-se a pessoas jurídicas e a profissionais maiores de 18 anos e não foi concebida para cadastramento intencional de menores de idade. Se identificarmos uma conta irregular, adotaremos as medidas pertinentes conforme a legislação.</p>
 
-  <h2>11. Menores de Idade</h2>
-  <p>11.1 A Plataforma é destinada exclusivamente a pessoas jurídicas e a profissionais maiores de 18 anos. A Ponderum não coleta intencionalmente dados pessoais de menores de idade.</p>
+  <h2>11. Inteligência artificial e conteúdos de terceiros</h2>
+  <p>11.1 As análises, classificações e sugestões geradas por IA podem envolver dados pessoais presentes no conteúdo dos contratos enviados. Esses resultados são ferramentas de apoio à revisão humana, não constituindo, por si, parecer jurídico ou decisão contratual obrigatória.</p>
+  <p>11.2 A organização que envia o contrato deve observar os deveres de informação, segurança, confidencialidade e base legal referentes aos dados contidos no documento. Quando necessário, recomenda-se limitar ou ocultar informações pessoais não essenciais à análise.</p>
 
-  <h2>12. Conteúdo Gerado por Inteligência Artificial</h2>
-  <p>12.1 As minutas contratuais geradas pela Plataforma a partir de templates trazem, de forma automática e não removível, o aviso: "Este documento foi gerado pela Ponderum com base em modelos padrão de mercado. Recomendamos revisão por advogado habilitado antes da assinatura."</p>
-  <p>12.2 As análises de risco, scores e estimativas de impacto financeiro gerados pela inteligência artificial são estimativas e não constituem parecer jurídico.</p>
+  <h2>12. Atualizações desta Política</h2>
+  <p>12.1 Alterações relevantes desta Política serão comunicadas por e-mail e aviso na Plataforma com antecedência mínima de 5 (cinco) dias, ressalvadas necessidades de adequação legal ou segurança que exijam outro tratamento permitido pela legislação.</p>
+  <p>12.2 A versão publicada conterá a data efetiva de atualização. A continuidade do tratamento observará as bases legais pertinentes e, quando exigido, será obtido novo consentimento ou outro aceite cabível.</p>
 
-  <h2>13. Alterações desta Política</h2>
-  <p>13.1 Esta Política poderá ser alterada a qualquer tempo, com comunicação prévia ao Usuário com antecedência mínima de 5 (cinco) dias, por e-mail e por aviso na própria Plataforma.</p>
-
-  <h2>14. Disposições Finais</h2>
-  <p>14.1 Esta Política é regida pelas leis da República Federativa do Brasil e pela Lei Geral de Proteção de Dados Pessoais (Lei nº 13.709/2018).</p>
-  <p>14.2 Em caso de dúvida sobre esta Política, entre em contato pelo canal indicado na Cláusula 10.</p>
+  <h2>13. Encarregado de dados e canais de contato</h2>
+  <p>13.1 O canal de atendimento para dúvidas sobre esta Política e exercício de direitos dos titulares é contato@ponderum.com. O Encarregado pelo Tratamento de Dados Pessoais informado pela Ponderum é Vitor Moreira de Azevedo.</p>
+  <p>13.2 Informações contratuais e operacionais também podem ser solicitadas ao canal indicado nos Termos de Uso: contato@ponderum.com.br. Os endereços deverão permanecer acessíveis e monitorados após a publicação.</p>
+  <p>13.3 Esta Política é regida pela legislação brasileira, em especial pela LGPD.</p>
 
   <p>Veja também os <a href="/termos">Termos de Uso</a>.</p>
   <p class="foot">Ponderum é uma marca da GVF Serviços de Tecnologia Ltda. © 2026. Todos os direitos reservados.</p>
