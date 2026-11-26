@@ -250,7 +250,13 @@ export function CouponFormDialog({ open, coupon, onClose, onSaved }: Props) {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="coupon-valid-until">Válido até (opcional)</Label>
-              <Input id="coupon-valid-until" type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
+              <Input
+                id="coupon-valid-until"
+                type="date"
+                value={validUntil}
+                onChange={(e) => setValidUntil(e.target.value)}
+                className="h-10 appearance-none"
+              />
             </div>
             <div className="space-y-1">
               <Label htmlFor="coupon-max-total">Limite total de usos</Label>

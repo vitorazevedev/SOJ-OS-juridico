@@ -49,6 +49,13 @@
   @media (max-width: 767px) {
     input, select, textarea { font-size: 16px !important; }
   }
+  /* Safari iOS ignora a altura (h-10) de input[type=date] vazio e renderiza
+     um controle nativo bem mais alto, desalinhando grids de 2 colunas
+     (achado real num iPhone, 2026-11-25). */
+  input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+  }
   /* input[type=month] no Chrome mistura o separador literal ("de") com os
      campos editáveis (mês/ano) em alturas de linha ligeiramente diferentes
      -- força todos à mesma linha de base. */
