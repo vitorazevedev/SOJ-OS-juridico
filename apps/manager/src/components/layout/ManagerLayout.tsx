@@ -5,6 +5,7 @@ import { cn } from "@ponderum/ui";
 import { useAuth } from "@/features/auth/components/AuthProvider";
 import { useStaffRoles } from "@/hooks/useStaffRoles";
 import { supabase } from "@/lib/supabase";
+import ManagerBottomNav from "./ManagerBottomNav";
 
 export default function ManagerLayout({ children }: { children: ReactNode }) {
   const { user } = useAuth();
@@ -17,7 +18,7 @@ export default function ManagerLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen flex bg-background">
-      <aside className="w-56 shrink-0 border-r border-border flex flex-col">
+      <aside className="hidden md:flex w-56 shrink-0 border-r border-border flex-col">
         <div className="px-4 py-5 flex items-center gap-2.5">
           <img src="/ponderum-icon-white.png" alt="Ponderum" className="h-8 w-8 shrink-0 object-contain" />
           <div className="flex flex-col leading-tight">
@@ -106,7 +107,33 @@ export default function ManagerLayout({ children }: { children: ReactNode }) {
           </button>
         </div>
       </aside>
-      <main className="flex-1 min-w-0">{children}</main>
+
+      <div className="flex-1 min-w-0 flex flex-col">
+        <header className="md:hidden flex h-14 border-b border-border items-center justify-between px-4 sticky top-0 bg-background/80 backdrop-blur z-10">
+          <div className="flex items-center gap-2">
+            <img src="/ponderum-icon-white.png" alt="Ponderum" className="h-5 w-5 object-contain" />
+            <span className="text-sm font-semibold">Ponderum Manager</span>
+          </div>
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="h-9 w-9 rounded-lg hover:bg-muted/50 flex items-center justify-center text-muted-foreground transition-colors"
+            aria-label="Sair"
+          >
+            <LogOut className="h-4 w-4" />
+          </button>
+        </header>
+
+        <main className="flex-1 min-w-0 pb-[calc(72px+env(safe-area-inset-bottom))] md:pb-0">
+          {children}
+        </main>
+      </div>
+
+      <ManagerBottomNav
+        canViewEquipe={canViewEquipe}
+        canViewDev={canViewDev}
+        canViewFinanceiroArea={canViewFinanceiroArea}
+        canViewCupons={canViewCupons}
+      />
     </div>
   );
 }
